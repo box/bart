@@ -1,0 +1,13 @@
+=================================================================
+==  NOTICE file for use with the Apache License, Version 2.0,  ==
+==  for the Box BART project.                                  ==
+=================================================================
+
+Box BART
+Copyright 2011 Box, Inc.
+
+This product includes software developed at Box (http://www.box.com)
+
+PHP command line option support is provided by Matt Carter's getopt
+package; Matt Carter (M@ttCarter.net).
+

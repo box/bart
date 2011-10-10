@@ -1,0 +1,29 @@
+##
+# Collection of git functions
+##
+
+##
+# Get commit message for pre-receive commit or received commit
+##
+function get_commit_message() {
+	declare commit="$1"
+	
+	if [ -z "$commit" ]; then
+		echo "Error: Commit not provided to extract message from"
+		return 1
+	fi
+
+	local commitmsg=`git --git-dir=$GIT_DIR cat-file commit $commit | sed '1,/^$/d'`
+
+	if [ $? -gt 0 ]; then
+		echo "Error: Problem extracting commit message from $commit. Message: $commitmsg"
+		return 1
+	fi
+
+	echo "$commitmsg"
+
+	return 0
+}
+
+# vim: set filetype=sh :
+

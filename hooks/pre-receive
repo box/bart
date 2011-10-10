@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+# To be executed by git (symbolically link as .git/hooks/pre-receive)
+# For each commit, will verify that one of the following is true:
+# (a) The build in Jenkins is green
+# (b) The build in Jenkins is broken AND the commit msg contains {buildfix}
+##
+
+declare GIT_DIR="$(pwd)"
+declare REPO="$(basename $GIT_DIR)"
+declare JENKINS="url.to.jenkins"
+# Since this is typically run via symbolic link, figure out where we're really
+# ...running.
+declare BART_HOOKS="$(dirname $(readlink $0))"
+
+source $BART_HOOKS/../rc/git-functions
+
+# This hook is provided with all commits on all branches that the user has pushed
+# User can push multiple branches at the same time, and multiple commits for each branch
+# The main 'while' loop goes over each branch. 
+# The inner 'for' loop goes ever each commit on that branch
+while true; do
+	read oldhead newhead branch
+
+	# Check if we're done looping thru every branch
+	if [ -z "$oldhead" -a -z "$newhead" -a -z "$branch" ]; then
+		exit 0
+	fi
+
+	# Check if we have everything as expected
+	if [ -z "$oldhead" -o -z "$newhead" -o -z "$branch" ]; then
+		echo "Unexpected: One of the required parameters is empty"
+		echo "oldhead: $oldhead, newhead: $newhead, branch: $branch"
+
+		exit 1
+	fi
+
+	branch=${branch##refs/heads/}
+	if [ "$branch" != "dev" ]; then
+		continue
+	fi
+
+	declare commitmsg=''
+	for commit in $(git --git-dir=$GIT_DIR rev-list $oldhead..$newhead)
+	do
+		commitmsg=$(get_commit_message "$commit")
+	
+		if [ $? -ne 0 -o -z "$commitmsg" ]; then
+			echo "Error: No commit message found for $commit"
+			exit 1
+		fi
+
+		# This script does all the work and will exit 0 or 1 based on success
+		php $BART_HOOKS/fail-if-job-unhealthy.php \
+			--job $REPO \
+			--domain $JENKINS \
+			"$commitmsg"
+
+		if [ $? -ne 0 ]; then
+			echo >&2 "
+			FAILED:
+			Jenkins is not healthy, only fixes marked by {buildfix} are allowed
+			"
+			exit 1
+		fi
+	done
+done
+
