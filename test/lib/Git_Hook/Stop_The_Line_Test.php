@@ -8,7 +8,7 @@ class Git_Hook_Stop_The_Line_Test extends Bart_Base_Test_Case
 
 	public function set_up()
 	{
-		Jenkins_Job_Test::mock_metadata('90');
+		Jenkins_Job_Test::mock_metadata(321, 123);
 		$this->stl = new Git_Hook_Stop_The_Line(
 			Jenkins_Job_Test::$domain,
 			Jenkins_Job_Test::$job_name,
@@ -53,7 +53,7 @@ class Git_Hook_Stop_The_Line_Test extends Bart_Base_Test_Case
 
 	public function test_healthy_build_passes()
 	{
-		Jenkins_Job_Test::mock_metadata('100');
+		Jenkins_Job_Test::mock_metadata(100, 100);
 		$happy_stl = new Git_Hook_Stop_The_Line(
 			Jenkins_Job_Test::$domain,
 			Jenkins_Job_Test::$job_name,

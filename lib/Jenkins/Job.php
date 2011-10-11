@@ -55,13 +55,16 @@ class Jenkins_Job
 	}
 
 	/**
-	 * @returns true if the project healthReport is 100%, false otherwise
+	 * @returns true if the last build was successful
 	 */
 	public function is_healthy()
 	{
-		// Current health is the last element of the array
-		$len = count($this->metadata['healthReport']);
-		return $this->metadata['healthReport'][$len - 1]['score'] == "100";
+		// TODO default if property is not defined?
+		$lastSuccess = $this->metadata['lastSuccessfulBuild']['number'];
+		$lastCompleted = $this->metadata['lastCompletedBuild']['number'];
+
+		// Another alternative is lastBuild.result == 'SUCCESS'
+		return $lastSuccess == $lastCompleted;
 	}
 
 	/**

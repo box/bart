@@ -15,7 +15,7 @@ class Jenkins_Job_Test extends Bart_Base_Test_Case
 	/**
 	 * Mock the metadata returned by curl
 	 */
-	public static function mock_metadata($health_score)
+	public static function mock_metadata($last_success, $last_completed)
 	{
 		$domain = self::$domain;
 		$url = "http://$domain:8080/job/" . rawurlencode(self::$job_name) . '//api/json';
@@ -28,12 +28,8 @@ class Jenkins_Job_Test extends Bart_Base_Test_Case
 					'parameterDefinitions' => array(),
 				),
 			),
-			'healthReport' => array(
-				'0' => array(), // extra element to ensure verifying against the last one
-				'1' => array(
-					'score' => $health_score,
-				),
-			),
+			'lastSuccessfulBuild' => array('number' => $last_success),
+			'lastCompletedBuild' => array('number' => $last_completed),
 		);
 
 		Curl_Helper::$cache[$url] = json_encode($norris_metadata, true);
@@ -41,14 +37,14 @@ class Jenkins_Job_Test extends Bart_Base_Test_Case
 
 	public function test_is_healthy()
 	{
-		self::mock_metadata('100');
+		self::mock_metadata(123, 123);
 		$job = new Jenkins_Job(self::$domain, self::$job_name, new Witness_Silent());
 		$this->assertTrue($job->is_healthy(), 'Expected that job would be healthy');
 	}
 
 	public function test_is_unhealthy()
 	{
-		self::mock_metadata('99');
+		self::mock_metadata(123, 122);
 		$job = new Jenkins_Job(self::$domain, self::$job_name, new Witness_Silent());
 		$this->assertFalse($job->is_healthy(), 'Expected that job would be unhealthy');
 	}
