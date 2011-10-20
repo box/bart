@@ -44,7 +44,19 @@ if (!$opts['domain'] || !$opts['job'] || empty($opts['cmdline']))
 $msg = $opts['cmdline'][0];
 $witness = $opts['verbose'] ? new Witness() : new Witness_Silent();
 
-$stl = new Git_Hook_Stop_The_Line($opts['domain'], $opts['job'], $witness);
+try
+{
+	$stl = new Git_Hook_Stop_The_Line($opts['domain'], $opts['job'], $witness);
+}
+catch(Exception $e)
+{
+	echo <<<MSG
+
+		Error loading metadata from Jenkins: {$e->getMessage()}
+
+MSG;
+	exit(1);
+}
 
 exit($stl->verify($msg) ? 0 : 1);
 

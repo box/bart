@@ -49,6 +49,24 @@ class Jenkins_Job_Test extends Bart_Base_Test_Case
 		$this->assertFalse($job->is_healthy(), 'Expected that job would be unhealthy');
 	}
 	
+	public function test_build_is_disabled()
+	{
+		$domain = self::$domain;
+		$job_name = self::$job_name;
+		$url = "http://$domain:8080/job/" . rawurlencode($job_name) . '//api/json';
+		Curl_Helper::$cache[$url] = json_encode(array('buildable' => 0), true);
+
+		try
+		{
+			new Jenkins_Job($domain, $job_name, new Witness_Silent());
+			$this->fail('Expected exception on disabled job');
+		}
+		catch (Exception $e)
+		{
+			$this->assertEquals($e->getMessage(), "Project $job_name is disabled");
+		}
+	}
+
 	public function test_fails_on_missing_param()
 	{
 		try
