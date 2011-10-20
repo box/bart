@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 #
 # To be executed by git (symbolically link as .git/hooks/pre-receive)
 # For each commit, will verify that one of the following is true:
@@ -8,12 +8,18 @@
 
 declare GIT_DIR="$(pwd)"
 declare REPO="$(basename $GIT_DIR)"
-declare JENKINS="url.to.jenkins"
 # Since this is typically run via symbolic link, figure out where we're really
 # ...running.
 declare BART_HOOKS="$(dirname $(readlink $0))"
 
-source $BART_HOOKS/../rc/git-functions
+# Load environment variables; e.g. JENKINS
+[[ -f $BART_HOOKS/../rc/env ]] && . $BART_HOOKS/../rc/env
+
+if [ -z $JENKINS ]; then
+	echo >&2 'Must define a URL for jenkins in $JENKINS variable'
+fi
+
+. $BART_HOOKS/../rc/git-functions
 
 # This hook is provided with all commits on all branches that the user has pushed
 # User can push multiple branches at the same time, and multiple commits for each branch

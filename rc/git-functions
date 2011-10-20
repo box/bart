@@ -9,14 +9,14 @@ function get_commit_message() {
 	declare commit="$1"
 	
 	if [ -z "$commit" ]; then
-		echo "Error: Commit not provided to extract message from"
+		echo >&2 'Error: Commit not provided from which to extract message'
 		return 1
 	fi
 
 	local commitmsg=`git --git-dir=$GIT_DIR cat-file commit $commit | sed '1,/^$/d'`
 
 	if [ $? -gt 0 ]; then
-		echo "Error: Problem extracting commit message from $commit. Message: $commitmsg"
+		echo >&2 "Error: Problem extracting commit message from $commit. Message: $commitmsg"
 		return 1
 	fi
 
