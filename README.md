@@ -20,17 +20,18 @@ Pre-Receive
 
 The pre-receive git hook is an example of where to plug in the stop the line
 script. Hook it up to the git pre-receive hook of your upstream repository via
-a symlink and then configure a jenkins host in your environment file. The name
+a symlink and then define your jenkins host in your environment file. The name
 of the jenkins job, by default, is extracted via the name of your git upstream
 project.
 
 ```
-   cd /etc/bart
-   # Configure your personal environment
-   echo "declare JENKINS='jenkins.internal-ip.company.com'" >> rc/env
+cd /etc/bart
+# Configure your personal environment
+echo "declare JENKINS='jenkins.internal-ip.company.com'" >> rc/env
 
-   # Create the symlink to the pre-receive script
-   cd /git/projects/your-proj
-   ln -s ./hooks/pre-receive /etc/bart/hooks/pre-receive
+# Create the symlink to the pre-receive script
+# ...which will, in this case, verify the health of job "your proj"
+cd /git/projects/your-proj
+ln -s /etc/bart/hooks/pre-receive ./hooks/pre-receive
 ```
 
