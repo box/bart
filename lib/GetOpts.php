@@ -1,4 +1,15 @@
 <?php
+/**
+ * Little trick class to make autoloader load this file, yay global functions!
+ */
+class GetOpts
+{
+	public static function parse($options, $fromarr = null)
+	{
+		return getopts($options, $fromarr);
+	}
+}
+
 	/**********************************************************************************
 	* Coded by Matt Carter (M@ttCarter.net)                                           *
 	***********************************************************************************
@@ -115,17 +126,6 @@ GETOPT_KEYVAL
 	$opt['c'] = array('key1' => 'val2','key2' => 'val2','key3' => array('val3','val4');
 
 */
-
-/**
- * Little trick class to make autoloader find this file
- */
-class GetOpt
-{
-	public static function parse($options, $fromarr = null)
-	{
-		return getopts($options, $fromarr);
-	}
-}
 
 define('GETOPT_NOTSWITCH',0); // Internal use only
 define('GETOPT_SWITCH',1);

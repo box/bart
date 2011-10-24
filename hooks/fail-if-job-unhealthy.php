@@ -26,7 +26,7 @@ USAGE;
 }
 
 // Parse command options and arguments
-$opts = GetOpt::parse(array(
+$opts = GetOpts::parse(array(
 	'domain' => array('switch' => 'domain', 'type' => GETOPT_VAL),
 	'job' => array('switch' => 'job', 'type' => GETOPT_VAL),
 	'verbose' => array('switch' => 'verbose', 'type' => GETOPT_SWITCH),
