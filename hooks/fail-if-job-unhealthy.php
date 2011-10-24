@@ -6,7 +6,6 @@ error_reporting(E_ALL);
 
 $root = dirname(__DIR__) . '/';
 require_once $root . 'lib/bart-common.php';
-require_once($root . 'lib/getopt.php');
 
 function show_usage($exit_status)
 {
@@ -27,7 +26,7 @@ USAGE;
 }
 
 // Parse command options and arguments
-$opts = getopts(array(
+$opts = GetOpt::parse(array(
 	'domain' => array('switch' => 'domain', 'type' => GETOPT_VAL),
 	'job' => array('switch' => 'job', 'type' => GETOPT_VAL),
 	'verbose' => array('switch' => 'verbose', 'type' => GETOPT_SWITCH),

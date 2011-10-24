@@ -116,6 +116,17 @@ GETOPT_KEYVAL
 
 */
 
+/**
+ * Little trick class to make autoloader find this file
+ */
+class GetOpt
+{
+	public static function parse($options, $fromarr = null)
+	{
+		return getopts($options, $fromarr);
+	}
+}
+
 define('GETOPT_NOTSWITCH',0); // Internal use only
 define('GETOPT_SWITCH',1);
 define('GETOPT_ACCUMULATE',2);
