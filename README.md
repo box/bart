@@ -1,12 +1,13 @@
 Bart
 ====
 
-A collection of build and release tools
+*A collection of build and release tools.*
 
 Stop The Line
 -------------
 
-    ./hooks/fail-if-job-unhealthy.php --domain jenkins.com --job the-build "A short commit message"
+```./hooks/fail-if-job-unhealthy.php --domain jenkins.com --job the-build "A short commit message"
+```
 
 Will check the current health of the the "the-build" on the jenkins server
 at jenkins.com. If the job is currently unhealthy, the commit will be rejected
@@ -23,8 +24,7 @@ a symlink and then configure a jenkins host in your environment file. The name
 of the jenkins job, by default, is extracted via the name of your git upstream
 project.
 
-E.g.
-
+```
    cd /etc/bart
    # Configure your personal environment
    echo "declare JENKINS='jenkins.internal-ip.company.com'" >> rc/env
@@ -32,5 +32,5 @@ E.g.
    # Create the symlink to the pre-receive script
    cd /git/projects/your-proj
    ln -s ./hooks/pre-receive /etc/bart/hooks/pre-receive
-
+```
 
