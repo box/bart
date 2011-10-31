@@ -3,6 +3,13 @@ Bart
 
 *A collection of build and release tools.*
 
+PHP Autoloader
+--------------
+
+The Bart Autoloader provides a stackable autoload register. This allows the developer to provide
+several entry points into autoload directory trees. Read more at, 
+http://developers.blog.box.net/2011/10/27/php-autoloader-building-your-own-register/
+
 Stop The Line
 -------------
 
