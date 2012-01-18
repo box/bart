@@ -20,6 +20,11 @@ class Bart_Base_Test_Case extends PHPUnit_Framework_TestCase
 		// Allows us to ensure __this__.tearDown is always run regardless of child
 		if (method_exists($this, 'tear_down')) $this->tear_down();
 	}
+
+	protected function assertArrayKeyNotExists($key, array $array, $message = '')
+	{
+		$this->assertFalse(array_key_exists($key, $array), $message);
+	}
 }
 
 

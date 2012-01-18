@@ -74,53 +74,53 @@ Types and there meanings
 
 GETOPT_SWITCH
 	This is either 0 or 1. No matter how many times it is specified on the command line.
-	
+
 	>PROGRAM -c -c -c -cccc
 	Gives:
 	$opt['c'] = 1;
-	
+
 	>PROGRAM
 	Gives:
 	$opt['c'] = 0
 
 GETOPT_ACCUMULATE
 	Each time this switch is used its value increases.
-	
+
 	>PROGRAM -vvvv
 	Gives:
 	$opt['v'] = 4
 
 GETOPT_VAL
 	This expects a value after its specification.
-	
+
 	>PROGRAM -c 32
 	Gives:
 	$opt['c'] = 32
-	
+
 	Multiple times override each precursive invokation so:
-	
+
 	>PROGRAM -c 32 -c 10 -c 67
 	Gives:
 	$opt['c'] = 67
 
 GETOPT_MULTIVAL
 	The same format as GETOPT_VAL only this allows multiple values. All incomming variables are automatically formatted in an array no matter how few items are present.
-	
+
 	>PROGRAM -c 1 -c 2 -c 3
 	Gives:
 	$opt['c'] = array(1,2,3)
-	
+
 	>PROGRAM -c 1
 	Gives:
 	$opt['c'] = array(1)
-	
+
 	>PROGRAM
 	Gives:
 	$opt['c'] = array()
 
 GETOPT_KEYVAL
 	Allows for key=value specifications.
-	
+
 	>PROGRAM -c key=val -c key2=val2 -c key3=val3 -c key3=val4
 	Gives:
 	$opt['c'] = array('key1' => 'val2','key2' => 'val2','key3' => array('val3','val4');
@@ -177,7 +177,7 @@ function getopts($options,$fromarr = null) {
 			$optionslookup[$props['switch']] = $optitem;
 		}
 	}
-	
+
 	$inswitch = GETOPT_NOTSWITCH;
 	for ($i = 1; $i < count($fromarr); $i++) {
 		switch ($inswitch) {
@@ -229,7 +229,7 @@ function getopts($options,$fromarr = null) {
 				break;
 		}
 	}
-	return $opts;	
+	return $opts;
 }
 
 function GETOPT_setval(&$opts,&$options,$key,$value) {

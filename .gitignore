@@ -1,3 +1,5 @@
 test.php
 *.swp
 rc/env
+/nbproject
+
