@@ -25,6 +25,23 @@ class Bart_Base_Test_Case extends PHPUnit_Framework_TestCase
 	{
 		$this->assertFalse(array_key_exists($key, $array), $message);
 	}
+
+	/**
+	 * Assert that @param closure fails with exception $type and $msg
+	 */
+	protected function assert_error($type, $msg, $closure)
+	{
+		try
+		{
+			$closure();
+			$this->fail("Expected exception, but succeeded. Type $type with $msg");
+		}
+		catch (Exception $e)
+		{
+			$this->assertInstanceOf($type, $e,
+				'Expected thrown exception of type ' . $type);
+			$this->assertEquals($msg, $e->getMessage(),
+				'Expected thrown exception to have msg ' . $msg);
+		}
+	}
 }
-
-
