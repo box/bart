@@ -7,6 +7,7 @@ class Git
 	private static $blame_pattern = '/^(\S*)\s.*?\((.*?)\s(\d{4}-\d{2}-\d{2}).*?\s\d+\)\s(.*)$/';
 	private $git;
 	private $origin;
+	private $shell;
 
 	/**
 	 * @param git_dir The git directory of interest
