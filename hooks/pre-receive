@@ -13,17 +13,18 @@ declare REPO="$(basename $GIT_DIR)"
 declare BART_HOOKS="$(dirname $(readlink $0))"
 
 # Load environment variables; e.g. JENKINS
-[[ -f $BART_HOOKS/../rc/env ]] && . $BART_HOOKS/../rc/env
+declare ENV_FILE="$BART_HOOKS/../etc/bash"
+[[ -f $ENV_FILE ]] && . $ENV_FILE
 
 if [ -z $JENKINS ]; then
 	echo >&2 'Must define a URL for jenkins in $JENKINS variable'
 fi
 
-. $BART_HOOKS/../rc/git-functions
+. $BART_HOOKS/../lib/functions.d/git-functions
 
 # This hook is provided with all commits on all branches that the user has pushed
 # User can push multiple branches at the same time, and multiple commits for each branch
-# The main 'while' loop goes over each branch. 
+# The main 'while' loop goes over each branch.
 # The inner 'for' loop goes ever each commit on that branch
 while true; do
 	read oldhead newhead branch
@@ -50,7 +51,7 @@ while true; do
 	for commit in $(git --git-dir=$GIT_DIR rev-list $oldhead..$newhead)
 	do
 		commitmsg=$(get_commit_message "$commit")
-	
+
 		if [ $? -ne 0 -o -z "$commitmsg" ]; then
 			echo "Error: No commit message found for $commit"
 			exit 1

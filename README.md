@@ -32,9 +32,9 @@ of the jenkins job, by default, is extracted via the name of your git upstream
 project.
 
 ```
-cd /etc/bart
+cd /usr/local/lib/bart
 # Configure your personal environment
-echo "declare JENKINS='jenkins.internal-ip.company.com'" >> rc/env
+echo "declare JENKINS='jenkins.internal-ip.company.com'" >> etc/bash/env
 
 # Create the symlink to the pre-receive script
 # ...which will, in this case, verify the health of job "your proj"
