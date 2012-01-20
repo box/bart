@@ -21,6 +21,10 @@ class Gerrit_Api
 
 	public static function dieselify($me)
 	{
+		Diesel::register_global($me, 'Config_Parser', function() {
+			return new Config_Parser();
+		});
+
 		Diesel::register_global($me, 'Ssh', function($params) {
 			$ssh = new Ssh($params['server']);
 			$ssh->use_auto_user();
