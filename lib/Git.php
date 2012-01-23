@@ -53,6 +53,11 @@ class Git
 		return explode(PHP_EOL, trim($files));
 	}
 
+	public function get_commit_msg($commit_hash)
+	{
+		return $this->shell->shell_exec($this->git . ' show -s --no-color ' . $commit_hash);
+	}
+
 	/**
 	 * @returns array('author', 'subject', 'message')
 	 */
@@ -72,6 +77,21 @@ class Git
 			'subject' => $subject,
 			'message' => $message,
 		);
+	}
+
+	public function get_change_id($commit_hash)
+	{
+		$show = $this->shell->shell_exec($this->git . ' show -s --no-color ' . $commit_hash);
+
+		$matches = array();
+		preg_match("/.*Change-Id: ([Ia-z0-9]*)/", $show, $matches);
+
+		if (count($matches) === 0)
+		{
+			throw new Git_Exception("No Change-Id in commit message for $commit_hash");
+		}
+
+		return $matches[1];
 	}
 
 	/**

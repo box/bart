@@ -29,12 +29,13 @@ class Bart_Base_Test_Case extends PHPUnit_Framework_TestCase
 	/**
 	 * Assert that @param closure fails with exception $type and $msg
 	 */
-	protected function assert_error($type, $msg, $closure)
+	protected function assert_throws($type, $msg, $closure)
 	{
 		try
 		{
 			$closure();
-			$this->fail("Expected exception, but succeeded. Type $type with $msg");
+			$this->fail("Expected exception, but succeeded. "
+					. "Expected - type: $type; msg: $msg");
 		}
 		catch (Exception $e)
 		{

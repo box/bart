@@ -42,7 +42,7 @@ class Diesel_Test extends Bart_Base_Test_Case
   public function test_missing_method()
   {
     $di = new Diesel();
-    $this->assert_error('Exception',
+    $this->assert_throws('Exception',
         'No instantiation method defined for Dependency_Factory_Test '
         . 'dependency on sandpeople',
         function() use ($di) {

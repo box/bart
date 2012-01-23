@@ -6,7 +6,7 @@ class Ssh_Test extends Bart_Base_Test_Case
 {
 	public function test_construct_missing_server()
 	{
-		$this->assert_error('Exception', 'Invalid server ', function() {
+		$this->assert_throws('Exception', 'Invalid server ', function() {
 			$g = new Ssh(null);
 		});
 	}

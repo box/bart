@@ -14,7 +14,7 @@ class Gerrit_Api_Test extends Bart_Base_Test_Case
 
 		$me = $this;
 		$msg = 'Gerrit API Exception: ' . $json;
-		$this->assert_error('Exception', $msg, function() use($g, $me) {
+		$this->assert_throws('Exception', $msg, function() use($g, $me) {
 			$g->get_approved_change($me->change_id, $me->commit_hash);
 		});
 
@@ -37,7 +37,7 @@ class Gerrit_Api_Test extends Bart_Base_Test_Case
 
 		$me = $this;
 		$msg = 'More than one gerrit record matched';
-		$this->assert_error('Exception', $msg, function() use($g, $me) {
+		$this->assert_throws('Exception', $msg, function() use($g, $me) {
 			$g->get_approved_change($me->change_id, $me->commit_hash);
 		});
 
@@ -75,27 +75,18 @@ class Gerrit_Api_Test extends Bart_Base_Test_Case
 			'exit_status' => $status,
 			'output' => $json,
 		);
-		$gerrit_conf = array(
-			'server' => array('host' => '', 'port' => ''),
-		);
+		$gerrit_conf = array('host' => '', 'port' => '');
 
 		$ssh_mock = $this->getMock('Ssh', array(), array(), '', false);
 		$ssh_mock->expects($this->once())
 				->method('execute')
 				->with($this->equalTo($remote_gerrit_cmd))
 				->will($this->returnValue($ssh_result));
-		$parser_mock = $this->getMock('Config_Parser', array(), array(), '', false);
-		$parser_mock->expects($this->once())
-				->method('parse_conf_file')
-				->will($this->returnValue($gerrit_conf));
 		$di = new Diesel();
 		$di->register_local('Gerrit_Api', 'Ssh', function() use($ssh_mock) {
 			return $ssh_mock;
 		});
-		$di->register_local('Gerrit_Api', 'Config_Parser', function() use($parser_mock){
-			return $parser_mock;
-		});
 
-		return new Gerrit_Api($di);
+		return new Gerrit_Api($gerrit_conf, new Witness_Silent(), $di);
 	}
 }

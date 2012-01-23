@@ -4,36 +4,39 @@ require_once $path . 'setup.php';
 
 class Git_Hook_Stop_The_Line_Test extends Bart_Base_Test_Case
 {
-	private $stl;
+	private static $conf = array(
+			'host' => 'jenkins.host.com',
+		);
 
-	public function set_up()
+	public function test_green_jenkins_job_with_configurable_job_name()
 	{
-		Jenkins_Job_Test::mock_metadata(321, 123);
-		$this->stl = new Git_Hook_Stop_The_Line(
-			Jenkins_Job_Test::$domain,
-			Jenkins_Job_Test::$job_name,
-			new Witness_Silent());
+		$conf = self::$conf;
+		$conf['job_name'] = 'jenkins php unit job';
+
+		$stlg = $this->configure_for($conf, true, $conf['job_name']);
+		$stlg['stl']->verify('hash');
 	}
 
-	public function tear_down()
+	public function test_green_jenkins_job_with_default_job_name()
 	{
-		Curl_Helper::$cache = array();
-	}
-
-	public function test_commit_msg_contains_buildfix()
-	{
-		$msg = 'some message {buildfix}';
-		$verified = $this->stl->verify($msg);
-
-		$this->assertTrue($verified, 'Build message contains buildfix');
+		$stlg = $this->configure_for(self::$conf, true, 'Gorg');
+		$stlg['stl']->verify('hash');
 	}
 
 	public function test_commit_msg_does_not_contain_buildfix()
 	{
-		$msg = 'some message';
-		$verified = $this->stl->verify($msg);
+		$stlg = $this->configure_for(self::$conf, false, 'Gorg');
+		$stl = $stlg['stl'];
 
-		$this->assertFalse($verified, 'Build should be rejected');
+		$mock_git = $stlg['git'];
+		$mock_git->expects($this->once())
+			->method('get_commit_msg')
+			->with($this->equalTo('hash'))
+			->will($this->returnValue('The commit message'));
+
+		$this->assert_throws('Exception', 'Jenkins not healthy', function() use($stl) {
+			$stl->verify('hash');
+		});
 	}
 
 	public function test_multi_line_commit_msg_contains_buildfix()
@@ -46,21 +49,47 @@ class Git_Hook_Stop_The_Line_Test extends Bart_Base_Test_Case
 			{buildfix}
 
 			It happened in Monterey';
-		$verified = $this->stl->verify($msg);
 
-		$this->assertTrue($verified, 'Build message contains buildfix');
+		$stlg = $this->configure_for(self::$conf, false, 'Gorg');
+		$stl = $stlg['stl'];
+
+		$mock_git = $stlg['git'];
+		$mock_git->expects($this->once())
+			->method('get_commit_msg')
+			->with($this->equalTo('hash'))
+			->will($this->returnValue($msg));
+
+		$stl->verify('hash');
 	}
 
-	public function test_healthy_build_passes()
+	private function configure_for($conf, $is_healthy, $job_name)
 	{
-		Jenkins_Job_Test::mock_metadata(100, 100);
-		$happy_stl = new Git_Hook_Stop_The_Line(
-			Jenkins_Job_Test::$domain,
-			Jenkins_Job_Test::$job_name,
-			new Witness_Silent());
+		$mock_job = $this->getMock('Jenkins_Job', array(), array(), '', false);
 
-		$verified = $happy_stl->verify('');
-		$this->assertTrue($verified, 'Happy build won\'t need to check the commit message');
+		$mock_job->expects($this->once())
+			->method('is_healthy')
+			->will($this->returnValue($is_healthy));
+
+		$dig = Git_Hook_Base_Test::get_diesel($this, 'Git_Hook_Stop_The_Line');
+		$di = $dig['di'];
+
+		$phpu = $this;
+		$di->register_local('Git_Hook_Stop_The_Line', 'Jenkins_Job',
+			function($params) use($phpu, $conf, $job_name, $mock_job) {
+				$phpu->assertEquals($job_name, $params['job_name'],
+						'Jenkins job name did not match');
+
+				$phpu->assertEquals($conf['host'], $params['host'],
+						'Expected host to match conf');
+
+				return $mock_job;
+		});
+
+		$w = new Witness_Silent();
+		return array(
+			'stl' => new Git_Hook_Stop_The_Line($conf, '', 'Gorg', $w, $di),
+			'git' => $dig['git'],
+		);
 	}
 }
 

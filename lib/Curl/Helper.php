@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @deprecated Use the Curl.php class
+ */
 class Curl_Helper
 {
 	// Hackish way to avoid passing around Curl_Helper instances
@@ -27,7 +30,9 @@ class Curl_Helper
 
 		if ((curl_errno($ch) != 0) || ($html === FALSE))
 		{
-			throw new Exception('Problem contacting ' . $url);
+			$error = curl_error($ch);
+			curl_close($ch);
+			throw new Exception("GET Error for $url, curl error: " . $error);
 		}
 
 		curl_close($ch);
@@ -36,14 +41,14 @@ class Curl_Helper
 	}
 
 	/**
-	 * @param $url {String} The URL to hit. Do NOT include get parameters in this
-	 * @param $get_params {array} An associative array of get parameters
-	 * @param $post_params {array} The data to send in your post
-	 * @param $port {int} The port to which to post
+	 * @param $url The URL to hit. Do NOT include get parameters in this
+	 * @param $get_params An associative array of get parameters
+	 * @param $post_params The data to send in your post
+	 * @param $port The post port
 	 *
-	 * @returns {String} Response
+	 * @return Remote response body as string
 	 */
-	public static function post($url, array $get_params, array $post_params, $port = 86)
+	public static function post($url, array $get_params, array $post_params, $port)
 	{
 		$ch = curl_init($url . '?' . http_build_query($get_params));
 
@@ -54,12 +59,15 @@ class Curl_Helper
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $post_params);
 		curl_setopt($ch, CURLOPT_PORT, $port);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
 		$result = curl_exec($ch);
 
 		if ((curl_errno($ch) != 0) || ($result === FALSE))
 		{
-			throw new Exception('Problem contacting ' . $url);
+			$error = curl_error($ch);
+			curl_close($ch);
+			throw new Exception("Error posting to $url, curl error: " . $error);
 		}
 
 		curl_close($ch);
@@ -67,3 +75,4 @@ class Curl_Helper
 		return $result;
 	}
 }
+

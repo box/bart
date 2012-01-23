@@ -45,7 +45,10 @@ class Jenkins_Job
 	 */
 	private function set_default_params()
 	{
-		$params = $this->metadata['property'][0]['parameterDefinitions'];
+		$properties = $this->metadata['property'];
+		if (count($properties) == 0) return;
+
+		$params = (array) $properties[0]['parameterDefinitions'];
 
 		foreach ($params as $p => $param)
 		{
@@ -138,14 +141,16 @@ class Jenkins_Job
 
 	/**
 	 * Keep polling jenkins every $poll_period seconds until build is complete
+	 * @param $timeout_after Maximum total minutes to poll before giving up
 	 */
-	public function wait_until_complete($poll_period = 1)
+	public function wait_until_complete($poll_period = 1, $timeout_after = 45)
 	{
 		// Poll jenkins until last build number is our build number or greater
 		$last_completed_build_id = $this->last_build_id(true);
-		while ($last_completed_build_id < $this->my_build_id)
+		$started = time();
+		while ($last_completed_build_id < $this->my_build_id
+			&& time() < (60 * $timeout_after) + $started)
 		{
-			// Run forever if build never finishes?
 			sleep($poll_period);
 
 			// Consider persisting curl handle between these requests

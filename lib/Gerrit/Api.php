@@ -8,23 +8,20 @@ class Gerrit_Api
 	private $ssh;
 	private $di;
 
-	public function __construct(Diesel $di = null)
+	/**
+	 * @param array $conf Configurations for reaching Gerrit server
+	 */
+	public function __construct(array $conf, Witness $w = null, Diesel $di = null)
 	{
 		$this->di = $di ?: new Diesel();
+		$this->w = $w ?: new Witness_Silent();
 
-		$parser = $this->di->create($this, 'Config_Parser');
-		$conf = $parser->parse_conf_file(BART_DIR . 'etc/php/gerrit.conf');
-
-		$this->ssh = $this->di->create($this, 'Ssh', array('server' => $conf['server']['host']));
-		$this->ssh->set_port($conf['server']['port']);
+		$this->ssh = $this->di->create($this, 'Ssh', array('server' => $conf['host']));
+		$this->ssh->set_port($conf['port']);
 	}
 
 	public static function dieselify($me)
 	{
-		Diesel::register_global($me, 'Config_Parser', function() {
-			return new Config_Parser();
-		});
-
 		Diesel::register_global($me, 'Ssh', function($params) {
 			$ssh = new Ssh($params['server']);
 			$ssh->use_auto_user();
@@ -59,6 +56,7 @@ class Gerrit_Api
 		$filter_str = self::make_filter_string($filters);
 
 		$remote_query = 'gerrit query --format=JSON ' . $change_id . $filter_str;
+		$this->w->report("Calling gerrit $remote_query");
 		$result = $this->ssh->execute($remote_query);
 
 		if ($result['exit_status'] != 0)

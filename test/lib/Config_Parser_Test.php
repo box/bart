@@ -52,4 +52,14 @@ class Config_Parser_Test extends Bart_Base_Test_Case
 		$this->assertEquals('cyan', $conf['favorites']['color'],
 				'Expected Ryan\'s favorite to take precedence');
 	}
+
+	public function test_with_dashes_in_env_name()
+	{
+		// Does ini handle the dashes OK?
+		$parser = new Config_Parser(array('van-wright'));
+		$conf = $parser->parse_conf_file(BART_DIR . 'test/etc/conf-parser.conf');
+
+		$this->assertEquals('pastel', $conf['favorites']['color'],
+				'Frank Lloyd likes pastels');
+	}
 }
