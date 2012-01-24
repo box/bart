@@ -18,7 +18,9 @@ all of your repositories. It then runs all configured hooks for the repo.
 
 In order to configure behavior for the hook, configure 
 
-```$bart_home/conf/hooks.conf```
+```
+$bart_home/conf/hooks.conf
+```
 
 
 ### Setup
