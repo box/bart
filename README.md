@@ -2,12 +2,32 @@
 
 *A collection of build and release tools.*
 
+A brief overview of the tools included are:
+
++ A stackable PHP Autoload register
++ PHP dependency injection (Diesel)
++ A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP parameter references. E.g. exec($commmand, &$output, &$status);
++ A generic and configurable git hook framework that may be used singularly used by several git projects hosted on the same machine
+
 ## PHP Autoloader
 
 The Bart Autoloader provides a stackable autoload register. This allows the developer to provide
 several entry points into autoload directory trees. Read more at, 
 http://developers.blog.box.net/2011/10/27/php-autoloader-building-your-own-register/
 
+## System Checkout
+
+It can be effective to have a system clone of Bart for use in other scripts, for example the pre-receive hook described below.
+
+Since system checkouts are not really owned or kept up to date by anyone, you'll need a cron to periodically fetch and reset from git hub. For convenience, we've included a script to install a cron for you.
+
+```
+$bart_home/maint/install-cron.sh --help
+```
+
+## Diesel
+
+See ```./lib/Diesel.php``` and ```./test/lib/Diesel_Test.php```
 
 ## Pre-Receive
 
@@ -65,6 +85,7 @@ for example configuration.
     port = 29418
     
     enabled = yes
+
 
 
 
