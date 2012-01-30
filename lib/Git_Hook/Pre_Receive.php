@@ -68,6 +68,9 @@ class Git_Hook_Pre_Receive
 
 		if (!$conf['enabled']) return null;
 
-		return new $class($conf, $this->git_dir, $this->repo, $this->w, $this->di);
+		$w = ($conf['verbose']) ? new Witness() : $this->w;
+		$w->report('...pre-receive verifying ' . $hook_name);
+
+		return new $class($conf, $this->git_dir, $this->repo, $w, $this->di);
 	}
 }

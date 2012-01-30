@@ -67,6 +67,7 @@ class Git_Hook_Pre_Receive_Test extends Bart_Base_Test_Case
 			'pre_receive' => array('names' => 'jenkins'),
 			'jenkins' => array(
 				'class' => 'For_Testing',
+				'verbose' => false,
 				'enabled' => true,
 				'super' => 'duper',
 			),

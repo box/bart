@@ -52,6 +52,7 @@ try
 {
 	$hook = new Git_Hook_Pre_Receive($git_dir, $repo, $witness);
 	$hook->verify_all($hash);
+	$witness->report('All hooks passed');
 }
 catch(Exception $e)
 {
@@ -72,3 +73,4 @@ function verify_param($name)
 	echo2(Escape_Colors::fg_color('red', 'Incorrect parameters: missing ' . $name));
 	show_usage(1);
 }
+

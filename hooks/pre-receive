@@ -17,7 +17,7 @@ declare BART_HOOKS="$(dirname $(readlink $0))"
 # The main 'while' loop goes over each branch.
 # The inner 'for' loop goes ever each commit on that branch
 while true; do
-	read oldhead newhead branch
+	read oldhead newhead branch || exit 0
 
 	# Check if we're done looping thru every branch
 	if [ -z "$oldhead" -a -z "$newhead" -a -z "$branch" ]; then
@@ -26,8 +26,8 @@ while true; do
 
 	# Check if we have everything as expected
 	if [ -z "$oldhead" -o -z "$newhead" -o -z "$branch" ]; then
-		echo "Unexpected: One of the required parameters is empty"
-		echo "oldhead: $oldhead, newhead: $newhead, branch: $branch"
+		echo >&2 "Unexpected: One of the required parameters is empty"
+		echo >&2 "oldhead: $oldhead, newhead: $newhead, branch: $branch"
 
 		exit 1
 	fi
@@ -46,7 +46,7 @@ while true; do
 			--repo $REPO \
 			"$commit_hash"
 
-		if [ $? -ne 0 ]; then
+		if [[ $? -ne 0 ]]; then
 			echo >&2 "
 			Hooks failed."
 			exit 1

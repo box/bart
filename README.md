@@ -66,6 +66,9 @@ This hook checks the health of a jenkins job. See below for example configuratio
     ; Otherwise, use this config to override
     job_name = 'the-build'
     
+    ; Show progress as hook runs
+    verbose = yes
+
     enabled = yes
 
 
@@ -84,6 +87,9 @@ for example configuration.
     host = gerrit.internal-ip.company.com
     port = 29418
     
+    ; Show progress as hook runs
+    verbose = yes
+
     enabled = yes
 
 
