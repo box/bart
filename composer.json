@@ -1,0 +1,21 @@
+{
+  "name": "box/bart",
+  "description": "Build and Release Tools",
+  "keywords": ["bart","dependency injection"],
+  "homepage": "http://github.com/box/bart",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Benjamin VanEvery",
+      "email": "vaenvery@gmail.com",
+      "homepage": "http://asheepapart.blogspot.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.0"
+  },
+  "autoload": {
+    "psr-0": {"bart": "lib/"}
+  }
+}
