@@ -1,10 +1,10 @@
 #!/usr/bin/env bash -e
 #
-# To be executed by git (symbolically link as .git/hooks/pre-receive)
+# To be executed by git (symbolically link as .git/hooks/post-receive)
 # For each commit, verify each hook configured for the repo
 ##
 
-declare HOOK_SCRIPT='pre-receive.php'
+declare HOOK_SCRIPT='post-receive.php'
 
 # TODO Generalize this for upstream names ending in .git
 declare GIT_DIR="$(pwd)"

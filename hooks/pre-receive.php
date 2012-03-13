@@ -50,7 +50,7 @@ $witness = $opts['verbose'] ? new Witness() : new Witness_Silent();
 
 try
 {
-	$hook = new Git_Hook_Pre_Receive($git_dir, $repo, $witness);
+	$hook = new Git_Hook_Pre_Receive_Runner($git_dir, $repo, $witness);
 	$hook->verify_all($hash);
 	$witness->report('All hooks passed');
 }

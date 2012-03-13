@@ -2,7 +2,7 @@
 $path = dirname(dirname(__DIR__)) . '/';
 require_once $path . 'setup.php';
 
-class Git_Hook_Pre_Receive_Test extends Bart_Base_Test_Case
+class Git_Hook_Pre_Receive_Runner_Test extends Bart_Base_Test_Case
 {
 	public function test_conf_key_missing()
 	{
@@ -104,9 +104,9 @@ class Git_Hook_Pre_Receive_Test extends Bart_Base_Test_Case
 			return $mock_conf;
 		};
 		$di = new Diesel();
-		$di->register_local('Git_Hook_Pre_Receive', 'Config_Parser', $create_conf);
+		$di->register_local('Git_Hook_Pre_Receive_Runner', 'Config_Parser', $create_conf);
 
-		$pre_receive = new Git_Hook_Pre_Receive($git_dir, $repo, $w, $di);
+		$pre_receive = new Git_Hook_Pre_Receive_Runner($git_dir, $repo, $w, $di);
 
 		return array('di' => $di, 'pr' => $pre_receive);
 	}

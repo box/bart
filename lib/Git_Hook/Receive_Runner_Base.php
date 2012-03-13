@@ -1,15 +1,15 @@
 <?php
 /**
- * Runs all configured git hooks
+ * Base of pre- and post-receive hooks
  */
-class Git_Hook_Pre_Receive
+class Git_Hook_Receive_Runner_Base
 {
-	private $di;
-	private $git_dir;
-	private $repo;
-	private $hooks;
-	private $conf;
-	private $w;
+	protected $di;
+	protected $git_dir;
+	protected $repo;
+	protected $hooks;
+	protected $conf;
+	protected $w;
 
 	public function __construct($git_dir, $repo, Witness $w, Diesel $di = null)
 	{
@@ -20,7 +20,7 @@ class Git_Hook_Pre_Receive
 
 		$this->git_dir = $git_dir;
 		$this->repo = $repo;
-		$this->hooks = explode(',', $conf['pre_receive']['names']);
+		$this->hooks = explode(',', $conf[static::$type]['names']);
 		$this->conf = $conf;
 		$this->w = $w;
 	}
@@ -69,7 +69,7 @@ class Git_Hook_Pre_Receive
 		if (!$conf['enabled']) return null;
 
 		$w = ($conf['verbose']) ? new Witness() : $this->w;
-		$w->report('...pre-receive verifying ' . $hook_name);
+		$w->report('...' . static::$type . ' verifying ' . $hook_name);
 
 		return new $class($conf, $this->git_dir, $this->repo, $w, $this->di);
 	}
