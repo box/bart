@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -e
+#!/usr/bin/env bash
 #
 # Source this file in a pre- or post-receive hook
 # For each commit, verify each hook configured for the repo
@@ -14,6 +14,11 @@ if [[ -z "$GIT_DIR" || -z "$REPO" || -z "$BART_HOOKS" ]]; then
 	echo >&2 'Missing required metadata variables'
 	exit 1
 fi
+
+# House keeping
+# TODO Ideally, should be its own post-receive hook class
+git --git-dir="$GIT_DIR" update-server-info -f
+git --git-dir="$GIT_DIR" gc --auto
 
 # This hook is provided with all commits on all branches that the user has pushed
 # User can push multiple branches at the same time, and multiple commits for each branch
