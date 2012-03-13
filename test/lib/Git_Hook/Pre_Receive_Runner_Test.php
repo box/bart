@@ -8,7 +8,7 @@ class Git_Hook_Pre_Receive_Runner_Test extends Bart_Base_Test_Case
 	{
 		$repo = 'Isengard';
 		$hook_conf = array(
-			'pre_receive' => array('names' => 'jenkins'),
+			'pre-receive' => array('names' => 'jenkins'),
 		);
 
 		$dipr = $this->configure_for($hook_conf, $repo);
@@ -26,7 +26,7 @@ class Git_Hook_Pre_Receive_Runner_Test extends Bart_Base_Test_Case
 		$repo = 'Isengard';
 		$monty = 'sit_not_appearing_in_this_film';
 		$hook_conf = array(
-			'pre_receive' => array('names' => 'jenkins'),
+			'pre-receive' => array('names' => 'jenkins'),
 			'jenkins' => array('class' => $monty),
 		);
 
@@ -44,7 +44,7 @@ class Git_Hook_Pre_Receive_Runner_Test extends Bart_Base_Test_Case
 	{
 		$repo = 'Isengard';
 		$hook_conf = array(
-			'pre_receive' => array('names' => 'jenkins'),
+			'pre-receive' => array('names' => 'jenkins'),
 			'jenkins' => array(
 				'class' => 'Gerrit_Approved',
 				'enabled' => false,
@@ -64,7 +64,7 @@ class Git_Hook_Pre_Receive_Runner_Test extends Bart_Base_Test_Case
 	{
 		$repo = 'Isengard';
 		$hook_conf = array(
-			'pre_receive' => array('names' => 'jenkins'),
+			'pre-receive' => array('names' => 'jenkins'),
 			'jenkins' => array(
 				'class' => 'For_Testing',
 				'verbose' => false,

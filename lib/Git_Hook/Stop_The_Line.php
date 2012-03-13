@@ -9,13 +9,13 @@ class Git_Hook_Stop_The_Line extends Git_Hook_Base
 	public function __construct(array $conf, $git_dir, $repo, Witness $w, Diesel $di = null)
 	{
 		$stl_conf = $conf['jenkins'];
-		parent::__construct($stl_conf, $git_dir, $repo, $w, $di);
-
 		if (!array_key_exists('job_name', $stl_conf))
 		{
 			// Default to the repo for convenience
 			$stl_conf['job_name'] = $repo;
 		}
+
+		parent::__construct($stl_conf, $git_dir, $repo, $w, $di);
 
 		$this->job = $di->create($this, 'Jenkins_Job', array(
 			'host' => $stl_conf['host'],
