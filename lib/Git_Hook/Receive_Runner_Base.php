@@ -58,19 +58,19 @@ class Git_Hook_Receive_Runner_Base
 		}
 
 		// All configurations for this hook
-		$conf = $this->conf[$hook_name];
-		$class = 'Git_Hook_' . $conf['class'];
+		$hook_conf = $this->conf[$hook_name];
+		$class = 'Git_Hook_' . $hook_conf['class'];
 
 		if (!class_exists($class))
 		{
 			throw new Exception("Class for hook does not exist! ($class)");
 		}
 
-		if (!$conf['enabled']) return null;
+		if (!$hook_conf['enabled']) return null;
 
-		$w = ($conf['verbose']) ? new Witness() : $this->w;
+		$w = ($hook_conf['verbose']) ? new Witness() : $this->w;
 		$w->report('...' . static::$type . ' verifying ' . $hook_name);
 
-		return new $class($conf, $this->git_dir, $this->repo, $w, $this->di);
+		return new $class($this->conf, $this->git_dir, $this->repo, $w, $this->di);
 	}
 }

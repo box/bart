@@ -5,15 +5,16 @@ require_once $path . 'setup.php';
 class Git_Hook_Stop_The_Line_Test extends Bart_Base_Test_Case
 {
 	private static $conf = array(
+		'jenkins' => array(
 			'host' => 'jenkins.host.com',
-		);
+		));
 
 	public function test_green_jenkins_job_with_configurable_job_name()
 	{
 		$conf = self::$conf;
-		$conf['job_name'] = 'jenkins php unit job';
+		$conf['jenkins']['job_name'] = 'jenkins php unit job';
 
-		$stlg = $this->configure_for($conf, true, $conf['job_name']);
+		$stlg = $this->configure_for($conf, true, $conf['jenkins']['job_name']);
 		$stlg['stl']->verify('hash');
 	}
 
@@ -79,7 +80,7 @@ class Git_Hook_Stop_The_Line_Test extends Bart_Base_Test_Case
 				$phpu->assertEquals($job_name, $params['job_name'],
 						'Jenkins job name did not match');
 
-				$phpu->assertEquals($conf['host'], $params['host'],
+				$phpu->assertEquals($conf['jenkins']['host'], $params['host'],
 						'Expected host to match conf');
 
 				return $mock_job;

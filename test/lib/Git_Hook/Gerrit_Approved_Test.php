@@ -4,7 +4,9 @@ require_once $path . 'setup.php';
 
 class Gerrit_Approved_Test extends Bart_Base_Test_Case
 {
-	private static $conf = array('host' => 'gorgoroth.com', 'port' => '42');
+	private static $conf = array('gerrit' =>
+		array('host' => 'gorgoroth.com', 'port' => '42')
+	);
 	private $w;
 
 	public function set_up()
@@ -78,7 +80,7 @@ class Gerrit_Approved_Test extends Bart_Base_Test_Case
 	private function configure_for($change_id, $commit_hash, $mock_g)
 	{
 		$phpu = $this;
-		$conf = self::$conf;
+		$conf = self::$conf['gerrit'];
 		$dig = Git_Hook_Base_Test::get_diesel($this, 'Git_Hook_Gerrit_Approved');
 		$di = $dig['di'];
 		$di->register_local('Git_Hook_Gerrit_Approved', 'Gerrit_Api',

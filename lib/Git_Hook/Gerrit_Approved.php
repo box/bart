@@ -6,8 +6,9 @@ class Git_Hook_Gerrit_Approved extends Git_Hook_Base
 {
 	private $api;
 
-	public function __construct(array $gerrit_conf, $git_dir, $repo, Witness $w, Diesel $di)
+	public function __construct(array $conf, $git_dir, $repo, Witness $w, Diesel $di)
 	{
+		$gerrit_conf = $conf['gerrit'];
 		parent::__construct($gerrit_conf, $git_dir, $repo, $w, $di);
 
 		$this->api = $di->create($this, 'Gerrit_Api',

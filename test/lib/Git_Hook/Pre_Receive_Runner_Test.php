@@ -133,6 +133,6 @@ class Git_Hook_For_Testing extends Git_Hook_Base
 		$phpu = $this->di->create($this, 'phpu');
 		$phpu->assertEquals('Isengard', $this->repo, 'Wrong repo passed');
 		$phpu->assertEquals('.git', $this->dir, 'Wrong git dir passed');
-		$phpu->assertEquals('duper', $this->conf['super'], 'Wrong conf passed');
+		$phpu->assertEquals('duper', $this->conf['jenkins']['super'], 'Wrong conf passed');
 	}
 }

@@ -6,8 +6,9 @@ class Git_Hook_Stop_The_Line extends Git_Hook_Base
 {
 	private $job;
 
-	public function __construct(array $stl_conf, $git_dir, $repo, Witness $w, Diesel $di = null)
+	public function __construct(array $conf, $git_dir, $repo, Witness $w, Diesel $di = null)
 	{
+		$stl_conf = $conf['jenkins'];
 		parent::__construct($stl_conf, $git_dir, $repo, $w, $di);
 
 		if (!array_key_exists('job_name', $stl_conf))
