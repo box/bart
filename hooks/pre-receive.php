@@ -68,7 +68,7 @@ function verify_param($name)
 {
 	global $opts;
 
-	if (isset($opts[$name])) return $opts[$name];
+	if (isset($opts[$name]) && $opts[$name]) return $opts[$name];
 
 	echo2(Escape_Colors::fg_color('red', 'Incorrect parameters: missing ' . $name));
 	show_usage(1);
