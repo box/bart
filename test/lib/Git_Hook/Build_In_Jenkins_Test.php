@@ -11,11 +11,22 @@ class Build_In_Jenkins_Test extends Bart_Base_Test_Case
 			'deploy-job' => 'Vlad, The Deployer',
 		));
 
+	public function test_not_skipped_with_no_justification()
+	{
+		$msg = '{nobuild}';
+		$jg = $this->configure_for(array('jenkins' => array()), $msg, self::$repo);
+
+		// PHP will complain that the configuration is missing the jenkins host
+		$this->assert_throws('Exception', 'Undefined index: host', function() use ($jg) {
+			$jg['j']->verify('HEAD');
+		});
+	}
+
 	public function test_git_skipped()
 	{
 		$msg = 'some message
 
-			{nobuild, reason="Tagging for release"}
+			{nobuild: "Incrementing version number"}
 
 			It happened in Monterey';
 		$jg = $this->configure_for(array('jenkins' => array()), $msg, self::$repo);

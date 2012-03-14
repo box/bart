@@ -31,10 +31,10 @@ class Git_Hook_Build_In_Jenkins extends Git_Hook_Base
 	public function verify($commit_hash)
 	{
 		$msg = $this->git->get_commit_msg($commit_hash);
-		if (preg_match('/\{nobuild\,\sreason=(.+?)\}/', $msg, $matches) > 0)
+		if (preg_match('/\{nobuild\:\s(\".+?\")\}/', $msg, $matches) > 0)
 		{
 			$reason = $matches[1];
-			$this->w->report('Skipping build with reason: ' . $reason);
+			$this->w->report('Skipping build with message: ' . $reason);
 			return;
 		}
 
