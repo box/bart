@@ -5,6 +5,7 @@ require_once $path . 'setup.php';
 class Build_In_Jenkins_Test extends Bart_Base_Test_Case
 {
 	private static $repo = 'Gorgoroth';
+	private static $author = 'Gollum';
 	private static $conf = array(
 		'jenkins' => array(
 			'host' => 'jenkins.host.com',
@@ -43,7 +44,10 @@ class Build_In_Jenkins_Test extends Bart_Base_Test_Case
 		// Build should be submitted to jenkins to deploy the Gorg repository
 		$mock_job->expects($this->once())
 			->method('start')
-			->with($this->equalTo(array('PROJECT_NAME' => self::$repo)));
+			->with($this->equalTo(array(
+				'Project-Name' => self::$repo,
+				'Requested-By' => self::$author,
+			)));
 
 		// Expect a jenkins job created for Vlad
 		$jg['j']->verify('HEAD');
@@ -77,11 +81,16 @@ class Build_In_Jenkins_Test extends Bart_Base_Test_Case
 		$di = $dig['di'];
 
 		$hash = 'HEAD';
+		$info = array(
+			'author' => self::$author,
+			'subject' => '',
+			'message' => $commit_msg,
+		);
 		$mock_git = $dig['git'];
 		$mock_git->expects($this->once())
-			->method('get_commit_msg')
+			->method('get_pretty_email')
 			->with($this->equalTo($hash))
-			->will($this->returnValue($commit_msg));
+			->will($this->returnValue($info));
 
 		$phpu = $this;
 		$mock_job = $this->getMock('Jenkins_Job', array(), array(), '', false);

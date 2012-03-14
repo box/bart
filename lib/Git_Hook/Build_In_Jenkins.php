@@ -30,7 +30,8 @@ class Git_Hook_Build_In_Jenkins extends Git_Hook_Base
 
 	public function verify($commit_hash)
 	{
-		$msg = $this->git->get_commit_msg($commit_hash);
+		$info = $this->git->get_pretty_email($commit_hash);
+		$msg = $info['subject'] . PHP_EOL . $info['message'];
 		if (preg_match('/\{nobuild\:\s(\".+?\")\}/', $msg, $matches) > 0)
 		{
 			$reason = $matches[1];
@@ -43,7 +44,8 @@ class Git_Hook_Build_In_Jenkins extends Git_Hook_Base
 		if (preg_match('/\{deploy}/', $msg, $matches) > 0)
 		{
 			// Submit a deploy job for repo
-			$params['PROJECT_NAME'] = $this->repo;
+			$params['Project-Name'] = $this->repo;
+			$params['Requested-By'] = $info['author'];
 			$job = $this->hook_conf['deploy-job'];
 		}
 
