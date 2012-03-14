@@ -45,8 +45,8 @@ class Build_In_Jenkins_Test extends Bart_Base_Test_Case
 		$mock_job->expects($this->once())
 			->method('start')
 			->with($this->equalTo(array(
-				'Project-Name' => self::$repo,
-				'Requested-By' => self::$author,
+				'Project_Name' => self::$repo,
+				'Requested_By' => self::$author,
 			)));
 
 		// Expect a jenkins job created for Vlad
@@ -61,7 +61,9 @@ class Build_In_Jenkins_Test extends Bart_Base_Test_Case
 		// Build should be submitted for Gorg repo
 		$mock_job->expects($this->once())
 			->method('start')
-			->with($this->equalTo(array()));
+			->with($this->equalTo(array(
+				'GIT_HASH' => 'HEAD',
+			)));
 
 		// Expect a jenkins job created for Vlad
 		$jg['j']->verify('HEAD');

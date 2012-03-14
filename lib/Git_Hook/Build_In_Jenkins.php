@@ -44,9 +44,13 @@ class Git_Hook_Build_In_Jenkins extends Git_Hook_Base
 		if (preg_match('/\{deploy}/', $msg, $matches) > 0)
 		{
 			// Submit a deploy job for repo
-			$params['Project-Name'] = $this->repo;
-			$params['Requested-By'] = $info['author'];
+			$params['Project_Name'] = $this->repo;
+			$params['Requested_By'] = $info['author'];
 			$job = $this->hook_conf['deploy-job'];
+		}
+		else
+		{
+			$params['GIT_HASH'] = $commit_hash;
 		}
 
 		$job = $this->di->create($this, 'Jenkins_Job', array(
