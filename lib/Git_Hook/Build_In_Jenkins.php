@@ -1,7 +1,7 @@
 <?php
 /**
  * Create a build in jenkins for the latest commit. Following exceptions apply:
- * - If commit message contains "{deploy}" then enqueue the :deploy job
+ * - If commit message contains "{deploy}" then enqueue the :deploy-job
  * instead of the normal job.
  * - If commit message contains "{nobuild, reason=*}", then no action is taken
  */
@@ -40,17 +40,19 @@ class Git_Hook_Build_In_Jenkins extends Git_Hook_Base
 		}
 
 		$job = $this->hook_conf['job_name'];
-		$params = array();
-		if (preg_match('/\{deploy}/', $msg, $matches) > 0)
+		// Default parameters that all jobs may use, but may otherwise ignore
+		$params = array(
+			'GIT_HASH' => $commit_hash,
+			'Project_Name' => $this->repo,
+			'Requested_By' => $info['author'],
+		);
+
+		if (preg_match('/\{deploy\}/', $msg, $matches) > 0)
 		{
 			// Submit a deploy job for repo
-			$params['Project_Name'] = $this->repo;
-			$params['Requested_By'] = $info['author'];
 			$job = $this->hook_conf['deploy-job'];
-		}
-		else
-		{
-			$params['GIT_HASH'] = $commit_hash;
+			// For repos whose deploy job is one and the same as the integration job
+			$params['DEPLOY'] = 'true';
 		}
 
 		$job = $this->di->create($this, 'Jenkins_Job', array(

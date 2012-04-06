@@ -47,6 +47,8 @@ class Build_In_Jenkins_Test extends Bart_Base_Test_Case
 			->with($this->equalTo(array(
 				'Project_Name' => self::$repo,
 				'Requested_By' => self::$author,
+				'GIT_HASH' => 'HEAD',
+				'DEPLOY' => 'true',
 			)));
 
 		// Expect a jenkins job created for Vlad
@@ -62,6 +64,8 @@ class Build_In_Jenkins_Test extends Bart_Base_Test_Case
 		$mock_job->expects($this->once())
 			->method('start')
 			->with($this->equalTo(array(
+				'Project_Name' => self::$repo,
+				'Requested_By' => self::$author,
 				'GIT_HASH' => 'HEAD',
 			)));
 
