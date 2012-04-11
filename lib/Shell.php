@@ -25,13 +25,16 @@ class Shell
     return shell_exec($command);
   }
 
-  /**
-   * See http://php.net/manual/en/function.gethostname.php
-   */
-  public function gethostname()
-  {
-    return gethostname();
-  }
+	/**
+	 * Full host name including domain: `hostname -f`
+	 */
+	public function gethostname()
+	{
+		// Classic PHP!
+		// -> On OpenSUSE, gethostname returns only the name of the host
+		// -> On Fedora, gethostname returns the host name and domain
+		return trim($this->shell_exec('hostname -f'));
+	}
 
   public function file_exists($filename)
   {
