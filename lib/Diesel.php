@@ -14,6 +14,11 @@ class Diesel
 
 	// Used by a given instance of the factory
 	private $local_registry = array();
+	// For explicitly instantiating common classes, e.g. $diesel::Shell();
+	private $magic_dependencies = array(
+		'Shell' => 'Shell',
+		'Git' => 'Git',
+	);
 
 	/**
 	 * Register with the global registry. Used for static binding
@@ -38,6 +43,7 @@ class Diesel
 		self::verify_owner_and_class($this->local_registry, $owner, $class);
 
 		$this->local_registry[$owner][$class] = $instantiate;
+		$this->magic_dependencies[$class] = $instantiate;
 	}
 
 	/**
@@ -67,6 +73,36 @@ class Diesel
 		if (array_key_exists($owner, self::$registry)) self::$registry[$owner] = array();
 	}
 
+	/**
+	 * Very commonly used class dependencies may be shared among all diesels and referenced
+	 * using PHP magic method, e.g. $diesel->Shell()
+	 */
+	public function __call($name, $arguments)
+	{
+		if (array_key_exists($name, $this->magic_dependencies))
+		{
+			$classNameOrMockedMethod = $this->magic_dependencies[$name];
+
+			if (is_callable($classNameOrMockedMethod))
+			{
+				// Unfortunately, we can't carry refs through; but perhaps that should
+				// ...help discourage such practices
+				return call_user_func($classNameOrMockedMethod, $arguments);
+			}
+
+            if (count($arguments) == 0)
+			{
+				// TODO Conceivably, this could be optimized to share the same instance of
+				// ...$classNameOrMockedMethod between Diesels for no args constructors
+                return new $classNameOrMockedMethod();
+            }
+			else
+			{
+                $class = new ReflectionClass($classNameOrMockedMethod);
+                return $class->newInstanceArgs($arguments);
+            }
+		}
+	}
 
 	/**
 	 * @param array $registries Diesel registries of instantiators

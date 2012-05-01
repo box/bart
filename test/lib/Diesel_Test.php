@@ -83,4 +83,53 @@ class Diesel_Test extends Bart_Base_Test_Case
             'vger stardate not returned from di::create');
     $this->assertEquals($then, $refs['created'], 'Reference param not changed in closure');
   }
+
+  public function test_magic_dependency_with_registered_method()
+  {
+	  $d = new Diesel();
+	  $d->register_local('Anyone', 'Shell', function() {
+		  return 7; // not really a Shell, just returning some discrete value
+	  });
+
+	  // If magic method works, this will return product of closure registered above
+	  $seven = $d->Shell();
+	  $this->assertEquals(7, $seven, 'Magic method did not return expected value');
+  }
+
+  public function test_magic_dependency_default()
+  {
+	  $d = new Diesel();
+	  $s = $d->Shell();
+	  $real_s = new Shell();
+
+	  $expected = $real_s->gethostname();
+	  $actual = $s->gethostname();
+	  $this->assertEquals($expected, $actual, 'Magic method did not create proper Shell');
+  }
+
+  public function test_magic_dependency_default_with_args()
+  {
+	  $d = new Diesel();
+	  // Rely on local registration to also register Class_With_Params with magic methods
+	  $d->register_local('Anything', 'Class_With_Params', 'Class_With_Params');
+	  // Invoke the magic method -- this time with arguments
+	  $c = $d->Class_With_Params(3, 13);
+
+	  $this->assertEquals(3, $c->a, 'Class_With_Params did not receive expected param a');
+	  $this->assertEquals(13, $c->b, 'Class_With_Params did not receive expected param b');
+  }
+}
+
+/**
+ * Some POPO to hold two properties for testing
+ */
+class Class_With_Params
+{
+	public $a, $b;
+
+	public function __construct($a, $b)
+	{
+		$this->a = $a;
+		$this->b = $b;
+	}
 }
