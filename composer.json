@@ -4,7 +4,7 @@
   "keywords": ["bart","dependency injection"],
   "homepage": "http://github.com/box/bart",
   "type": "library",
-  "license": "MIT",
+  "license": "Apache 2.0",
   "authors": [
     {
       "name": "Benjamin VanEvery",

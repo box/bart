@@ -6,14 +6,14 @@ A brief overview of the tools included are:
 
 + A stackable PHP Autoload register
 + PHP dependency injection (Diesel)
-+ A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP parameter references. E.g. exec($commmand, &$output, &$status);
++ A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP parameter references. E.g. exec($command, &$output, &$status);
 + A generic and configurable git hook framework that may be used singularly used by several git projects hosted on the same machine
 
 ## PHP Autoloader
 
 The Bart Autoloader provides a stackable autoload register. This allows the developer to provide
 several entry points into autoload directory trees. Read more at, 
-http://developers.blog.box.net/2011/10/27/php-autoloader-building-your-own-register/
+http://developers.blog.box.com/2011/10/27/php-autoloader-building-your-own-register/
 
 ## System Checkout
 
@@ -24,6 +24,10 @@ Since system checkouts are not really owned or kept up to date by anyone, you'll
 ```
 $bart_home/maint/install-cron.sh --help
 ```
+
+### Composer
+
+Bart supports the composer dependency format, https://github.com/composer/composer, which can serve as an appealing alternative to crons.
 
 ## Diesel
 
