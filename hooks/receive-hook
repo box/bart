@@ -42,7 +42,7 @@ while true; do
 
 	# TODO generalize this for other branches
 	branch=${branch##refs/heads/}
-	if [ "$branch" != "dev" ]; then
+	if [[ "$branch" != "dev" && "$branch" != "master" ]]; then
 		continue
 	fi
 
