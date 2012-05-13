@@ -1,8 +1,9 @@
 <?php
 namespace Bart\Jenkins;
 
-use Bart\Witness;
 use Bart\Curl;
+use Bart\Diesel;
+use Bart\Witness;
 
 /**
  * Interface to Jenkins jobs
@@ -14,11 +15,12 @@ class Job
 	private $my_build_id;
 	private $metadata;
 	private $witness;
+	private $di;
 
 	/**
 	 * Load metadata about a project
 	 */
-	public function __construct($domain, $job_name, Witness $witness)
+	public function __construct($domain, $job_name, Witness $witness, Diesel $di = null)
 	{
 		if (!$domain)
 		{
@@ -35,6 +37,8 @@ class Job
 		$this->base_job_url = "http://$domain:8080/job/" . rawurlencode($job_name) . '/';
 		$this->witness->report('Base url: ' . $this->base_job_url);
 
+		$this->di = $di ?: new Diesel();
+
 		$this->metadata = $this->get_json(array());
 
 		if (!$this->metadata['buildable'])
@@ -43,6 +47,13 @@ class Job
 		}
 
 		$this->set_default_params();
+	}
+
+	public function dieselify($me)
+	{
+		Diesel::register_global($me, 'Curl', function($params) {
+			return new Curl($params['url'], $params['port']);
+		});
 	}
 
 	/**
@@ -187,11 +198,11 @@ class Job
 	/**
 	 * Curl Jenkins JSON API
 	 *
-	 * @param $resource_items
-	 * @param $post_data if null, then curl uses GET, otherwise POSTs data
+	 * @param array $resource_items
+	 * @param array $post_data if null, then curl uses GET, otherwise POSTs data
 	 * @returns JSON data decoded as PHP array
 	 */
-	private function curl(array $resource_items, $post_data = null)
+	private function curl(array $resource_items, array $post_data = null)
 	{
 		$resource_path = implode('/', $resource_items);
 
@@ -199,9 +210,10 @@ class Job
 		$is_post = ($post_data != null);
 		$this->witness->report('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
 
+		$c = $this->di->create($this, 'Curl', array('url' => $url, 'port' => 8080));
 		$jenkins_json = $is_post ?
-			Curl\Helper::post($url, array(), $post_data, 8080) :
-			Curl\Helper::get($url, array());
+			$c->post('', array(), $post_data) :
+			$c->get('', array());
 
 		return json_decode($jenkins_json, true);
 	}

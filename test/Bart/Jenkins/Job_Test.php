@@ -9,16 +9,17 @@ class Job_Test extends \Bart\Base_Test_Case
 {
 	public static $domain = 'www.norris.com';
 	public static $job_name = 'chuck norris';
+	private $di;
 
-	public function tear_down()
+	public function setUp()
 	{
-		Curl\Helper::$cache = array();
+		$this->di = new Diesel();
 	}
 
 	/**
 	 * Mock the metadata returned by curl
 	 */
-	public static function mock_metadata($last_success, $last_completed)
+	public function configure_for_health_tests($last_success, $last_completed)
 	{
 		$domain = self::$domain;
 		$url = "http://$domain:8080/job/" . rawurlencode(self::$job_name) . '//api/json';
@@ -35,20 +36,42 @@ class Job_Test extends \Bart\Base_Test_Case
 			'lastCompletedBuild' => array('number' => $last_completed),
 		);
 
-		Curl\Helper::$cache[$url] = json_encode($norris_metadata, true);
+		$json = json_encode($norris_metadata, true);
+		$this->configure_diesel($url, $json);
+	}
+
+	/**
+	 * Configure Job for injection of stub Curl with $json
+	 * @param string $url Expected Jenkins URL
+	 * @param JSON $json
+	 */
+	private function configure_diesel($url, $json)
+	{
+		$mock_curl = $this->getMock('\\Bart\\Curl', array(), array(), '', false);
+		$mock_curl->expects($this->once())
+			->method('get')
+			->with($this->equalTo(''), $this->equalTo(array()))
+		    ->will($this->returnValue($json));
+
+		$phpu = $this;
+		$this->di->register_local('Bart\\Jenkins\\Job', 'Curl', function($params) use($phpu, $url, $mock_curl) {
+			$phpu->assertEquals($url, $params['url']);
+			$phpu->assertEquals(8080, $params['port']);
+			return $mock_curl;
+		});
 	}
 
 	public function test_is_healthy()
 	{
-		self::mock_metadata(123, 123);
-		$job = new Job(self::$domain, self::$job_name, new Witness\Silent());
+		$this->configure_for_health_tests(123, 123);
+		$job = new Job(self::$domain, self::$job_name, new Witness\Silent(), $this->di);
 		$this->assertTrue($job->is_healthy(), 'Expected that job would be healthy');
 	}
 
 	public function test_is_unhealthy()
 	{
-		self::mock_metadata(123, 122);
-		$job = new Job(self::$domain, self::$job_name, new Witness\Silent());
+		$this->configure_for_health_tests(123, 122);
+		$job = new Job(self::$domain, self::$job_name, new Witness\Silent(), $this->di);
 		$this->assertFalse($job->is_healthy(), 'Expected that job would be unhealthy');
 	}
 
@@ -57,11 +80,11 @@ class Job_Test extends \Bart\Base_Test_Case
 		$domain = self::$domain;
 		$job_name = self::$job_name;
 		$url = "http://$domain:8080/job/" . rawurlencode($job_name) . '//api/json';
-		Curl\Helper::$cache[$url] = json_encode(array('buildable' => 0), true);
+		$this->configure_diesel($url, json_encode(array('buildable' => 0), true));
 
 		try
 		{
-			new Job($domain, $job_name, new Witness\Silent());
+			new Job($domain, $job_name, new Witness\Silent(), $this->di);
 			$this->fail('Expected exception on disabled job');
 		}
 		catch (\Exception $e)
