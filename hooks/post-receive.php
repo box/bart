@@ -2,10 +2,11 @@
 /**
  * Run all post-receive scripts, failing early if problems
  */
+namespace Bart;
 error_reporting(E_ALL);
 
 $root = dirname(__DIR__) . '/';
-require_once $root . 'lib/bart-common.php';
+require_once $root . 'src/Bart/bart-common.php';
 
 function show_usage($exit_status)
 {
@@ -46,15 +47,15 @@ $git_dir = verify_param('git-dir');
 $repo = verify_param('repo');
 
 $hash = $opts['cmdline'][0];
-$witness = $opts['verbose'] ? new Witness() : new Witness_Silent();
+$witness = $opts['verbose'] ? new Witness() : new Witness\Silent();
 
 try
 {
-	$hook = new Git_Hook_Post_Receive_Runner($git_dir, $repo, $witness);
+	$hook = new Git_Hook\Post_Receive_Runner($git_dir, $repo, $witness);
 	$hook->verify_all($hash);
 	$witness->report('All hooks passed');
 }
-catch(Exception $e)
+catch(\Exception $e)
 {
 	echo <<<MSG
 

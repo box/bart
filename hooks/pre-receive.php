@@ -2,10 +2,11 @@
 /**
  * Run all pre-receive scripts, failing early if problems
  */
+namespace Bart;
 error_reporting(E_ALL);
 
 $root = dirname(__DIR__) . '/';
-require_once $root . 'lib/bart-common.php';
+require_once $root . 'src/Bart/bart-common.php';
 
 function show_usage($exit_status)
 {
@@ -50,11 +51,11 @@ $witness = $opts['verbose'] ? new Witness() : new Witness_Silent();
 
 try
 {
-	$hook = new Git_Hook_Pre_Receive_Runner($git_dir, $repo, $witness);
+	$hook = new Git_Hook\Pre_Receive_Runner($git_dir, $repo, $witness);
 	$hook->verify_all($hash);
 	$witness->report('All hooks passed');
 }
-catch(Exception $e)
+catch(\Exception $e)
 {
 	echo <<<MSG
 

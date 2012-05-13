@@ -1,0 +1,13 @@
+x Create src/Bart
+x Move lib -> src/Bart
+x Change all links to src/Bart (namely require_once lib/bart_common.php) in scripts
+x New autoloader
+x Add namespaces to all classes
+x Make sure all global classes are forward-slashed
+x   Exception
+x   assertThrows \Exception
+-   global functions? -- Not necessary, thank zend.
+x Check all uses of getMock() for prefix with \Bart
+x Check all uses of Diesel for $owner and $class
+x register_local --> for $owner, no leading slash, Bart\\$subpackage\\$className
+x Unit tests -- assert throws needs forward slash
