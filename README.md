@@ -6,8 +6,8 @@ A brief overview of the tools included are:
 
 + A stackable PHP Autoload register
 + PHP dependency injection (Diesel)
-+ A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP parameter references. E.g. exec($command, &$output, &$status);
 + A generic and configurable git hook framework that may be used singularly used by several git projects hosted on the same machine
++ A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP parameter references. E.g. exec($command, &$output, &$status);
 
 ## PHP Autoloader
 
@@ -30,6 +30,10 @@ $bart_home/maint/install-cron.sh --help
 Bart supports the composer dependency format, https://github.com/composer/composer, which can serve as an appealing alternative to crons.
 
 ## Diesel
+
+Diesel is a simple and useful dependency injection framework for PHP. It does not require major changes to your code base, nor does it require odd configurations in non-PHP.
+
+Check out http://box.github.com/eng-services/blog/2012/05/03/introducting-diesel-php-dependency-injection/ for a brief description. Feel free to tweet at us @BoxEngServices with questions.
 
 See ```./lib/Diesel.php``` and ```./test/lib/Diesel_Test.php```
 
