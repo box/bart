@@ -1,9 +1,8 @@
 <?php
 
 /**
- * Autoload classes in defined load paths
- *
- * Default to class hierarchy in ./lib/
+ * Autoloader for PHP4, non-namespaced style classes
+ * Automatically stacks into the spl_register_autoload() method
  */
 class AutoloaderPHP4
 {
@@ -28,9 +27,6 @@ class AutoloaderPHP4
 	{
 		// Should only be run once
 		if (count(self::$load_paths) > 0) return;
-
-		// By default, look here
-		self::$load_paths []= dirname(__DIR__) . '/Bart/';
 	}
 
 	/**
@@ -53,7 +49,7 @@ class AutoloaderPHP4
 		}
 
 		// Class wasn't found!
-		// ...let PHP throw an error
+		// ...let PHP throw an error or try next autoload method
 	}
 
 	/**

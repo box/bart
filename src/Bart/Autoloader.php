@@ -3,6 +3,7 @@ namespace Bart;
 
 /**
  * Autoload classes in defined load paths
+ * Automatically stacks into the spl_register_autoload() method
  *
  * Default to class hierarchy in $BART_DIR/src
  */
@@ -54,7 +55,7 @@ class Autoloader
 		}
 
 		// Class wasn't found!
-		// ...let PHP throw an error
+		// ...let PHP throw an error or try next autoload method
 	}
 
 	/**
