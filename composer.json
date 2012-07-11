@@ -1,9 +1,9 @@
 {
   "name": "box/bart",
-  "description": "Build and Release Tools",
-  "keywords": ["bart","dependency injection"],
-  "homepage": "http://github.com/box/bart",
   "type": "library",
+  "description": "Build and Release Tools for PHP",
+  "keywords": ["bart","dependency injection","phpunit"],
+  "homepage": "http://github.com/box/bart",
   "license": "Apache 2.0",
   "authors": [
     {
@@ -17,5 +17,11 @@
   },
   "autoload": {
     "psr-0": {"Bart": "src/"}
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0.1-dev"
+    }
   }
 }
+
