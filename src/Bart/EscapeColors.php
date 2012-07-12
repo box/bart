@@ -4,7 +4,7 @@ namespace Bart;
 /**
  * Color escapes for bash output
  */
-class Escape_Colors
+class EscapeColors
 {
 	private static $foreground = array(
 		'black' => '0;30',

@@ -15,7 +15,7 @@ class Witness
 	 */
 	public function report($msg = '', $color = null, $eol = true)
 	{
-		$msg = $color ? Escape_Colors::fg_color($color, $msg) : $msg;
+		$msg = $color ? EscapeColors::fg_color($color, $msg) : $msg;
 		$msg = $eol ? $msg . PHP_EOL : $msg;
 
 		echo $msg;
