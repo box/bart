@@ -47,7 +47,7 @@ class Git_Test extends \Bart\Base_Test_Case
 		});
 
 		$git = new Git('.git', 'origin', $di);
-		$this->assert_throws('Bart\\Git_Exception', "Error in fetch: $fail_msg", function() use($git) {
+		$this->assertThrows('Bart\\Git_Exception', "Error in fetch: $fail_msg", function() use($git) {
 			$git->fetch();
 		});
 	}
@@ -67,7 +67,7 @@ class Git_Test extends \Bart\Base_Test_Case
 
 		$git = new Git('', 'origin', $di);
 
-		$this->assert_throws('Bart\\Git_Exception', 'No Change-Id in commit message for hash',
+		$this->assertThrows('Bart\\Git_Exception', 'No Change-Id in commit message for hash',
 			function() use($git) {
 				$git->get_change_id('hash');
 			});

@@ -22,15 +22,15 @@ class Base_Test_Case extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * Assert that @param closure fails with exception $type and $msg
+	 * Assert that $anonFunc fails with exception of $type and $msg
 	 */
-	protected function assert_throws($type, $msg, $closure)
+	protected function assertThrows($type, $msg, $anonFunc)
 	{
 		try
 		{
-			$closure();
-			$this->fail("Expected exception, but succeeded. "
-					. "Expected - type: $type; msg: $msg");
+			$anonFunc();
+			$this->fail('Expected test to fail, but it succeeded. '
+					. "Expected - exception $type; with msg: $msg");
 		}
 		catch (\Exception $e)
 		{

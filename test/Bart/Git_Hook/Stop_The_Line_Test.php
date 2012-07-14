@@ -37,7 +37,7 @@ class Stop_The_Line_Test extends \Bart\Base_Test_Case
 			->with($this->equalTo('hash'))
 			->will($this->returnValue('The commit message'));
 
-		$this->assert_throws('\Exception', 'Jenkins not healthy', function() use($stl) {
+		$this->assertThrows('\Exception', 'Jenkins not healthy', function() use($stl) {
 			$stl->verify('hash');
 		});
 	}

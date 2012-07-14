@@ -57,7 +57,7 @@ class Client_Test extends \Bart\Base_Test_Case
 			->will($this->throwException(new \SoapFault('blah', 'blash')));
 
 		$phpu = $this;
-		$this->assert_throws('Bart\\Jira\\Soap_Exception', 'Authentication failed', function() use($phpu) {
+		$this->assertThrows('Bart\\Jira\\Soap_Exception', 'Authentication failed', function() use($phpu) {
 			$c = new Client($phpu->u, $phpu->p, $phpu->opts, $phpu->di);
 		});
 	}

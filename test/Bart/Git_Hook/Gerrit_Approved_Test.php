@@ -49,7 +49,7 @@ class Gerrit_Approved_Test extends \Bart\Base_Test_Case
 
 		$msg = 'An approved review was not found in Gerrit for commit '
 		. $commit_hash . ' with Change-Id ' . $change_id;
-		$this->assert_throws('\Exception', $msg, function() use($hook, $commit_hash){
+		$this->assertThrows('\Exception', $msg, function() use($hook, $commit_hash){
 			$hook->verify($commit_hash);
 		});
 	}
@@ -70,7 +70,7 @@ class Gerrit_Approved_Test extends \Bart\Base_Test_Case
 		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w, $di);
 
 		$msg = 'Error getting Gerrit review info';
-		$this->assert_throws('\Exception', $msg, function() use($hook, $commit_hash){
+		$this->assertThrows('\Exception', $msg, function() use($hook, $commit_hash){
 			$hook->verify($commit_hash);
 		});
 	}

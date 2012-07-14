@@ -17,7 +17,7 @@ class Build_In_Jenkins_Test extends \Bart\Base_Test_Case
 		$jg = $this->configure_for(array('jenkins' => array()), $msg, self::$repo);
 
 		// PHP will complain that the configuration is missing the jenkins host
-		$this->assert_throws('\Exception', 'Undefined index: host', function() use ($jg) {
+		$this->assertThrows('\Exception', 'Undefined index: host', function() use ($jg) {
 			$jg['j']->verify('HEAD');
 		});
 	}

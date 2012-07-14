@@ -16,7 +16,7 @@ class Api_Test extends \Bart\Base_Test_Case
 
 		$me = $this;
 		$msg = 'Gerrit API Exception: ' . $json;
-		$this->assert_throws('\Exception', $msg, function() use($g, $me) {
+		$this->assertThrows('\Exception', $msg, function() use($g, $me) {
 			$g->get_approved_change($me->change_id, $me->commit_hash);
 		});
 
@@ -39,7 +39,7 @@ class Api_Test extends \Bart\Base_Test_Case
 
 		$me = $this;
 		$msg = 'More than one gerrit record matched';
-		$this->assert_throws('\Exception', $msg, function() use($g, $me) {
+		$this->assertThrows('\Exception', $msg, function() use($g, $me) {
 			$g->get_approved_change($me->change_id, $me->commit_hash);
 		});
 

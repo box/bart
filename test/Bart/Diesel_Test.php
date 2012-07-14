@@ -41,7 +41,7 @@ class Diesel_Test extends \Bart\Base_Test_Case
   public function test_missing_method()
   {
     $di = new Diesel();
-    $this->assert_throws('\Exception',
+    $this->assertThrows('\Exception',
         'No instantiation method defined for Dependency_Factory_Test '
         . 'dependency on sandpeople',
         function() use ($di) {
@@ -157,7 +157,7 @@ class Diesel_Test extends \Bart\Base_Test_Case
 	{
 		Diesel::registerInstantiator('Braynard', function($a, $b) {});
 
-		$this->assert_throws('\Exception', 'A function is already registered for Braynard',
+		$this->assertThrows('\Exception', 'A function is already registered for Braynard',
 			function() {
 				Diesel::registerInstantiator('Braynard', function($a, $b) {});
 			});
@@ -165,7 +165,7 @@ class Diesel_Test extends \Bart\Base_Test_Case
 
 	public function testLocateNew_AnonymousFunctionNonFunction()
 	{
-		$this->assert_throws('\Exception',
+		$this->assertThrows('\Exception',
 				'Only functions may be registered as instantiators',
 				function() {
 					Diesel::registerInstantiator('', '');

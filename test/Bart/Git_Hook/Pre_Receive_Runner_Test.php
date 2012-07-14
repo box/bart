@@ -20,7 +20,7 @@ class Pre_Receive_Runner_Test extends \Bart\Base_Test_Case
 		$closure = function() use ($pre_receive) {
 			$pre_receive->verify_all('doesnt matter');
 		};
-		$this->assert_throws('\Exception', $msg, $closure);
+		$this->assertThrows('\Exception', $msg, $closure);
 	}
 
 	public function test_no_class_exists()
@@ -39,7 +39,7 @@ class Pre_Receive_Runner_Test extends \Bart\Base_Test_Case
 		$closure = function() use ($pre_receive) {
 			$pre_receive->verify_all('doesnt matter');
 		};
-		$this->assert_throws('\Exception', $msg, $closure);
+		$this->assertThrows('\Exception', $msg, $closure);
 	}
 
 	public function test_disabled_class()
