@@ -19,7 +19,7 @@ class Ssh
 	private $shell;
 	private $conf;
 
-	public function __construct($server, Diesel $di = null)
+	public function __construct($server)
 	{
 		if (!is_string($server))
 		{
@@ -29,17 +29,8 @@ class Ssh
 		$this->server = $server;
 		$this->ssh_user = get_current_user();
 
-		$di = $di ?: new Diesel();
-
-		$this->shell = $di->Shell();
-		$this->conf = $di->create($this, 'Config_Parser');
-	}
-
-	public static function dieselify($me)
-	{
-		Diesel::register_global($me, 'Config_Parser', function() {
-			return new Config_Parser();
-		});
+		$this->shell = Diesel::locateNew('Bart\Shell');
+		$this->conf = Diesel::locateNew('Bart\Config_Parser');
 	}
 
 	/**

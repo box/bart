@@ -8,9 +8,10 @@ class Gerrit_Approved_Test extends \Bart\Base_Test_Case
 	);
 	private $w;
 
-	public function set_up()
+	public function setUp()
 	{
 		$this->w = new \Bart\Witness\Silent();
+		parent::setUp();
 	}
 
 	public function test_valid_commit()

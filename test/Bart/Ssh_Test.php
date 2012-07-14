@@ -34,15 +34,14 @@ class Ssh_Test extends \Bart\Base_Test_Case
 				->method('parse_conf_file')
 				->will($this->returnValue($conf_stub));
 
-		$di = new Diesel();
-		$di->register_local('Bart\\Ssh', 'Shell', function() use($mock_shell){
+		Diesel::registerInstantiator('Bart\Shell', function() use($mock_shell) {
 			return $mock_shell;
 		});
-		$di->register_local('Bart\\Ssh', 'Config_Parser', function() use($mock_config){
+		Diesel::registerInstantiator('Bart\Config_Parser', function() use($mock_config) {
 			return $mock_config;
 		});
 
-		$ssh = new Ssh($server, $di);
+		$ssh = new Ssh($server);
 		$ssh->use_auto_user();
 		$result = $ssh->execute($cmd);
 

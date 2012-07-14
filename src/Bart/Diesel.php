@@ -21,6 +21,10 @@ class Diesel
 	private static $registry = array();
 	// List of classes that have been configured globally
 	private static $dieselified = array();
+	/**
+	 * @var boolean Permit instantiation if no record of requested class exists
+	 */
+	private static $allowDefaults = true;
 
 	// Used by a given instance of the factory
 	private $local_registry = array();
@@ -71,6 +75,10 @@ class Diesel
 
 	private static function createInstance($className, array $arguments)
 	{
+		if (!self::$allowDefaults) {
+			throw new \Exception("No singleton or instantiator defined for $className");
+		}
+
 		if (count($arguments) == 0) {
 			return new $className();
 		}
@@ -156,6 +164,14 @@ class Diesel
 	}
 
 	/**
+	 * Require that a method or singleton is defined for all instantiation
+	 */
+	public static function disableDefault()
+	{
+		self::$allowDefaults = false;
+	}
+
+	/**
 	 * Very commonly used class dependencies may be shared among all diesels and referenced
 	 * using PHP magic method, e.g. $diesel->Shell()
 	 */
@@ -207,7 +223,7 @@ class Diesel
 			}
 		}
 
-		if ($dieselify)
+		if ($dieselify && self::$allowDefaults)
 		{
 			self::dieselify($owner);
 			return self::find(array(self::$registry), $owner, $class, false);

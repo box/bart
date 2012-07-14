@@ -118,14 +118,16 @@ class Diesel_Test extends \Bart\Base_Test_Case
 	  $this->assertEquals(13, $c->b, 'DieselTestClassWithParams did not receive expected param b');
   }
 
-	public function testCallStatic_NoArgs()
+	public function testLocateNew_NoArgs()
 	{
+		$this->enableDieselDefaults();
 		$c = Diesel::locateNew('Bart\DieselTestClassNoParams');
 		$this->assertEquals('Bart\DieselTestClassNoParams', get_class($c));
 	}
 
-	public function testCallStatic_WithArgs()
+	public function testLocateNew_WithArgs()
 	{
+		$this->enableDieselDefaults();
 		$c = Diesel::locateNew('Bart\DieselTestClassWithParams', 42, 108);
 		$this->assertEquals('Bart\DieselTestClassWithParams', get_class($c));
 		$this->assertEquals(108, $c->b, 'Property $b of $c');
@@ -168,6 +170,12 @@ class Diesel_Test extends \Bart\Base_Test_Case
 				function() {
 					Diesel::registerInstantiator('', '');
 				});
+	}
+
+	private function enableDieselDefaults()
+	{
+		$prop = Util\Reflection_Helper::get_property('Bart\Diesel', 'allowDefaults');
+		$prop->setValue(null, true);
 	}
 }
 
