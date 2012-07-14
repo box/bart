@@ -1,7 +1,7 @@
 <?php
 namespace Bart\Git_Hook;
 
-class Gerrit_Approved_Test extends \Bart\Base_Test_Case
+class Gerrit_Approved_Test extends \Bart\BaseTestCase
 {
 	private static $conf = array('gerrit' =>
 		array('host' => 'gorgoroth.com', 'port' => '42')

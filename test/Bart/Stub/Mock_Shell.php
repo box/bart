@@ -17,7 +17,7 @@ class Mock_Shell
   private $return_val;
   private $configured = null;
 
-  public function __construct(\Bart\Base_Test_Case $phpunit)
+  public function __construct(\Bart\BaseTestCase $phpunit)
   {
     $this->phpunit = $phpunit;
   }

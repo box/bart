@@ -1,7 +1,7 @@
 <?php
 namespace Bart;
 
-class GetOpts_Test extends \Bart\Base_Test_Case
+class GetOpts_Test extends \Bart\BaseTestCase
 {
 	public function test_parsing()
 	{

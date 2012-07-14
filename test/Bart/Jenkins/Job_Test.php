@@ -5,7 +5,7 @@ use Bart\Witness;
 use Bart\Diesel;
 use Bart\Curl;
 
-class Job_Test extends \Bart\Base_Test_Case
+class Job_Test extends \Bart\BaseTestCase
 {
 	public static $domain = 'www.norris.com';
 	public static $job_name = 'chuck norris';

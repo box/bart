@@ -4,7 +4,7 @@ namespace Bart\Git_Hook;
 use Bart\Diesel;
 use Bart\Witness;
 
-class Pre_Receive_Runner_Test extends \Bart\Base_Test_Case
+class Pre_Receive_Runner_Test extends \Bart\BaseTestCase
 {
 	public function test_conf_key_missing()
 	{

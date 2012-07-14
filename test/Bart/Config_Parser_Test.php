@@ -1,7 +1,7 @@
 <?php
 namespace Bart;
 
-class Config_Parser_Test extends \Bart\Base_Test_Case
+class Config_Parser_Test extends \Bart\BaseTestCase
 {
 	public function test_default_envs()
 	{

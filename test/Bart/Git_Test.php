@@ -1,7 +1,7 @@
 <?php
 namespace Bart;
 
-class Git_Test extends \Bart\Base_Test_Case
+class Git_Test extends \Bart\BaseTestCase
 {
 	public function test_chain_commands()
 	{

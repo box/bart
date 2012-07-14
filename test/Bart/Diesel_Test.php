@@ -1,7 +1,7 @@
 <?php
 namespace Bart;
 
-class Diesel_Test extends \Bart\Base_Test_Case
+class Diesel_Test extends \Bart\BaseTestCase
 {
   public function setUp()
   {

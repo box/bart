@@ -3,7 +3,7 @@ namespace Bart\Jira;
 
 use Bart\Diesel;
 
-class Client_Test extends \Bart\Base_Test_Case
+class Client_Test extends \Bart\BaseTestCase
 {
 	public $di;
 	public $opts;

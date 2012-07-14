@@ -1,7 +1,7 @@
 <?php
 namespace Bart;
 
-class Base_Test_Case extends \PHPUnit_Framework_TestCase
+class BaseTestCase extends \PHPUnit_Framework_TestCase
 {
 	public static function setUpBeforeClass()
 	{

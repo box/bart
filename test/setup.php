@@ -11,5 +11,5 @@ require_once $root . 'src/Bart/bart-common.php';
 
 date_default_timezone_set('America/Los_Angeles');
 
-require_once $root . 'test/Bart/Base_Test_Case.php';
+require_once $root . 'test/Bart/BaseTestCase.php';
 

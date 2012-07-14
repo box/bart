@@ -1,7 +1,7 @@
 <?php
 namespace Bart\Git_Hook;
 
-class Build_In_Jenkins_Test extends \Bart\Base_Test_Case
+class Build_In_Jenkins_Test extends \Bart\BaseTestCase
 {
 	private static $repo = 'Gorgoroth';
 	private static $author = 'Gollum';

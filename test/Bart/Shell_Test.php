@@ -1,7 +1,7 @@
 <?php
 namespace Bart;
 
-class Shell_Test extends \Bart\Base_Test_Case
+class Shell_Test extends \Bart\BaseTestCase
 {
   private function create_mock_shell()
   {

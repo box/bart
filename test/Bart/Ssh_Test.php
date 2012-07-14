@@ -1,7 +1,7 @@
 <?php
 namespace Bart;
 
-class Ssh_Test extends \Bart\Base_Test_Case
+class Ssh_Test extends \Bart\BaseTestCase
 {
 	public function test_construct_missing_server()
 	{

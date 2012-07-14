@@ -4,7 +4,7 @@ namespace Bart\Gerrit;
 use \Bart\Diesel;
 use \Bart\Witness;
 
-class Api_Test extends \Bart\Base_Test_Case
+class Api_Test extends \Bart\BaseTestCase
 {
 	public $change_id = 'Iabcde123f';
 	public $commit_hash = 'abcde123fg';

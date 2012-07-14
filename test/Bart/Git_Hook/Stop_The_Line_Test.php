@@ -4,7 +4,7 @@ namespace Bart\Git_Hook;
 use Bart\Diesel;
 use Bart\Witness;
 
-class Stop_The_Line_Test extends \Bart\Base_Test_Case
+class Stop_The_Line_Test extends \Bart\BaseTestCase
 {
 	private static $conf = array(
 		'jenkins' => array(
