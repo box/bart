@@ -109,20 +109,72 @@ class Diesel_Test extends \Bart\Base_Test_Case
   public function test_magic_dependency_default_with_args()
   {
 	  $d = new Diesel();
-	  // Rely on local registration to also register Class_With_Params with magic methods
-	  $d->register_local('Anything', 'Class_With_Params', 'Class_With_Params');
+	  // Rely on local registration to also register DieselTestClassWithParams with magic methods
+	  $d->register_local('Anything', 'DieselTestClassWithParams', 'DieselTestClassWithParams');
 	  // Invoke the magic method -- this time with arguments
-	  $c = $d->Class_With_Params(3, 13);
+	  $c = $d->DieselTestClassWithParams(3, 13);
 
-	  $this->assertEquals(3, $c->a, 'Class_With_Params did not receive expected param a');
-	  $this->assertEquals(13, $c->b, 'Class_With_Params did not receive expected param b');
+	  $this->assertEquals(3, $c->a, 'DieselTestClassWithParams did not receive expected param a');
+	  $this->assertEquals(13, $c->b, 'DieselTestClassWithParams did not receive expected param b');
   }
+
+	public function testCallStatic_NoArgs()
+	{
+		$c = Diesel::locateNew('Bart\DieselTestClassNoParams');
+		$this->assertEquals('Bart\DieselTestClassNoParams', get_class($c));
+	}
+
+	public function testCallStatic_WithArgs()
+	{
+		$c = Diesel::locateNew('Bart\DieselTestClassWithParams', 42, 108);
+		$this->assertEquals('Bart\DieselTestClassWithParams', get_class($c));
+		$this->assertEquals(108, $c->b, 'Property $b of $c');
+	}
+
+	public function testLocateNew_AnonymousFunctionNoArgs()
+	{
+		Diesel::registerInstantiator('Braynard', function() {
+			return 42;
+		});
+
+		$fortyTwo = Diesel::locateNew('Braynard');
+		$this->assertEquals(42, $fortyTwo, 'forty two');
+	}
+
+	public function testLocateNew_AnonymousFunctionWithArgs()
+	{
+		Diesel::registerInstantiator('Braynard', function($a, $b) {
+			return $b;
+		});
+
+		$fortyTwo = Diesel::locateNew('Braynard', 34, 42);
+		$this->assertEquals(42, $fortyTwo, 'forty two');
+	}
+
+	public function testLocateNew_AnonymousFunctionAlreadyRegistered()
+	{
+		Diesel::registerInstantiator('Braynard', function($a, $b) {});
+
+		$this->assert_throws('\Exception', 'A function is already registered for Braynard',
+			function() {
+				Diesel::registerInstantiator('Braynard', function($a, $b) {});
+			});
+	}
+
+	public function testLocateNew_AnonymousFunctionNonFunction()
+	{
+		$this->assert_throws('\Exception',
+				'Only functions may be registered as instantiators',
+				function() {
+					Diesel::registerInstantiator('', '');
+				});
+	}
 }
 
 /**
  * Some POPO to hold two properties for testing
  */
-class Class_With_Params
+class DieselTestClassWithParams
 {
 	public $a, $b;
 
@@ -131,4 +183,9 @@ class Class_With_Params
 		$this->a = $a;
 		$this->b = $b;
 	}
+}
+
+class DieselTestClassNoParams
+{
+
 }

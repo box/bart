@@ -9,6 +9,14 @@ namespace Bart;
  */
 class Diesel
 {
+	/**
+	 * @var array Registry of all instantiation methods
+	 */
+	private static $instantiators = array();
+	/**
+	 * @var array Registry of all singletons
+	 */
+	private static $singletons = array();
 	// Global dependencies, should be registered by the class itself
 	private static $registry = array();
 	// List of classes that have been configured globally
@@ -21,6 +29,74 @@ class Diesel
 		'Shell' => 'Shell',
 		'Git' => 'Git',
 	);
+
+	/**
+	 * Create an instance of class
+	 * @param string $className Name of the class
+	 * @param array $arguments Any arguments needed by the class
+	 * @return $className New instance of $className($arguments)
+	 */
+	public static function locateNew()
+	{
+		$arguments = func_get_args();
+		$className = array_shift($arguments);
+
+		// If a method has been registered
+		if (array_key_exists($className, self::$instantiators)) {
+			$instantiator = self::$instantiators[$className];
+
+			return call_user_func_array($instantiator, $arguments);
+		}
+
+		return self::createInstance($className, $arguments);
+	}
+
+	/**
+	 * Get singleton instance of this class
+	 * @param type $className
+	 * @return $className Singleton instance of class
+	 */
+	public static function singleton($className)
+	{
+		if (func_num_args() > 1) {
+			throw new Exception('Diesel::singleton only accepts no-argument classes');
+		}
+
+		if (!array_key_exists($className, self::$singletons)) {
+			self::$singletons[$className] = self::createInstance($className, array());
+		}
+
+		return self::$singletons[$className];
+	}
+
+	private static function createInstance($className, array $arguments)
+	{
+		if (count($arguments) == 0) {
+			return new $className();
+		}
+
+		$class = new \ReflectionClass($className);
+		return $class->newInstanceArgs($arguments);
+	}
+
+	/**
+	 * Register the function to create an instance of $className
+	 * @param string $className
+	 * @param function $instantiator Function to create instance of $className
+	 * @testonly
+	 */
+	public static function registerInstantiator($className, $instantiator)
+	{
+		if (!is_callable($instantiator)) {
+			throw new \Exception('Only functions may be registered as instantiators');
+		}
+
+		if (array_key_exists($className, self::$instantiators)) {
+			throw new \Exception("A function is already registered for $className");
+		}
+
+		self::$instantiators[$className] = $instantiator;
+	}
 
 	/**
 	 * Register with the global registry. Used for static binding
@@ -67,12 +143,16 @@ class Diesel
 	}
 
 	/**
-	 * Reset dependency map for $owner
+	 * Reset dependency map for all singletons, instantiators, and any methods for $owner
+	 * @param string $owner [optional] Owning class of the dependency
 	 */
-	public static function reset($owner)
+	public static function reset($owner = '')
 	{
 		$owner = self::get_class_name($owner);
 		if (array_key_exists($owner, self::$registry)) self::$registry[$owner] = array();
+
+		self::$instantiators = array();
+		self::$singletons = array();
 	}
 
 	/**
