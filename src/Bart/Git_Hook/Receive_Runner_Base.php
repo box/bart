@@ -10,18 +10,16 @@ use Bart\Config_Parser;
  */
 class Receive_Runner_Base
 {
-	protected $di;
 	protected $git_dir;
 	protected $repo;
 	protected $hooks;
 	protected $conf;
 	protected $w;
 
-	public function __construct($git_dir, $repo, Witness $w, Diesel $di = null)
+	public function __construct($git_dir, $repo, Witness $w)
 	{
-		$this->di = $di ?: new Diesel();
-
-		$parser = $this->di->create($this, 'Config_Parser', array('repo' => $repo));
+		// Use the repo as the environment when parsing conf
+		$parser = Diesel::locateNew('Bart\Config_Parser', $repo);
 		$conf = $parser->parse_conf_file(BART_DIR . 'etc/php/hooks.conf');
 
 		$this->git_dir = $git_dir;
@@ -29,14 +27,6 @@ class Receive_Runner_Base
 		$this->hooks = explode(',', $conf[static::$type]['names']);
 		$this->conf = $conf;
 		$this->w = $w;
-	}
-
-	public static function dieselify($me)
-	{
-		Diesel::register_global($me, 'Config_Parser', function($params) {
-			// Use the repo as the environment when parsing conf
-			return new Config_Parser(array($params['repo']));
-		});
 	}
 
 	public function verify_all($commit_hash)
@@ -77,6 +67,6 @@ class Receive_Runner_Base
 		$w = ($hook_conf['verbose']) ? new Witness() : $this->w;
 		$w->report('...' . static::$type . ' verifying ' . $hook_name);
 
-		return new $class($this->conf, $this->git_dir, $this->repo, $w, $this->di);
+		return new $class($this->conf, $this->git_dir, $this->repo, $w);
 	}
 }

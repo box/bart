@@ -77,18 +77,22 @@ class Api_Test extends \Bart\BaseTestCase
 			'exit_status' => $status,
 			'output' => $json,
 		);
-		$gerrit_conf = array('host' => '', 'port' => '');
+		$gerrit_conf = array('host' => 'my-gerrit', 'port' => '');
 
 		$ssh_mock = $this->getMock('\\Bart\\Ssh', array(), array(), '', false);
 		$ssh_mock->expects($this->once())
 				->method('execute')
 				->with($this->equalTo($remote_gerrit_cmd))
 				->will($this->returnValue($ssh_result));
-		$di = new Diesel();
-		$di->register_local('Bart\\Gerrit\\Api', 'Ssh', function() use($ssh_mock) {
-			return $ssh_mock;
-		});
 
-		return new Api($gerrit_conf, new Witness\Silent(), $di);
+		$phpu = $this;
+		Diesel::registerInstantiator('Bart\Ssh',
+			function($server) use($ssh_mock, $phpu) {
+				$phpu->assertEquals('my-gerrit', $server, 'ssh server');
+
+				return $ssh_mock;
+			});
+
+		return new Api($gerrit_conf, new Witness\Silent());
 	}
 }

@@ -89,7 +89,7 @@ class Diesel
 
 	/**
 	 * Register the function to create an instance of $className
-	 * @param string $className
+	 * @param string $className Name of class being injected
 	 * @param function $instantiator Function to create instance of $className
 	 * @testonly
 	 */

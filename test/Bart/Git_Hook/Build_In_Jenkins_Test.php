@@ -1,7 +1,7 @@
 <?php
 namespace Bart\Git_Hook;
 
-class Build_In_Jenkins_Test extends \Bart\BaseTestCase
+class Build_In_Jenkins_Test extends TestBase
 {
 	private static $repo = 'Gorgoroth';
 	private static $author = 'Gollum';
@@ -82,29 +82,27 @@ class Build_In_Jenkins_Test extends \Bart\BaseTestCase
 	 */
 	private function configure_for($conf, $commit_msg, $job_name)
 	{
-		$dig = Base_Test::get_diesel($this, 'Bart\\Git_Hook\\Build_In_Jenkins');
-		$di = $dig['di'];
-
 		$hash = 'HEAD';
 		$info = array(
 			'author' => self::$author,
 			'subject' => '',
 			'message' => $commit_msg,
 		);
-		$mock_git = $dig['git'];
+
+		$mock_git = $this->getGitStub();
 		$mock_git->expects($this->once())
 			->method('get_pretty_email')
 			->with($this->equalTo($hash))
 			->will($this->returnValue($info));
 
 		$phpu = $this;
-		$mock_job = $this->getMock('\\Bart\\Jenkins\\Job', array(), array(), '', false);
-		$di->register_local('Bart\\Git_Hook\\Build_In_Jenkins', 'Jenkins_Job',
-			function($params) use($phpu, $conf, $job_name, $mock_job) {
-				$phpu->assertEquals($job_name, $params['job_name'],
+		$mock_job = $this->getMock('\Bart\Jenkins\Job', array(), array(), '', false);
+		\Bart\Diesel::registerInstantiator('Bart\Jenkins\Job',
+			function($host, $name, $w) use($phpu, $conf, $job_name, $mock_job) {
+				$phpu->assertEquals($job_name, $name,
 						'Jenkins job name did not match');
 
-				$phpu->assertEquals($conf['jenkins']['host'], $params['host'],
+				$phpu->assertEquals($conf['jenkins']['host'], $host,
 						'Expected host to match conf');
 
 				return $mock_job;
@@ -112,7 +110,7 @@ class Build_In_Jenkins_Test extends \Bart\BaseTestCase
 
 		$w = new \Bart\Witness\Silent();
 		return array(
-			'j' => new Build_In_Jenkins($conf, '', self::$repo, $w, $di),
+			'j' => new Build_In_Jenkins($conf, '', self::$repo, $w),
 			'git' => $mock_git,
 			'job' => $mock_job,
 		);

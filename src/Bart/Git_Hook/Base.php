@@ -12,7 +12,6 @@ abstract class Base
 {
 	protected $hook_conf;
 	protected $repo;
-	protected $di;
 	protected $git;
 	protected $w;
 
@@ -20,14 +19,13 @@ abstract class Base
 	 * @param array $hook_conf Configuration for this hook type
 	 * @param type $repo Name of the repository
 	 */
-	public function __construct(array $hook_conf, $git_dir, $repo, Witness $w, Diesel $di)
+	public function __construct(array $hook_conf, $git_dir, $repo, Witness $w)
 	{
 		$this->hook_conf = $hook_conf;
 		$this->repo = $repo;
 		$this->w = $w;
-		$this->di = $di ?: new Diesel();
 
-		$this->git = $di->create($this, 'Git', array('git_dir' => $git_dir));
+		$this->git = Diesel::locateNew('Bart\Git', $git_dir);
 	}
 
 	/**

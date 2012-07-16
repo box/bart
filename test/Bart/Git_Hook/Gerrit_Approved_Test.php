@@ -1,7 +1,7 @@
 <?php
 namespace Bart\Git_Hook;
 
-class Gerrit_Approved_Test extends \Bart\BaseTestCase
+class Gerrit_Approved_Test extends TestBase
 {
 	private static $conf = array('gerrit' =>
 		array('host' => 'gorgoroth.com', 'port' => '42')
@@ -19,16 +19,16 @@ class Gerrit_Approved_Test extends \Bart\BaseTestCase
 		$change_id = 'Iabcde123';
 		$commit_hash = 'abcde123';
 
-		$mock_g = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
-		$mock_g->expects($this->once())
+		$mockApi = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
+		$mockApi->expects($this->once())
 			->method('get_approved_change')
 			->with($this->equalTo($change_id), $this->equalTo($commit_hash))
 					// Just some non-null value
 			->will($this->returnValue(array('id' => $change_id)));
 
-		$di = $this->configure_for($change_id, $commit_hash, $mock_g);
+		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w, $di);
+		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w);
 		$hook->verify($commit_hash);
 	}
 
@@ -37,15 +37,15 @@ class Gerrit_Approved_Test extends \Bart\BaseTestCase
 		$change_id = 'Iabcde123';
 		$commit_hash = 'abcde123';
 
-		$mock_g = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
-		$mock_g->expects($this->once())
+		$mockApi = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
+		$mockApi->expects($this->once())
 			->method('get_approved_change')
 			->with($this->equalTo($change_id), $this->equalTo($commit_hash))
 			->will($this->returnValue(null));
 
-		$di = $this->configure_for($change_id, $commit_hash, $mock_g);
+		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w, $di);
+		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w);
 
 		$msg = 'An approved review was not found in Gerrit for commit '
 		. $commit_hash . ' with Change-Id ' . $change_id;
@@ -59,15 +59,15 @@ class Gerrit_Approved_Test extends \Bart\BaseTestCase
 		$change_id = 'Iabcde123';
 		$commit_hash = 'abcde123';
 
-		$mock_g = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
-		$mock_g->expects($this->once())
+		$mockApi = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
+		$mockApi->expects($this->once())
 			->method('get_approved_change')
 			->with($this->equalTo($change_id), $this->equalTo($commit_hash))
 			->will($this->throwException(new \Exception()));
 
-		$di = $this->configure_for($change_id, $commit_hash, $mock_g);
+		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w, $di);
+		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w);
 
 		$msg = 'Error getting Gerrit review info';
 		$this->assertThrows('\Exception', $msg, function() use($hook, $commit_hash){
@@ -75,26 +75,22 @@ class Gerrit_Approved_Test extends \Bart\BaseTestCase
 		});
 	}
 
-	private function configure_for($change_id, $commit_hash, $mock_g)
+	private function configure_for($change_id, $commit_hash, $mockApi)
 	{
 		$phpu = $this;
 		$conf = self::$conf['gerrit'];
-		$dig = Base_Test::get_diesel($this, 'Bart\\Git_Hook\\Gerrit_Approved');
-		$di = $dig['di'];
-		$di->register_local('Bart\\Git_Hook\\Gerrit_Approved', '\\Bart\\Gerrit\\Api',
-			function($params) use($phpu, $conf, $mock_g) {
-				$phpu->assertEquals($conf, $params['gerrit_conf'],
+		$mock_git = $this->getGitStub();
+		\Bart\Diesel::registerInstantiator('Bart\Gerrit\Api',
+			function($gerritConf) use($phpu, $conf, $mockApi) {
+				$phpu->assertEquals($conf, $gerritConf,
 						'Expected params to contain gerrit conf');
 
-				return $mock_g;
+				return $mockApi;
 			});
 
-		$mock_git = $dig['git'];
 		$mock_git->expects($this->once())
 			->method('get_change_id')
 			->with($this->equalTo($commit_hash))
 			->will($this->returnValue($change_id));
-
-		return $di;
 	}
 }

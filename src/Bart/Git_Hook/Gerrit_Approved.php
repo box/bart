@@ -11,22 +11,12 @@ class Gerrit_Approved extends Base
 {
 	private $api;
 
-	public function __construct(array $conf, $git_dir, $repo, Witness $w, Diesel $di)
+	public function __construct(array $conf, $git_dir, $repo, Witness $w)
 	{
 		$gerrit_conf = $conf['gerrit'];
-		parent::__construct($gerrit_conf, $git_dir, $repo, $w, $di);
+		parent::__construct($gerrit_conf, $git_dir, $repo, $w);
 
-		$this->api = $di->create($this, '\\Bart\\Gerrit\\Api',
-				array('gerrit_conf' => $gerrit_conf, 'w' => $w));
-	}
-
-	public static function dieselify($me)
-	{
-		parent::dieselify($me);
-
-		Diesel::register_global($me, '\\Bart\\Gerrit\\Api', function($params) {
-			return new \Bart\Gerrit\Api($params['gerrit_conf'], $params['w']);
-		});
+		$this->api = Diesel::locateNew('Bart\\Gerrit\\Api', $gerrit_conf, $w);
 	}
 
 	public function verify($commit_hash)

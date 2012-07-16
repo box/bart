@@ -6,48 +6,27 @@ use Bart\Git;
 
 class Base_Test extends \Bart\BaseTestCase
 {
-	public function test_constructor()
+	public function testConstructor()
 	{
 		$conf = array();
 
 		// mock git and method get_change_id to return $repo
-		$mock_git = $this->getMock('\\Bart\\Git', array(), array(), '', false);
+		$mock_git = $this->getMock('\Bart\Git', array(), array(), '', false);
 		$mock_git->expects($this->once())
 				->method('get_change_id')
 				->will($this->returnValue('grinder'));
 
 		$phpu = $this;
-		$di = new Diesel();
-		$di->register_local('Bart\\Git_Hook\\Test_Git_Hook', 'Git',
-			function($params) use($mock_git, $phpu) {
-				$phpu->assertEquals('.git', $params['git_dir'],
+		Diesel::registerInstantiator('Bart\Git',
+			function($gitDir) use($mock_git, $phpu) {
+				$phpu->assertEquals('.git', $gitDir,
 						'Expected constructor to get git dir');
 
 				return $mock_git;
 		});
 
-		$hook = new Test_Git_Hook($conf, '.git', 'grinder', $di);
+		$hook = new Test_Git_Hook($conf, '.git', 'grinder');
 		$hook->verify($this);
-	}
-
-	/**
-	 * @return array(
-	 * 	'di' => Diesel to use in tests for Git_Hook_Base implementors,
-	 *  'git' => mock_git that was registered for $class_name
-	 * );
-	 */
-	public static function get_diesel($phpu, $class_name)
-	{
-		// mock git and method get change id to return $repo
-		$mock_git = $phpu->getMock('\\Bart\\Git', array(), array(), '', false);
-
-		$di = new Diesel();
-		$di->register_local($class_name, 'Git',
-			function($params) use($mock_git) {
-				return $mock_git;
-		});
-
-		return array('di' => $di, 'git' => $mock_git);
 	}
 }
 
@@ -56,9 +35,9 @@ class Base_Test extends \Bart\BaseTestCase
  */
 class Test_Git_Hook extends Base
 {
-	public function __construct(array $hook_conf, $git_dir, $repo, Diesel $di)
+	public function __construct(array $hook_conf, $git_dir, $repo)
 	{
-		parent::__construct($hook_conf, $git_dir, $repo, new \Bart\Witness(), $di);
+		parent::__construct($hook_conf, $git_dir, $repo, new \Bart\Witness());
 	}
 
 	public function verify($phpu)

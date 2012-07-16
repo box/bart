@@ -4,7 +4,7 @@ namespace Bart\Git_Hook;
 use Bart\Diesel;
 use Bart\Witness;
 
-class Stop_The_Line_Test extends \Bart\BaseTestCase
+class Stop_The_Line_Test extends TestBase
 {
 	private static $conf = array(
 		'jenkins' => array(
@@ -73,25 +73,24 @@ class Stop_The_Line_Test extends \Bart\BaseTestCase
 			->method('is_healthy')
 			->will($this->returnValue($is_healthy));
 
-		$dig = Base_Test::get_diesel($this, 'Bart\\Git_Hook\\Stop_The_Line');
-		$di = $dig['di'];
+		$gitStub = $this->getGitStub();
 
 		$phpu = $this;
-		$di->register_local('Bart\\Git_Hook\\Stop_The_Line', 'Jenkins_Job',
-			function($params) use($phpu, $conf, $job_name, $mock_job) {
-				$phpu->assertEquals($job_name, $params['job_name'],
-						'Jenkins job name did not match');
+		\Bart\Diesel::registerInstantiator('Bart\Jenkins\Job',
+			function($host, $jobNameParam) use($phpu, $conf, $job_name, $mock_job) {
+				$phpu->assertEquals($job_name, $jobNameParam,
+						'Jenkins job name');
 
-				$phpu->assertEquals($conf['jenkins']['host'], $params['host'],
-						'Expected host to match conf');
+				$phpu->assertEquals($conf['jenkins']['host'], $host,
+						'Jenkins host');
 
 				return $mock_job;
 		});
 
 		$w = new Witness\Silent();
 		return array(
-			'stl' => new Stop_The_Line($conf, '', 'Gorg', $w, $di),
-			'git' => $dig['git'],
+			'stl' => new Stop_The_Line($conf, '', 'Gorg', $w),
+			'git' => $gitStub,
 		);
 	}
 }

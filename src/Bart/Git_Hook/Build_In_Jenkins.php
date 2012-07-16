@@ -13,7 +13,7 @@ use Bart\Jenkins\Job;
  */
 class Build_In_Jenkins extends Base
 {
-	public function __construct(array $conf, $git_dir, $repo, Witness $w, Diesel $di = null)
+	public function __construct(array $conf, $git_dir, $repo, Witness $w)
 	{
 		$jenkins_conf = $conf['jenkins'];
 		if (!array_key_exists('job_name', $jenkins_conf))
@@ -22,16 +22,7 @@ class Build_In_Jenkins extends Base
 			$jenkins_conf['job_name'] = $repo;
 		}
 
-		parent::__construct($jenkins_conf, $git_dir, $repo, $w, $di);
-	}
-
-	public static function dieselify($me)
-	{
-		parent::dieselify($me);
-
-		Diesel::register_global($me, 'Jenkins_Job', function($params) {
-			return new Job($params['host'], $params['job_name'], $params['w']);
-		});
+		parent::__construct($jenkins_conf, $git_dir, $repo, $w);
 	}
 
 	public function verify($commit_hash)
@@ -45,7 +36,7 @@ class Build_In_Jenkins extends Base
 			return;
 		}
 
-		$job = $this->hook_conf['job_name'];
+		$jobName = $this->hook_conf['job_name'];
 		// Default parameters that all jobs may use, but may otherwise ignore
 		$params = array(
 			'GIT_HASH' => $commit_hash,
@@ -56,16 +47,14 @@ class Build_In_Jenkins extends Base
 		if (preg_match('/\{deploy\}/', $msg, $matches) > 0)
 		{
 			// Submit a deploy job for repo
-			$job = $this->hook_conf['deploy-job'];
+			$jobName = $this->hook_conf['deploy-job'];
 			// For repos whose deploy job is one and the same as the integration job
 			$params['DEPLOY'] = 'true';
 		}
 
-		$job = $this->di->create($this, 'Jenkins_Job', array(
-			'host' => $this->hook_conf['host'],
-			'job_name' => $job,
-			'w' => $this->w,
-		));
+		// return new Job($params['host'], $params['job_name'], $params['w']);
+		$job = Diesel::locateNew('Bart\Jenkins\Job',
+				$this->hook_conf['host'], $jobName, $this->w);
 
 		$job->start($params);
 	}

@@ -12,7 +12,7 @@ class Stop_The_Line extends Base
 {
 	private $job;
 
-	public function __construct(array $conf, $git_dir, $repo, Witness $w, Diesel $di = null)
+	public function __construct(array $conf, $git_dir, $repo, Witness $w)
 	{
 		$stl_conf = $conf['jenkins'];
 		if (!array_key_exists('job_name', $stl_conf))
@@ -21,22 +21,10 @@ class Stop_The_Line extends Base
 			$stl_conf['job_name'] = $repo;
 		}
 
-		parent::__construct($stl_conf, $git_dir, $repo, $w, $di);
+		parent::__construct($stl_conf, $git_dir, $repo, $w);
 
-		$this->job = $di->create($this, 'Jenkins_Job', array(
-			'host' => $stl_conf['host'],
-			'job_name' => $stl_conf['job_name'],
-			'w' => $w,
-		));
-	}
-
-	public static function dieselify($me)
-	{
-		parent::dieselify($me);
-
-		Diesel::register_global($me, 'Jenkins_Job', function($params) {
-			return new Jenkins\Job($params['host'], $params['job_name'], $params['w']);
-		});
+		$this->job = Diesel::locateNew('Bart\Jenkins\Job',
+				$stl_conf['host'], $stl_conf['job_name'], $w);
 	}
 
 	public function verify($commit_hash)

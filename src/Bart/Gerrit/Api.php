@@ -11,28 +11,17 @@ use Bart\Ssh;
 class Api
 {
 	private $ssh;
-	private $di;
 
 	/**
 	 * @param array $conf Configurations for reaching Gerrit server
 	 */
-	public function __construct(array $conf, Witness $w = null, Diesel $di = null)
+	public function __construct(array $conf, Witness $w = null)
 	{
-		$this->di = $di ?: new Diesel();
 		$this->w = $w ?: new Witness\Silent();
 
-		$this->ssh = $this->di->create($this, 'Ssh', array('server' => $conf['host']));
+		$this->ssh = Diesel::locateNew('Bart\Ssh', $conf['host']);
+		$this->ssh->use_auto_user();
 		$this->ssh->set_port($conf['port']);
-	}
-
-	public static function dieselify($me)
-	{
-		Diesel::register_global($me, 'Ssh', function($params) {
-			$ssh = new Ssh($params['server']);
-			$ssh->use_auto_user();
-
-			return $ssh;
-		});
 	}
 
 	/**
