@@ -23,7 +23,7 @@ class Client
 	{
 		$wsdl = $options['wsdl'];
 		unset($options['wsdl']);
-		$this->soap = Diesel::locateNew('\\SoapClient', $wsdl, $options);
+		$this->soap = Diesel::create('\\SoapClient', $wsdl, $options);
 
 		try
 		{

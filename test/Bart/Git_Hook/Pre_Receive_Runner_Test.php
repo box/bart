@@ -124,7 +124,7 @@ class For_Testing extends Base
 	public function verify($commit_hash)
 	{
 		// Make sure everything got passed through as expected
-		$phpu = Diesel::locateNew('phpu');
+		$phpu = Diesel::create('phpu');
 		$phpu->assertEquals('Isengard', $this->repo, 'Wrong repo passed');
 		$phpu->assertEquals('.git', $this->dir, 'Wrong git dir passed');
 		$phpu->assertEquals('duper', $this->conf['jenkins']['super'], 'Wrong conf passed');

@@ -200,7 +200,7 @@ class Job
 		$is_post = ($post_data != null);
 		$this->witness->report('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
 
-		$c = Diesel::locateNew('Bart\Curl', $url, 8080);
+		$c = Diesel::create('Bart\Curl', $url, 8080);
 		$jenkins_json = $is_post ?
 			$c->post('', array(), $post_data) :
 			$c->get('', array());

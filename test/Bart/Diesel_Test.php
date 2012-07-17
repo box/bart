@@ -6,14 +6,14 @@ class Diesel_Test extends \Bart\BaseTestCase
 	public function testLocateNew_NoArgs()
 	{
 		$this->enableDieselDefaults();
-		$c = Diesel::locateNew('Bart\DieselTestClassNoParams');
+		$c = Diesel::create('Bart\DieselTestClassNoParams');
 		$this->assertInstanceOf('Bart\DieselTestClassNoParams', $c);
 	}
 
 	public function testLocateNew_WithArgs()
 	{
 		$this->enableDieselDefaults();
-		$c = Diesel::locateNew('Bart\DieselTestClassWithParams', 42, 108);
+		$c = Diesel::create('Bart\DieselTestClassWithParams', 42, 108);
 		$this->assertInstanceOf('Bart\DieselTestClassWithParams', $c);
 		$this->assertEquals(108, $c->b, 'Property $b of $c');
 	}
@@ -24,7 +24,7 @@ class Diesel_Test extends \Bart\BaseTestCase
 			return 42;
 		});
 
-		$fortyTwo = Diesel::locateNew('Braynard');
+		$fortyTwo = Diesel::create('Braynard');
 		$this->assertEquals(42, $fortyTwo, 'forty two');
 	}
 
@@ -34,7 +34,7 @@ class Diesel_Test extends \Bart\BaseTestCase
 			return $b;
 		});
 
-		$fortyTwo = Diesel::locateNew('Braynard', 34, 42);
+		$fortyTwo = Diesel::create('Braynard', 34, 42);
 		$this->assertEquals(42, $fortyTwo, 'forty two');
 	}
 
@@ -62,9 +62,9 @@ class Diesel_Test extends \Bart\BaseTestCase
 		return;
 
 		// This won't work because we can't pass $c as undef because
-		// locateNew signature doesn't specify a reference param
+		// create signature doesn't specify a reference param
 		$this->enableDieselDefaults();
-		$class = Diesel::locateNew('Bart\DieselTestClassWithParams', 1, 2, $c);
+		$class = Diesel::create('Bart\DieselTestClassWithParams', 1, 2, $c);
 		$this->assertInstanceOf('Bart\DieselTestClassWithParams', $class);
 		$this->assertEquals('Bart\DieselTestClassWithParams', $c, 'ref param');
 	}

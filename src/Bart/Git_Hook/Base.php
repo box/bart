@@ -25,7 +25,7 @@ abstract class Base
 		$this->repo = $repo;
 		$this->w = $w;
 
-		$this->git = Diesel::locateNew('Bart\Git', $git_dir);
+		$this->git = Diesel::create('Bart\Git', $git_dir);
 	}
 
 	/**

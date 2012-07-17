@@ -53,7 +53,7 @@ class Build_In_Jenkins extends Base
 		}
 
 		// return new Job($params['host'], $params['job_name'], $params['w']);
-		$job = Diesel::locateNew('Bart\Jenkins\Job',
+		$job = Diesel::create('Bart\Jenkins\Job',
 				$this->hook_conf['host'], $jobName, $this->w);
 
 		$job->start($params);

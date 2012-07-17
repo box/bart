@@ -16,7 +16,7 @@ class Gerrit_Approved extends Base
 		$gerrit_conf = $conf['gerrit'];
 		parent::__construct($gerrit_conf, $git_dir, $repo, $w);
 
-		$this->api = Diesel::locateNew('Bart\\Gerrit\\Api', $gerrit_conf, $w);
+		$this->api = Diesel::create('Bart\\Gerrit\\Api', $gerrit_conf, $w);
 	}
 
 	public function verify($commit_hash)

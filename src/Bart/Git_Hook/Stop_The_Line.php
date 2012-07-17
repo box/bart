@@ -23,7 +23,7 @@ class Stop_The_Line extends Base
 
 		parent::__construct($stl_conf, $git_dir, $repo, $w);
 
-		$this->job = Diesel::locateNew('Bart\Jenkins\Job',
+		$this->job = Diesel::create('Bart\Jenkins\Job',
 				$stl_conf['host'], $stl_conf['job_name'], $w);
 	}
 

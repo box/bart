@@ -28,7 +28,7 @@ class Diesel
 	 * @param array $arguments Any arguments needed by the class
 	 * @return $className New instance of $className($arguments)
 	 */
-	public static function locateNew()
+	public static function create()
 	{
 		$arguments = func_get_args();
 		$className = array_shift($arguments);
@@ -78,7 +78,7 @@ class Diesel
 		}
 
 		// LIMITATION: cannot pass by reference due to dynamic evaluation of
-		// ...$arguments in locateNew();
+		// ...$arguments in create();
 		return $class->newInstanceArgs($arguments);
 	}
 

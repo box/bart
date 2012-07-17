@@ -29,8 +29,8 @@ class Ssh
 		$this->server = $server;
 		$this->ssh_user = get_current_user();
 
-		$this->shell = Diesel::locateNew('Bart\Shell');
-		$this->conf = Diesel::locateNew('Bart\Config_Parser');
+		$this->shell = Diesel::create('Bart\Shell');
+		$this->conf = Diesel::create('Bart\Config_Parser');
 	}
 
 	/**

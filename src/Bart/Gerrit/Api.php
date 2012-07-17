@@ -19,7 +19,7 @@ class Api
 	{
 		$this->w = $w ?: new Witness\Silent();
 
-		$this->ssh = Diesel::locateNew('Bart\Ssh', $conf['host']);
+		$this->ssh = Diesel::create('Bart\Ssh', $conf['host']);
 		$this->ssh->use_auto_user();
 		$this->ssh->set_port($conf['port']);
 	}
