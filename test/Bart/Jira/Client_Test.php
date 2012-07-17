@@ -5,7 +5,6 @@ use Bart\Diesel;
 
 class Client_Test extends \Bart\BaseTestCase
 {
-	public $di;
 	public $opts;
 	public $soap;
 	public $u = 'username';
@@ -14,9 +13,9 @@ class Client_Test extends \Bart\BaseTestCase
 
 	public function setUp()
 	{
-		$this->di = new Diesel();
-		$this->opts = array('wsdl' => 'some random path');
+		$this->opts = array('wsdl' => 'some random path', 'key' => 'val');
 		$this->soap = $this->getMock('\\SoapClient', array(), array(), '', false);
+		parent::setUp();
 	}
 
 	/**
@@ -25,10 +24,12 @@ class Client_Test extends \Bart\BaseTestCase
 	private function register_soap_with_diesel()
 	{
 		$phpu = $this;
-		$this->di->register_local('Bart\\Jira\\Client', 'SoapClient', function($params) use($phpu) {
-			$phpu->assertEquals($phpu->opts, $params['options']);
-			return $phpu->soap;
-		});
+		Diesel::registerInstantiator('\\SoapClient',
+			function($wsdl, $options) use($phpu) {
+				$phpu->assertEquals($phpu->opts['wsdl'], $wsdl, 'wsdl');
+				$phpu->assertEquals($phpu->opts['key'], $options['key'], 'opts');
+				return $phpu->soap;
+			});
 	}
 
 	/**
@@ -58,7 +59,7 @@ class Client_Test extends \Bart\BaseTestCase
 
 		$phpu = $this;
 		$this->assertThrows('Bart\\Jira\\Soap_Exception', 'Authentication failed', function() use($phpu) {
-			$c = new Client($phpu->u, $phpu->p, $phpu->opts, $phpu->di);
+			$c = new Client($phpu->u, $phpu->p, $phpu->opts);
 		});
 	}
 
@@ -68,7 +69,7 @@ class Client_Test extends \Bart\BaseTestCase
 		$this->configure_login(array());
 
 		// Success should yield no exception
-		$c = new Client($this->u, $this->p, $this->opts, $this->di);
+		$c = new Client($this->u, $this->p, $this->opts);
 	}
 
 	public function test_call_to_anything()
@@ -79,7 +80,7 @@ class Client_Test extends \Bart\BaseTestCase
 			array('getIssueById', array($this->t, 'BOX-1235'), array('id' => 1234)),
 		));
 
-		$c = new Client($this->u, $this->p, $this->opts, $this->di);
+		$c = new Client($this->u, $this->p, $this->opts);
 
 		$issue = $c->getIssue('BOX-1234');
 		$this->assertEquals(1234, $issue['id'], 'Client did not return issue');

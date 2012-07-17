@@ -5,6 +5,7 @@ class Git_Test extends \Bart\BaseTestCase
 {
 	public function test_chain_commands()
 	{
+		$this->registerMockShell();
 		$git = new Git('.git');
 		$hello_world_commands = array(
 			'hello world',
@@ -19,34 +20,40 @@ class Git_Test extends \Bart\BaseTestCase
 			'Chain commands produced wrong cmd');
 	}
 
+	/**
+	 * Register a mock shell instance with Diesel
+	 */
+	protected function registerMockShell($mockShell = null)
+	{
+		if (!$mockShell) {
+			$mockShell = $this->getMock('Bart\Shell');
+		}
+
+		Diesel::registerInstantiator('Bart\Shell', $mockShell, true);
+	}
+
 	public function test_fetch()
 	{
-		$shell_mock = new Stub\Mock_Shell($this);
+		$mock_shell = new Stub\Mock_Shell($this);
 		$cmd = 'git --git-dir=.git fetch origin';
-		$shell_mock->expect_exec($cmd, '', 0, 0);
+		$mock_shell->expect_exec($cmd, '', 0, 0);
 
-		$di = new Diesel();
-		$di->register_local('Bart\\Git', 'Shell', function($params) use($shell_mock) {
-			return $shell_mock;
-		});
+		$this->registerMockShell($mock_shell);
 
-		$git = new Git('.git', 'origin', $di);
+		$git = new Git('.git', 'origin');
 		$git->fetch();
 	}
 
 	public function test_bad_fetch()
 	{
-		$shell_mock = new Stub\Mock_Shell($this);
+		$mock_shell = new Stub\Mock_Shell($this);
 		$cmd = 'git --git-dir=.git fetch origin';
 		$fail_msg = 'Couldn\'t contact origin';
-		$shell_mock->expect_exec($cmd, $fail_msg, 1, 0);
+		$mock_shell->expect_exec($cmd, $fail_msg, 1, 0);
 
-		$di = new Diesel();
-		$di->register_local('Bart\\Git', 'Shell', function($params) use($shell_mock) {
-			return $shell_mock;
-		});
+		$this->registerMockShell($mock_shell);
 
-		$git = new Git('.git', 'origin', $di);
+		$git = new Git('.git', 'origin');
 		$this->assertThrows('Bart\\Git_Exception', "Error in fetch: $fail_msg", function() use($git) {
 			$git->fetch();
 		});
@@ -54,18 +61,15 @@ class Git_Test extends \Bart\BaseTestCase
 
 	public function test_get_change_id_bad()
 	{
-		$shell_mock = $this->getMock('\\Bart\\Shell');
-		$shell_mock->expects($this->once())
+		$mock_shell = $this->getMock('\\Bart\\Shell');
+		$mock_shell->expects($this->once())
 				->method('shell_exec')
 				->with('git --git-dir= show -s --no-color hash')
 				->will($this->returnValue('Some random commit message'));
 
-		$di = new Diesel();
-		$di->register_local('Bart\\Git', 'Shell', function($params) use($shell_mock) {
-			return $shell_mock;
-		});
+		$this->registerMockShell($mock_shell);
 
-		$git = new Git('', 'origin', $di);
+		$git = new Git('', 'origin');
 
 		$this->assertThrows('Bart\\Git_Exception', 'No Change-Id in commit message for hash',
 			function() use($git) {
@@ -84,18 +88,15 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 
     Change-Id: $change_id";
 
-		$shell_mock = $this->getMock('\\Bart\\Shell');
-		$shell_mock->expects($this->once())
+		$mock_shell = $this->getMock('\\Bart\\Shell');
+		$mock_shell->expects($this->once())
 				->method('shell_exec')
 				->with('git --git-dir= show -s --no-color hash')
 				->will($this->returnValue($commit_msg));
 
-		$di = new Diesel();
-		$di->register_local('Bart\\Git', 'Shell', function($params) use($shell_mock) {
-			return $shell_mock;
-		});
+		$this->registerMockShell($mock_shell);
 
-		$git = new Git('', 'origin', $di);
+		$git = new Git('', 'origin');
 		$actual_change_id = $git->get_change_id('hash');
 
 		$this->assertEquals($change_id, $actual_change_id, 'Should have found change id');
@@ -104,22 +105,18 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 	public function test_get_commit_msg()
 	{
 		$commit_hash = 'abcde123f';
-		$shell_mock = $this->getMock('\\Bart\\Shell');
-		$shell_mock->expects($this->once())
+		$mock_shell = $this->getMock('\\Bart\\Shell');
+		$mock_shell->expects($this->once())
 				->method('shell_exec')
 				->with('git --git-dir= show -s --no-color ' . $commit_hash)
 				->will($this->returnValue('Some random commit message'));
 
-		$di = new Diesel();
-		$di->register_local('Bart\\Git', 'Shell', function($params) use($shell_mock) {
-			return $shell_mock;
-		});
+		$this->registerMockShell($mock_shell);
 
-		$git = new Git('', 'origin', $di);
+		$git = new Git('', 'origin');
 		$msg = $git->get_commit_msg($commit_hash);
 
 		$this->assertEquals('Some random commit message', $msg,
 				'Git did not return proper commit message');
 	}
-
 }

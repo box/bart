@@ -15,12 +15,11 @@ class Job
 	private $my_build_id;
 	private $metadata;
 	private $witness;
-	private $di;
 
 	/**
 	 * Load metadata about a project
 	 */
-	public function __construct($domain, $job_name, Witness $witness, Diesel $di = null)
+	public function __construct($domain, $job_name, Witness $witness)
 	{
 		if (!$domain)
 		{
@@ -37,8 +36,6 @@ class Job
 		$this->base_job_url = "http://$domain:8080/job/" . rawurlencode($job_name) . '/';
 		$this->witness->report('Base url: ' . $this->base_job_url);
 
-		$this->di = $di ?: new Diesel();
-
 		$this->metadata = $this->get_json(array());
 
 		if (!$this->metadata['buildable'])
@@ -47,13 +44,6 @@ class Job
 		}
 
 		$this->set_default_params();
-	}
-
-	public function dieselify($me)
-	{
-		Diesel::register_global($me, 'Curl', function($params) {
-			return new Curl($params['url'], $params['port']);
-		});
 	}
 
 	/**
@@ -210,7 +200,7 @@ class Job
 		$is_post = ($post_data != null);
 		$this->witness->report('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
 
-		$c = $this->di->create($this, 'Curl', array('url' => $url, 'port' => 8080));
+		$c = Diesel::locateNew('Bart\Curl', $url, 8080);
 		$jenkins_json = $is_post ?
 			$c->post('', array(), $post_data) :
 			$c->get('', array());

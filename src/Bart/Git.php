@@ -19,14 +19,12 @@ class Git
 	 * @param origin Upstream origin name
 	 * @param bin The git executable
 	 */
-	public function __construct($dir = '.git', $origin = 'origin', Diesel $di = null)
+	public function __construct($dir = '.git', $origin = 'origin')
 	{
 		$this->git = "git --git-dir=$dir";
 		$this->origin = $origin;
 
-		$di = $di ?: new Diesel();
-
-		$this->shell = $di->Shell();
+		$this->shell = Diesel::singleton('Bart\Shell');
 	}
 
 	/**

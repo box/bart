@@ -18,12 +18,12 @@ class Client
 	 * @param array $options Generic soap options hash. Must, at the least, specify the WSDL to
 	 * your Jira SOAP, which can be a local or remote resource. It typically is available at
 	 * http://$your-jira-server/rpc/soap/jirasoapservice-v2?wsdl'
-	 * @param Diesel $di
 	 */
-	public function __construct($username, $password, $options, Diesel $di = null)
+	public function __construct($username, $password, $options)
 	{
-		$di = $di ?: new Diesel();
-		$this->soap = $di->create($this, 'SoapClient', array('options' => $options));
+		$wsdl = $options['wsdl'];
+		unset($options['wsdl']);
+		$this->soap = Diesel::locateNew('\\SoapClient', $wsdl, $options);
 
 		try
 		{
@@ -33,18 +33,6 @@ class Client
 		{
 			throw new Soap_Exception($f, 'Authentication failed');
 		}
-	}
-
-	public static function dieselify($me)
-	{
-		Diesel::register_global($me, 'SoapClient', function($params) {
-			$options = $params['options'];
-
-			$wsdl = $options['wsdl'];
-			unset($options['wsdl']);
-
-			return new \SoapClient($wsdl, $options);
-		});
 	}
 
 	/**

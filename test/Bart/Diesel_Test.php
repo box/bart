@@ -3,133 +3,18 @@ namespace Bart;
 
 class Diesel_Test extends \Bart\BaseTestCase
 {
-  public function setUp()
-  {
-    Diesel::reset($this);
-  }
-
-  public function test_static()
-  {
-    Diesel::register_global($this, 'curl', function() {
-      return 5;
-    });
-
-    $di = new Diesel();
-    $five = $di->create($this, 'curl');
-    $this->assertEquals(5, $five);
-  }
-
-  public function test_local()
-  {
-    // Register the global dependency
-    Diesel::register_global($this, 'curl', function() {
-      return 5;
-    });
-
-    $di = new Diesel();
-    // Register a local dependency
-    $di->register_local($this, 'curl', function($params) {
-        return 7;
-    });
-
-    $seven = $di->create($this, 'curl');
-
-    // The local dependency should be returned
-    $this->assertEquals(7, $seven);
-  }
-
-  public function test_missing_method()
-  {
-    $di = new Diesel();
-    $this->assertThrows('\Exception',
-        'No instantiation method defined for Dependency_Factory_Test '
-        . 'dependency on sandpeople',
-        function() use ($di) {
-           $di->create('Dependency_Factory_Test', 'sandpeople');
-        });
-  }
-
-  public function test_with_params()
-  {
-    $di = new Diesel();
-    $di->register_local($this, 'vger', function($params) {
-      return $params['stardate'];
-    });
-
-    // Will the params get passed in to the creation closure?
-    $stardate = $di->create($this, 'vger',
-            array('stardate' => 'stardate 65441.9'));
-
-    $this->assertEquals('stardate 65441.9', $stardate,
-            'vger stardate not returned from di::create');
-  }
-
-  public function test_with_reference_params()
-  {
-    $then = new \DateTime();
-    $di = new Diesel();
-    $di->register_local($this, 'vger', function($params, &$refs) use ($then) {
-      $refs['created'] = $then;
-      return $params['stardate'];
-    });
-
-    // Will the refs get passed a reference?
-    $stardate = $di->create($this, 'vger',
-            array('stardate' => 'stardate 65441.9'),
-            $refs);
-
-    $this->assertEquals('stardate 65441.9', $stardate,
-            'vger stardate not returned from di::create');
-    $this->assertEquals($then, $refs['created'], 'Reference param not changed in closure');
-  }
-
-  public function test_magic_dependency_with_registered_method()
-  {
-	  $d = new Diesel();
-	  $d->register_local('Anyone', 'Shell', function() {
-		  return 7; // not really a Shell, just returning some discrete value
-	  });
-
-	  // If magic method works, this will return product of closure registered above
-	  $seven = $d->Shell();
-	  $this->assertEquals(7, $seven, 'Magic method did not return expected value');
-  }
-
-  public function test_magic_dependency_default()
-  {
-	  $d = new Diesel();
-	  $s = $d->Shell();
-	  $real_s = new Shell();
-
-	  $expected = $real_s->gethostname();
-	  $actual = $s->gethostname();
-	  $this->assertEquals($expected, $actual, 'Magic method did not create proper Shell');
-  }
-
-  public function test_magic_dependency_default_with_args()
-  {
-	  $d = new Diesel();
-	  // Rely on local registration to also register DieselTestClassWithParams with magic methods
-	  $d->register_local('Anything', 'DieselTestClassWithParams', 'DieselTestClassWithParams');
-	  // Invoke the magic method -- this time with arguments
-	  $c = $d->DieselTestClassWithParams(3, 13);
-
-	  $this->assertEquals(3, $c->a, 'DieselTestClassWithParams did not receive expected param a');
-	  $this->assertEquals(13, $c->b, 'DieselTestClassWithParams did not receive expected param b');
-  }
-
 	public function testLocateNew_NoArgs()
 	{
 		$this->enableDieselDefaults();
 		$c = Diesel::locateNew('Bart\DieselTestClassNoParams');
-		$this->assertEquals('Bart\DieselTestClassNoParams', get_class($c));
+		$this->assertInstanceOf('Bart\DieselTestClassNoParams', $c);
 	}
 
 	public function testLocateNew_WithArgs()
 	{
 		$this->enableDieselDefaults();
 		$c = Diesel::locateNew('Bart\DieselTestClassWithParams', 42, 108);
-		$this->assertEquals('Bart\DieselTestClassWithParams', get_class($c));
+		$this->assertInstanceOf('Bart\DieselTestClassWithParams', $c);
 		$this->assertEquals(108, $c->b, 'Property $b of $c');
 	}
 
@@ -172,6 +57,34 @@ class Diesel_Test extends \Bart\BaseTestCase
 				});
 	}
 
+	public function testLocateNew_WithReferenceArgs()
+	{
+		return;
+
+		// This won't work because we can't pass $c as undef because
+		// locateNew signature doesn't specify a reference param
+		$this->enableDieselDefaults();
+		$class = Diesel::locateNew('Bart\DieselTestClassWithParams', 1, 2, $c);
+		$this->assertInstanceOf('Bart\DieselTestClassWithParams', $class);
+		$this->assertEquals('Bart\DieselTestClassWithParams', $c, 'ref param');
+	}
+
+	public function testSingleton()
+	{
+		$this->enableDieselDefaults();
+		$d1 = Diesel::singleton('Bart\DieselTestClassNoParams');
+		$d2 = Diesel::singleton('Bart\DieselTestClassNoParams');
+
+		$this->assertSame($d1, $d2, 'Singleton classes');
+	}
+
+	public function testSingleton_WithArgs()
+	{
+		$this->assertThrows('Exception', 'Diesel::singleton only accepts no-argument classes', function() {
+			Diesel::singleton('ignored', 'some argument');
+		});
+	}
+
 	private function enableDieselDefaults()
 	{
 		$prop = Util\Reflection_Helper::get_property('Bart\Diesel', 'allowDefaults');
@@ -186,10 +99,11 @@ class DieselTestClassWithParams
 {
 	public $a, $b;
 
-	public function __construct($a, $b)
+	public function __construct($a, $b, &$c = 4)
 	{
 		$this->a = $a;
 		$this->b = $b;
+		$c = __CLASS__;
 	}
 }
 

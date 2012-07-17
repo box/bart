@@ -9,12 +9,6 @@ class Job_Test extends \Bart\BaseTestCase
 {
 	public static $domain = 'www.norris.com';
 	public static $job_name = 'chuck norris';
-	private $di;
-
-	public function setUp()
-	{
-		$this->di = new Diesel();
-	}
 
 	/**
 	 * Mock the metadata returned by curl
@@ -54,24 +48,25 @@ class Job_Test extends \Bart\BaseTestCase
 		    ->will($this->returnValue($json));
 
 		$phpu = $this;
-		$this->di->register_local('Bart\\Jenkins\\Job', 'Curl', function($params) use($phpu, $url, $mock_curl) {
-			$phpu->assertEquals($url, $params['url']);
-			$phpu->assertEquals(8080, $params['port']);
-			return $mock_curl;
-		});
+		Diesel::registerInstantiator('Bart\Curl',
+			function($urlParam, $portParam) use($phpu, $url, $mock_curl) {
+				$phpu->assertEquals($url, $urlParam, 'url');
+				$phpu->assertEquals(8080, $portParam, 'port');
+				return $mock_curl;
+			});
 	}
 
 	public function test_is_healthy()
 	{
 		$this->configure_for_health_tests(123, 123);
-		$job = new Job(self::$domain, self::$job_name, new Witness\Silent(), $this->di);
+		$job = new Job(self::$domain, self::$job_name, new Witness\Silent());
 		$this->assertTrue($job->is_healthy(), 'Expected that job would be healthy');
 	}
 
 	public function test_is_unhealthy()
 	{
 		$this->configure_for_health_tests(123, 122);
-		$job = new Job(self::$domain, self::$job_name, new Witness\Silent(), $this->di);
+		$job = new Job(self::$domain, self::$job_name, new Witness\Silent());
 		$this->assertFalse($job->is_healthy(), 'Expected that job would be unhealthy');
 	}
 
@@ -84,7 +79,7 @@ class Job_Test extends \Bart\BaseTestCase
 
 		try
 		{
-			new Job($domain, $job_name, new Witness\Silent(), $this->di);
+			new Job($domain, $job_name, new Witness\Silent());
 			$this->fail('Expected exception on disabled job');
 		}
 		catch (\Exception $e)

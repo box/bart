@@ -32,12 +32,4 @@ abstract class Base
 	 * @param $commit_hash Hash of commit to verify
 	 */
 	public abstract function verify($commit_hash);
-
-	public static function dieselify($me)
-	{
-		Diesel::register_global($me, 'Git', function($params) {
-			return new Git($params['git_dir']);
-		});
-	}
-
 }
