@@ -73,9 +73,6 @@ class Diesel
 		}
 
 		$class = new \ReflectionClass($className);
-		if (!$class->hasMethod('__construct')) {
-			throw new \Exception("$className lacks a constructor");
-		}
 
 		// LIMITATION: cannot pass by reference due to dynamic evaluation of
 		// ...$arguments in create();
