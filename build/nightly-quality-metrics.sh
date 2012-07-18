@@ -32,12 +32,10 @@ declare statusPhpmd=0
 declare statusPhpcpd=0
 declare statusPhpdcd=0
 
-# Do not use phpunit.xml
+# Assuming you have a phpunit.xml with options for excludes, etc
 phpunit \
- --no-configuration \
  --log-junit build/reports/phpunit.xml \
  --coverage-clover build/reports/coverage.xml \
- --bootstrap test/setup.php \
  test/ || statusPhpunit=$?
 
 # Note, ignoring the pdepend.xml output for now until I get that "bug" figured out

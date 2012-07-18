@@ -20,8 +20,9 @@ $(git show --name-status)
 
 set -x
 
-phpunit --log-junit build/reports/phpunit.xml \
-  --no-configuration \
-  --bootstrap test/setup.php \
+# PHPUnit doesn't have a --no-colors option,
+# ...sorry if the escapes mess up your output in jenkins
+phpunit \
+  --log-junit build/reports/phpunit.xml \
   test/
 
