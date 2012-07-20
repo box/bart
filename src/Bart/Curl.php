@@ -6,55 +6,55 @@ namespace Bart;
  */
 class Curl
 {
-	private $url;
+	private $uri;
 	private $port;
 
 	/**
-	 * Curl to $host_url on $port
+	 * Curl to $hostUri on $port
 	 */
-	public function __construct($host_url, $port = 80)
+	public function __construct($hostUri, $port = 80)
 	{
-		$this->url = $host_url;
+		$this->uri = $hostUri;
 		$this->port = $port;
 	}
 
-	public function get($path, array $get_params, array $headers = null, $cookies = null)
+	public function get($path, array $getParams, array $headers = null, $cookies = null)
 	{
-		return $this->request(null, $this->url . $path,
-			$get_params, null, $headers, $cookies);
+		return $this->request(null, $this->uri . $path,
+			$getParams, null, $headers, $cookies);
 	}
 
 	/**
-	 * @param string $path relative path from base url
-	 * @param array $get_params An associative array of get parameters
-	 * @param [array,string] $post_params The data to send in your post
+	 * @param string $path relative path from base uri
+	 * @param array $getParams An associative array of get parameters
+	 * @param [array,string] $postData The data to send in your post
 	 *
 	 * @return Remote response body as string
 	 */
-	public function post($path, array $get_params, $post_params)
+	public function post($path, array $getParams, $postData)
 	{
-		return $this->request(CURLOPT_POST, $this->url . $path,
-			$get_params, $post_params);
+		return $this->request(CURLOPT_POST, $this->uri . $path,
+			$getParams, $postData);
 	}
 
 	/**
 	 * PUT a json body
 	 *
-	 * @param $path relative path from base url
-	 * @param $get_params An associative array of get parameters
+	 * @param $path relative path from base uri
+	 * @param $getParams An associative array of get parameters
 	 * @param $body Optional request body data to send
 	 *
 	 * @return Remote response body as string
 	 */
-	public function put($path, array $get_params, $body = null)
+	public function put($path, array $getParams, $body = null)
 	{
-		return $this->request(CURLOPT_PUT, $this->url . $path,
-			$get_params, $body, array('Content-type: application/json'));
+		return $this->request(CURLOPT_PUT, $this->uri . $path,
+			$getParams, $body, array('Content-type: application/json'));
 	}
 
-	private function request($http_method, $url, array $get_params, $body, array $headers = null, $cookies = null)
+	private function request($httpMethod, $uri, array $getParams, $body, array $headers = null, $cookies = null)
 	{
-		$ch = curl_init($url . '?' . http_build_query($get_params));
+		$ch = curl_init($uri . '?' . http_build_query($getParams));
 		curl_setopt($ch, CURLOPT_PORT, $this->port);
 
 		if ($headers != null)
@@ -67,17 +67,17 @@ class Curl
 			curl_setopt($ch, CURLOPT_COOKIE, $cookies);
 		}
 
-		if (isset($http_method))
+		if (isset($httpMethod))
 		{
 			// Hey, guess what? Curl option PUT won't work!
 			// http://stackoverflow.com/questions/5043525/php-curl-http-put
-			if ($http_method == CURLOPT_PUT)
+			if ($httpMethod == CURLOPT_PUT)
 			{
 				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
 			}
 			else
 			{
-				curl_setopt($ch, $http_method, true);
+				curl_setopt($ch, $httpMethod, true);
 			}
 
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
@@ -89,17 +89,21 @@ class Curl
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
-		$result = curl_exec($ch);
+		$content = curl_exec($ch);
+		$info = curl_getinfo($ch);
 
-		if ((curl_errno($ch) != 0) || ($result === FALSE))
+		if ((curl_errno($ch) != 0) || ($content === FALSE))
 		{
 			$error = curl_error($ch);
 			curl_close($ch);
-			throw new \Exception("Error posting to $url, curl error: $error");
+			throw new \Exception("Error posting to $uri, curl error: $error");
 		}
 
 		curl_close($ch);
 
-		return $result;
+		return array(
+			'info' => $info,
+			'content' => $content,
+		);
 	}
 }

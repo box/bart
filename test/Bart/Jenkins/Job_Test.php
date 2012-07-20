@@ -45,7 +45,7 @@ class Job_Test extends \Bart\BaseTestCase
 		$mock_curl->expects($this->once())
 			->method('get')
 			->with($this->equalTo(''), $this->equalTo(array()))
-		    ->will($this->returnValue($json));
+		    ->will($this->returnValue(array('content' => $json)));
 
 		$phpu = $this;
 		Diesel::registerInstantiator('Bart\Curl',

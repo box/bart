@@ -34,7 +34,7 @@ class Job
 		$this->witness = $witness;
 
 		$this->base_job_url = "http://$domain:8080/job/" . rawurlencode($job_name) . '/';
-		$this->witness->report('Base url: ' . $this->base_job_url);
+		$this->witness->report('Base uri: ' . $this->base_job_url);
 
 		$this->metadata = $this->get_json(array());
 
@@ -201,10 +201,11 @@ class Job
 		$this->witness->report('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
 
 		$c = Diesel::create('Bart\Curl', $url, 8080);
-		$jenkins_json = $is_post ?
+		$response = $is_post ?
 			$c->post('', array(), $post_data) :
 			$c->get('', array());
 
+		$jenkins_json = $response['content'];
 		return json_decode($jenkins_json, true);
 	}
 
