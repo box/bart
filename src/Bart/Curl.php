@@ -8,6 +8,7 @@ class Curl
 {
 	private $uri;
 	private $port;
+	private $opts = array();
 
 	/**
 	 * Curl to $hostUri on $port
@@ -16,6 +17,35 @@ class Curl
 	{
 		$this->uri = $hostUri;
 		$this->port = $port;
+	}
+
+	/**
+	 * Set any authentication credentials desired for request(s)
+	 * @param type $user
+	 * @param type $pwd
+	 * @param int $method (optional) Curl constant for the auth method type
+	 */
+	public function setAuth($user, $pwd, $method = CURLAUTH_BASIC)
+	{
+		$this->opts[CURLOPT_HTTPAUTH] = $method;
+		$this->opts[CURLOPT_USERPWD] = "$user:$pwd";
+	}
+
+	/**
+	 * Fall back method to set your own curl options not currenctly
+	 * explicitly support
+	 *
+	 * @param array $curlOpts An array specifying which options to set and
+	 * their values. The keys must be valid curl_setopt() constants or
+	 * their integer equivalents.
+	 * @link http://www.php.net/manual/en/function.curl-setopt-array.php
+	 */
+	public function setPhpCurlOpts(array $curlOpts)
+	{
+		// Overwrite any existing values
+		foreach ($curlOpts as $optName => $value) {
+			$this->opts[$optName] = $value;
+		}
 	}
 
 	public function get($path, array $getParams, array $headers = null, $cookies = null)
@@ -83,11 +113,12 @@ class Curl
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
 		}
 
-		// Do not return http headers
-		curl_setopt($ch, CURLOPT_HEADER, false);
 		// Do not output the contents of the call, instead return in a string
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+		// Set all user defined options last
+		curl_setopt_array($ch, $this->opts);
 
 		$content = curl_exec($ch);
 		$info = curl_getinfo($ch);
