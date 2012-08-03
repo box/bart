@@ -70,16 +70,17 @@ class Curl
 	/**
 	 * PUT a json body
 	 *
-	 * @param $path relative path from base uri
-	 * @param $getParams An associative array of get parameters
-	 * @param $body Optional request body data to send
+	 * @param string $path relative path from base uri
+	 * @param array $getParams An associative array of get parameters
+	 * @param mixed $body Optional array or string request body data to send
+	 * @param array $headers Optional headers to send with PUT
 	 *
 	 * @return Remote response body as string
 	 */
-	public function put($path, array $getParams, $body = null)
+	public function put($path, array $getParams, $body = null, array $headers = null)
 	{
 		return $this->request(CURLOPT_PUT, $this->uri . $path,
-			$getParams, $body, array('Content-type: application/json'));
+			$getParams, $body, $headers);
 	}
 
 	private function request($httpMethod, $uri, array $getParams, $body, array $headers = null, $cookies = null)
