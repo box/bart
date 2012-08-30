@@ -11,7 +11,7 @@ class AutoloaderPHP4
 
 	/**
 	 * Register a root path for autload to start its search
-	 * Autload will always look in the default load paths
+	 * Autoload will always look in the default load paths
 	 */
 	public static function register_autoload_path($path)
 	{
