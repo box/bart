@@ -83,5 +83,22 @@ class EscapeColors
 			echo "$color - " . self::bg_color($color, 'Hello, world!') . PHP_EOL;
 		}
 	}
+
+	/**
+	 * Shortcut to fg_color or bg_color
+	 * @param string $color See possible colors with self::all_[fg|bg]() methods
+	 * @param array $arguments 0 - message to be colored;
+	 * ...1 - [Optional] 'bg' or 'fg' (default) to indicate background or foreground coloring
+	 */
+	public static function __callStatic($color, $arguments)
+	{
+		$method = 'fg_color';
+		if (count($arguments) > 1 && $arguments[1] == 'bg')
+		{
+			$method = 'bg_color';
+		}
+
+		return self::$method($color, $arguments[0]);
+	}
 }
 
