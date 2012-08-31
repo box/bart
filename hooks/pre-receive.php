@@ -39,7 +39,7 @@ $opts = GetOpts::parse(array(
 if ($opts['help']) show_usage(0);
 if (empty($opts['cmdline']) || count($opts['cmdline']) != 1)
 {
-	echo2(EscapeColors::fg_color('red', 'Incorrect parameters'));
+	echo2(EscapeColors::red('Incorrect parameters'));
 	show_usage(1);
 }
 
@@ -71,7 +71,7 @@ function verify_param($name)
 
 	if (isset($opts[$name]) && $opts[$name]) return $opts[$name];
 
-	echo2(EscapeColors::fg_color('red', 'Incorrect parameters: missing ' . $name));
+	echo2(EscapeColors::red('Incorrect parameters: missing ' . $name));
 	show_usage(1);
 }
 
