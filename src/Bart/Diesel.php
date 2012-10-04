@@ -45,7 +45,7 @@ class Diesel
 
 	/**
 	 * Get singleton instance of this class
-	 * @param type $className
+	 * @param string $className
 	 * @return $className Singleton instance of class
 	 */
 	public static function singleton($className)
@@ -82,9 +82,9 @@ class Diesel
 	/**
 	 * Register the function to create an instance of $className
 	 * @param string $className Name of class being injected
-	 * @param function $instantiator Function to create instance of $className
+	 * @param callable $instantiator Function to create instance of $className
 	 *        or existing instance to override singleton
-	 * @param boolean singleton Class is a singleton
+	 * @param boolean Singleton Class is a singleton
 	 * @testonly
 	 */
 	public static function registerInstantiator($className, $instantiator, $singleton = false)
