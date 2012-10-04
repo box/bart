@@ -6,7 +6,7 @@ namespace Bart;
  */
 class ConfigResolver
 {
-	/** @var array */
+	/** @var array Specificity of each environment */
 	private $envSpecificity;
 
 	/**
@@ -52,9 +52,6 @@ class ConfigResolver
 			// Break out each key-value pair
 			// ...and percolate based on env specificity
 			foreach ($namedGroups as $configName => $envValues) {
-				// Use default env, unless specified otherwise
-				$envName = '';
-
 				foreach ($envValues as $envName => $configValue) {
 					$final = $this->updateFinalArray($final, $sectionName, $configName, $envName, $configValue);
 				}

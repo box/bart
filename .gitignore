@@ -1,4 +1,6 @@
-test.php
 *.swp
+
 /nbproject
+/.idea/
+bart.iml
 
