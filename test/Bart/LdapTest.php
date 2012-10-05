@@ -29,7 +29,7 @@ class LdapTest extends BaseTestCase
 	 */
 	private function skipIfNoLdap()
 	{
-		if (self::$ldapInstalled) {
+		if (!self::$ldapInstalled) {
 			$this->markTestSkipped('LDAP extensions not installed');
 			return true;
 		}

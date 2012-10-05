@@ -2,5 +2,5 @@ language: php
 php:
   - 5.3
 script: phpunit test
-before_script: "pear channel-discover pear.apache.org/log4php && pear install log4php/Apache_log4php"
+before_script: "pear channel-discover pear.apache.org/log4php && time pear install log4php/Apache_log4php"
 
