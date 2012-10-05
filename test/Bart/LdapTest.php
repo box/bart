@@ -12,15 +12,35 @@ class LdapTest extends BaseTestCase
 			'basedn' => 'basedn',
 		);
 	private $brayDN = 'cn=John Braynard,ou=Engineering,ou=Employees,dc=ops,dc=box,dc=net';
+	private static $ldapInstalled = false;
 
 	public static function setUpBeforeClass()
 	{
 		// Load the class file, which contains some supporting classes
 		Autoloader::autoload('Ldap');
+
+		self::$ldapInstalled = function_exists('ldap_connect');
+	}
+
+	/**
+	 * Ldap extensions are not available on some systems. Notably on travis-ci
+	 * https://github.com/travis-ci/travis-cookbooks/pull/67
+	 * @return bool Whether or not to return early
+	 */
+	private function skipIfNoLdap()
+	{
+		if (self::$ldapInstalled) {
+			$this->markTestSkipped('LDAP extensions not installed');
+			return true;
+		}
+
+		return false;
 	}
 
 	public function testHappyPath()
 	{
+		if ($this->skipIfNoLdap()) return;
+
 		$mock = $this->getMock('Bart\PHPLDAP');
 		$mock->expects($this->exactly(2))
 			->method('ldap_bind')
@@ -41,6 +61,8 @@ class LdapTest extends BaseTestCase
 
 	public function testFailedSearch()
 	{
+		if ($this->skipIfNoLdap()) return;
+
 		$mock = $this->getMock('Bart\PHPLDAP');
 		$mock->expects($this->exactly(2))
 			->method('ldap_bind')
