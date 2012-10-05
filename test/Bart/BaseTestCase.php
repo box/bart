@@ -22,7 +22,7 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 	 * @param string $class_name
 	 * @param mixed $stub
 	 */
-	public function register_diesel($class_name, $stub)
+	public function registerDiesel($class_name, $stub)
 	{
 		Diesel::registerInstantiator($class_name, function() use ($stub)
 		{
