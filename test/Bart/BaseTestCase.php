@@ -37,16 +37,38 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Provide a temporary file path to use for tests and always make sure it gets removed
+	 * @param callable $func (TestCase, String) => () Will do the stuff to the temporary file
+	 */
+	protected function doStuffToTempFile($func)
+	{
+		$filename = BART_DIR . 'phpunit-random-file-please-delete.txt';
+		@unlink($filename);
+
+		try
+		{
+			$func($this, $filename);
+		}
+		catch (\Exception $e)
+		{
+			@unlink($filename);
+			throw $e;
+		}
+
+		@unlink($filename);
+	}
+
+	/**
 	 * Assert that $anonFunc fails with exception of $type and $msg
 	 * @param string $type Exception type
 	 * @param string $msg Exception message
-	 * @param callable $anonFunc Anonymous function containing code expected to fail
+	 * @param callable $anonFunc (PHPUnit) => () Anonymous function containing code expected to fail
 	 */
 	protected function assertThrows($type, $msg, $anonFunc)
 	{
 		try
 		{
-			$anonFunc();
+			$anonFunc($this);
 			$this->fail('Expected test to fail, but it succeeded. '
 					. "Expected - exception $type; with msg: $msg");
 		}

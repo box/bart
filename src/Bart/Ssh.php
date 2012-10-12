@@ -57,7 +57,7 @@ class Ssh
 
 	/**
 	 * Run the ssh command
-	 * @param type $cmd The ssh command to execute
+	 * @param string $cmd The ssh command to execute
 	 * @return array(output, exit_status)
 	 */
 	public function execute($cmd)
