@@ -9,25 +9,58 @@ A brief overview of the tools included are:
 + A generic and configurable git hook framework that may be used singularly used by several git projects hosted on the same machine
 + A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP parameter references. E.g. exec($command, &$output, &$status);
 
-## PHP Autoloader
+# Install
+Bart can be installed with the [composer](http://getcomposer.org/) package manager.
 
-The Bart Autoloader provides a stackable autoload register. This allows the developer to provide
-several entry points into autoload directory trees. Read more at, 
-http://developers.blog.box.com/2011/10/27/php-autoloader-building-your-own-register/
+Put this in your project dependencies:
 
+```javascript
+{
+  "require": {
+    "box/bart" : "dev-master"
+  }
+}
+```
+
+Use this PHP code in your project's bootstrap:
+
+```php
+$bartPath = "$root/vendor/box/bart/src/Bart/bart-common.php";
+ 
+if (!file_exists($bartPath)) {
+    echo 'Cannot find required Bart in local path.' . PHP_EOL;
+    echo 'Have you run `composer install`?' . PHP_EOL;
+    echo '' . PHP_EOL;
+    echo 'See https://github.com/box/bart' . PHP_EOL;
+    echo '' . PHP_EOL;
+    exit(1);
+}
+ 
+ 
+require $bartPath;
+  
+// Setup autoloading using Bart
+Bart\Autoloader::register_autoload_path("$root/src"); // Add this project's namespace
+Bart\Autoloader::register_autoload_path("$root/vendor/box/bart/src"); // Add Bart's namespace.
+```
 ## System Checkout
 
-It can be effective to have a system clone of Bart for use in other scripts, for example the pre-receive hook described below.
+Alternatively, if you don't use composer. You can setup a system clone of Bart for use in other scripts, for example the pre-receive hook described below.
 
-Since system checkouts are not really owned or kept up to date by anyone, you'll need a cron to periodically fetch and reset from git hub. For convenience, we've included a script to install a cron for you.
+Use the following script to install a cron to periodically fetch and reset from git hub.
 
 ```
 $bart_home/maint/install-cron.sh --help
 ```
 
-### Composer
 
-Bart supports the composer dependency format, https://github.com/composer/composer, which can serve as an appealing alternative to crons.
+# Some Features
+
+## PHP Autoloader
+
+The Bart Autoloader provides a stackable autoload register. This allows the developer to provide
+several entry points into autoload directory trees. Read more at, 
+http://developers.blog.box.com/2011/10/27/php-autoloader-building-your-own-register/
 
 ## Diesel
 
@@ -35,7 +68,7 @@ Diesel is a simple and useful dependency injection framework for PHP. It does no
 
 Check out http://box.github.com/eng-services/blog/2012/05/03/introducting-diesel-php-dependency-injection/ for a brief description. Feel free to tweet at us @BoxEngServices with questions.
 
-See ```./lib/Diesel.php``` and ```./test/lib/Diesel_Test.php```
+See ```./src/Bart/Diesel.php``` and ```./test/Bart/Diesel_Test.php```
 
 ## Pre-Receive
 
