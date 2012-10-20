@@ -2,24 +2,25 @@
 namespace Bart\Stub;
 
 /**
- * PHPUnit (more specifically PHP) cannot handle mocking of methods that expect
- * variable references as arguments. So, it is necessary to do a little extra
- * work below to provide mocking of the Shell methods
+ * MockShell provides the ability to assert the behavior of calls to both {@see Shell::exec()} and
+ * {@see Shell::passthru()}.
  *
- * @Note sorry no fluid interface!
+ * Due to the manner in which PHPUnit creates mocks expectations, it is not possible to generalize
+ * the expectation of parameters passed by reference.
  */
 class MockShell
 {
 	private $phpunit;
-	private $command;
-	private $output;
-	private $return_var;
-	private $return_val;
-	private $configured = null;
+	/** @var array[MockShellCommand] Keyed by command string, holds all expected exec commands */
+	private $execs = array();
+	/** @var array[MockShellCommand] Keyed by command string, holds all expected passthru commands */
+	private $passthrus = array();
 	private $shell;
 
 	/**
-	 * Create a mock shell that will allow mocking of exec with reference variables
+	 * Creates a MockShell capable of mocking multiple calls to both {@see Shell::exec()} and
+	 * {@see Shell::passthru()}
+	 *
 	 * @param \PHPUnit_Framework_TestCase $phpunit
 	 * @param \Bart\Shell $shell Decorates a mock Shell instance if desired for missing methods
 	 */
@@ -31,7 +32,7 @@ class MockShell
 
 	/**
 	 * Pass through all method calls to a shell to an internally mocked Shell instance
-	 * This allows using the Mock_Shell in all use cases where a Shell would be expected
+	 * This allows using the MockShell in all use cases where a Shell would be expected
 	 */
 	public function __call($name, $args)
 	{
@@ -43,68 +44,113 @@ class MockShell
 		return call_user_func_array(array($this->shell, $name), $args);
 	}
 
-	public function exec($command, &$output = null, &$return_var = null)
+	public function exec($cmdStr, &$output = null, &$returnVar = null)
 	{
-		$this->assertConfigured('exec');
-		$this->phpunit->assertEquals($this->command, $command,
-			'Command did not match in mock exec');
+		$this->assertConfigured($this->execs, $cmdStr);
+		$command = $this->execs[$cmdStr];
+		unset($this->execs[$cmdStr]);
 
-		$output = $this->output;
-		$return_var = $this->return_var;
-		return $this->return_val;
+		$output = $command->output;
+		$returnVar = $command->exitStatus;
+
+		return $command->returns;
 	}
 
-	public function passthru($command)
+	/**
+	 * Simulate the passthru command being run and return the expected passthru
+	 * @param string $cmdStr Command to passthru
+	 * @return void
+	 */
+	public function passthru($cmdStr, &$returnVar)
 	{
-		$this->assertConfigured('passthru');
-		$this->phpunit->assertEquals($this->command, $command,
-			'Command did not match in mock passthru');
+		$this->assertConfigured($this->passthrus, $cmdStr);
+		$command = $this->passthrus[$cmdStr];
+		unset($this->passthrus[$cmdStr]);
 
-		return $this->return_val;
+		$returnVar = $command->exitStatus;
 	}
 
 	/**
 	 * Configure expected behavior of exec
+	 * @return MockShell $this
 	 */
-	public function expect_exec($command, array $output, $return_var, $return_val)
+	public function expectExec($cmdStr, array $output, $returnVar, $returnVal)
 	{
-		$this->assertNotConfigured();
-		$this->command = $command;
-		$this->output = $output;
-		$this->return_var = $return_var;
-		$this->return_val = $return_val;
-		$this->markConfigured('exec');
+		$this->assertNotConfigured($this->execs, $cmdStr);
+		$command = MockShellCommand::newExec($cmdStr, $output, $returnVar, $returnVal);
+
+		$this->execs[$cmdStr] = $command;
+
+		return $this;
 	}
 
 	/**
 	 * Configure expected behavior of passthru
+	 * @return MockShell $this
 	 */
-	public function expect_passthru($command, $return_val)
+	public function expectPassthru($cmdStr, $returnVal)
 	{
-		$this->assertNotConfigured();
-		$this->command = $command;
-		$this->return_val = $return_val;
-		$this->markConfigured('passthru');
+		$this->assertNotConfigured($this->passthrus, $cmdStr);
+		$command = MockShellCommand::newPassthru($cmdStr, $returnVal);
+
+		$this->passthrus[$cmdStr] = $command;
+
+		return $this;
+	}
+
+	public function verify()
+	{
+		$this->phpunit->assertEquals(
+			0,
+			count($this->execs) + count($this->passthrus),
+			'Some MockShell commands not run');
+	}
+
+	private function assertNotConfigured(array $commands, $cmdStr)
+	{
+		$hasKey = array_key_exists($cmdStr, $commands);
+		$this->phpunit->assertFalse($hasKey, "MockShell already configured for $cmdStr");
+	}
+
+	private function assertConfigured(array $commands, $cmdStr)
+	{
+		$hasKey = array_key_exists($cmdStr, $commands);
+		$this->phpunit->assertTrue($hasKey, "MockShell not configured for $cmdStr");
+	}
+}
+
+/**
+ * A single command expected by MockShell
+ */
+class MockShellCommand
+{
+	public $cmdStr, $output, $exitStatus, $returns;
+
+	/**
+	 * All parameters relate to either {@see exec()} or {@see passthru()}
+	 */
+	private function __construct($cmdStr, array $output = null, $exitStatus = null, $returns = null)
+	{
+		$this->cmdStr = $cmdStr;
+		$this->output = $output;
+		$this->exitStatus = $exitStatus;
+		$this->returns = $returns;
 	}
 
 	/**
-	 * @param string $for Method for which behavior has been mocked
+	 * @return MockShellCommand for an {@see exec()} call
 	 */
-	private function markConfigured($for)
+	public static function newExec($cmdStr, array $output, $exitStatus, $returns)
 	{
-		$this->configured = $for;
+		return new self($cmdStr, $output, $exitStatus, $returns);
 	}
 
-	private function assertNotConfigured()
+	/**
+	 * @return MockShellCommand for a {@see passthru()} call
+	 */
+	public static function newPassthru($cmdStr, $exitStatus)
 	{
-		$this->phpunit->assertNull($this->configured,
-			"Mock_Shell already configured for {$this->configured}. Please create a new mock.");
-	}
-
-	private function assertConfigured($for)
-	{
-		$this->phpunit->assertEquals($for, $this->configured,
-			"Mock_Shell was not configured for mocking $for");
+		return new self($cmdStr, null, $exitStatus);
 	}
 }
 

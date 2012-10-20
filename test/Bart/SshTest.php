@@ -27,7 +27,7 @@ class SshTest extends \Bart\BaseTestCase
 				. " {$confStub['connection']['user']}@$server $cmd 2>&1";
 
 		$mockShell = new Stub\MockShell($this);
-		$mockShell->expect_exec($sshCmd, array('Anything'), 0, 0);
+		$mockShell->expectExec($sshCmd, array('Anything'), 0, 0);
 
 		$mockConfig = $this->getMock('\\Bart\\Config_Parser', array(), array(), '', false);
 		$mockConfig->expects($this->once())

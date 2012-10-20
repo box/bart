@@ -37,7 +37,7 @@ class GitTest extends \Bart\BaseTestCase
 	{
 		$mock_shell = new Stub\MockShell($this);
 		$cmd = 'git --git-dir=.git fetch origin';
-		$mock_shell->expect_exec($cmd, array(''), 0, 0);
+		$mock_shell->expectExec($cmd, array(''), 0, 0);
 
 		$this->registerMockShell($mock_shell);
 
@@ -50,7 +50,7 @@ class GitTest extends \Bart\BaseTestCase
 		$mockShell = new Stub\MockShell($this);
 		$cmd = 'git --git-dir=.git fetch origin';
 		$failMsg = 'Couldn\'t contact origin';
-		$mockShell->expect_exec($cmd, array($failMsg), 1, 0);
+		$mockShell->expectExec($cmd, array($failMsg), 1, 0);
 
 		$this->registerMockShell($mockShell);
 

@@ -3,7 +3,7 @@ namespace Bart;
 
 class ShellTest extends BaseTestCase
 {
-	private function create_mock_shell()
+	private function createMockShell()
 	{
 		return new \Bart\Stub\MockShell($this);
 	}
@@ -70,11 +70,14 @@ class ShellTest extends BaseTestCase
 	public function test_passthru_mock()
 	{
 		// Does our Mock_Shell class work?
-		$shell = self::create_mock_shell($this);
-		$shell->expect_passthru('whoami', true);
+		$shell = self::createMockShell($this);
+		$shell->expectPassthru('whoami', true);
 
-		$success = $shell->passthru('whoami');
+		$success = false;;
+		$shell->passthru('whoami', $success);
 		$this->assertSame(true, $success, 'Return var incorrect from passthru');
+
+		$shell->verify();
 	}
 
 	// @TODO (florian): add test_passthru_blank_line_returns_echo_and_new_line_on_unix()
@@ -86,27 +89,71 @@ class ShellTest extends BaseTestCase
 		$iam = exec('whoami');
 		$shell = new Shell();
 
-		$this->assertEquals($iam, $shell->exec('whoami', $output, $return_var));
+		$output = array();
+		$this->assertEquals($iam, $shell->exec('whoami', $output, $returnVar));
 		$this->assertEquals($iam, implode('', $output), 'Real output of whoami unexpected');
-		$this->assertSame(0, $return_var, 'exec of whoami had bad return status');
+		$this->assertSame(0, $returnVar, 'exec of whoami had bad return status');
 	}
 
 	public function test_exec_mock()
 	{
-		$shell = self::create_mock_shell($this);
-		$shell->expect_exec('whoami', array('p diddy'), 0, 'mo money, mo problems');
+		$shell = self::createMockShell($this);
+		$shell->expectExec('whoami', array('p diddy'), 0, 'mo money, mo problems');
 
-		$last_line = $shell->exec('whoami', $output, $return_var);
+		$lastLine = $shell->exec('whoami', $output, $returnVar);
 		$this->assertEquals('p diddy', $output[0], "P Diddy isn't who i am =(");
-		$this->assertEquals('mo money, mo problems', $last_line, 'last line not returned from exec');
-		$this->assertSame(0, $return_var, 'Return var incorrect from exec');
+		$this->assertEquals('mo money, mo problems', $lastLine, 'last line not returned from exec');
+		$this->assertSame(0, $returnVar, 'Return var incorrect from exec');
+
+		$shell->verify();
+	}
+
+	public function testMockShell_StackedExec()
+	{
+		$mockShell = self::createMockShell();
+		$outputLs = array('file1', 'file2');
+		$outputCat = array('No such file', 'Sorry');
+		$mockShell
+			->expectExec('ls ~/ | xargs echo', $outputLs, $outputLs[1], 0)
+			->expectExec('cat README', $outputLs, $outputCat[1], 1);
+
+		$actualCatOutput = array();
+		$lastCatLine = '';
+		$catExitStatus = $mockShell->exec('cat README', $actualCatOutput, $lastCatLine);
+
+		$this->assertEquals($outputLs, $actualCatOutput, 'output');
+		$this->assertEquals('Sorry', $lastCatLine, 'last line of output');
+		$this->assertEquals(1, $catExitStatus, 'Exit status');
+
+		$actualLsOutput = array();
+		$lastLsLine = '';
+		$lsExitStatus = $mockShell->exec('ls ~/ | xargs echo', $actualLsOutput, $lastLsLine);
+
+		$this->assertEquals($outputLs, $actualLsOutput, 'output');
+		$this->assertEquals('file2', $lastLsLine, 'last line of output');
+		$this->assertEquals(0, $lsExitStatus, 'Exit status');
+
+		$mockShell->verify();
+	}
+
+	public function testMockShell_Verify()
+	{
+		$mockShell = self::createMockShell();
+		$mockShell->expectPassthru('ls', 0);
+
+		try
+		{
+			$mockShell->verify();
+			$this->fail('Expected verify to fail');
+		}
+		catch (\PHPUnit_Framework_ExpectationFailedException $e)
+		{
+			$this->assertContains('Some MockShell commands not run', $e->getMessage(), "expected message");
+		}
 	}
 
 	public function test_gethostname()
 	{
-		// @NOTE - the mock shell doesn't add a method for this, since it can be
-		// ...mocked by PHPUnit successfully. Perhaps if we add a fluent interface
-		// ...and start using the object more extensively, we can add it.
 		$name = gethostname();
 		$shell = new Shell();
 		$this->assertEquals($name, $shell->gethostname(), 'Hostnames did not match.');

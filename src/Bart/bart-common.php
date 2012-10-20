@@ -12,8 +12,10 @@ require_once(BART_SRC . 'AutoloaderPHP4.php');
 
 Autoloader::register_autoload_path(BART_SRC);
 
-// Bart was written in the SF Bay
-date_default_timezone_set('America/Los_Angeles');
+if (!ini_get('date.timezone')) {
+	// Prevent unwanted PHP warnings when dealing with dates in any capacity
+	date_default_timezone_set('UTC');
+}
 
 /**
  * Echo $str . PHP_EOL
