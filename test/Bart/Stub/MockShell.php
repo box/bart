@@ -7,6 +7,8 @@ namespace Bart\Stub;
  *
  * Due to the manner in which PHPUnit creates mocks expectations, it is not possible to generalize
  * the expectation of parameters passed by reference.
+ *
+ * TODO expect same command string more than once
  */
 class MockShell
 {
@@ -44,6 +46,12 @@ class MockShell
 		return call_user_func_array(array($this->shell, $name), $args);
 	}
 
+	/**
+	 * @param string $cmdStr Command to execute
+	 * @param array $output All output from command
+	 * @param int $returnVar exit status
+	 * @return string Last line of output
+	 */
 	public function exec($cmdStr, &$output = null, &$returnVar = null)
 	{
 		$this->assertConfigured($this->execs, $cmdStr);
@@ -57,8 +65,8 @@ class MockShell
 	}
 
 	/**
-	 * Simulate the passthru command being run and return the expected passthru
 	 * @param string $cmdStr Command to passthru
+	 * @param int $returnVar The exit status
 	 * @return void
 	 */
 	public function passthru($cmdStr, &$returnVar)
@@ -71,13 +79,18 @@ class MockShell
 	}
 
 	/**
-	 * Configure expected behavior of exec
+	 * Configure expected behavior of {@see Shell::exec()} to set the
+	 * reference params and also return the last element of $output.
+	 *
+	 * @param string $cmdStr Command string associated to $output and $returnVar
+	 * @param array $output Value to assign $output
+	 * @param int $exitStatus Value to assign $exitStatus
 	 * @return MockShell $this
 	 */
-	public function expectExec($cmdStr, array $output, $returnVar, $returnVal)
+	public function expectExec($cmdStr, array $output, $exitStatus)
 	{
 		$this->assertNotConfigured($this->execs, $cmdStr);
-		$command = MockShellCommand::newExec($cmdStr, $output, $returnVar, $returnVal);
+		$command = MockShellCommand::newExec($cmdStr, $output, $exitStatus);
 
 		$this->execs[$cmdStr] = $command;
 
@@ -85,19 +98,27 @@ class MockShell
 	}
 
 	/**
-	 * Configure expected behavior of passthru
+	 * Configure expected behavior of {@see Shell::passthru()} to set the
+	 * $returnVal reference params.
+	 *
+	 * @param string $cmdStr Command string associated with $returnVar
+	 * @param int $returnVar exit status to assign to reference param
 	 * @return MockShell $this
 	 */
-	public function expectPassthru($cmdStr, $returnVal)
+	public function expectPassthru($cmdStr, $exitStatus)
 	{
 		$this->assertNotConfigured($this->passthrus, $cmdStr);
-		$command = MockShellCommand::newPassthru($cmdStr, $returnVal);
+		$command = MockShellCommand::newPassthru($cmdStr, $exitStatus);
 
 		$this->passthrus[$cmdStr] = $command;
 
 		return $this;
 	}
 
+	/**
+	 * Verify the calls to exec and passthru were called as expected
+	 * @throws Assertion Exception if otherwise
+	 */
 	public function verify()
 	{
 		$this->phpunit->assertEquals(
@@ -122,7 +143,7 @@ class MockShell
 /**
  * A single command expected by MockShell
  */
-class MockShellCommand
+final class MockShellCommand
 {
 	public $cmdStr, $output, $exitStatus, $returns;
 
@@ -140,8 +161,11 @@ class MockShellCommand
 	/**
 	 * @return MockShellCommand for an {@see exec()} call
 	 */
-	public static function newExec($cmdStr, array $output, $exitStatus, $returns)
+	public static function newExec($cmdStr, array $output, $exitStatus)
 	{
+		$outputCount = count($output);
+		$returns = $outputCount > 0 ? $output[$outputCount - 1] : '';
+
 		return new self($cmdStr, $output, $exitStatus, $returns);
 	}
 

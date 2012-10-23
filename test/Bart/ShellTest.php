@@ -3,9 +3,12 @@ namespace Bart;
 
 class ShellTest extends BaseTestCase
 {
-	private function createMockShell()
+	/**
+	 * @return Stub\MockShell wrapping $this and [optional] $shell
+	 */
+	private function createMockShell(Shell $shell = null)
 	{
-		return new \Bart\Stub\MockShell($this);
+		return new \Bart\Stub\MockShell($this, $shell);
 	}
 
 	/**
@@ -32,7 +35,7 @@ class ShellTest extends BaseTestCase
 	}
 
 
-	public function test_shell_exec_stubbed()
+	public function testShellExec_Mocked()
 	{
 		// Can we successfully mock the Shell class shell_exec method?
 		$shell_stub = $this->getMock('Bart\Shell');
@@ -44,7 +47,7 @@ class ShellTest extends BaseTestCase
 		$this->assertEquals('john braynard', $shell_stub->shell_exec('whoami'));
 	}
 
-	public function test_shell_exec_real()
+	public function testShellExec_Real()
 	{
 		// Non-brittle - this value shouldn't change during test!
 		$iam = shell_exec('whoami');
@@ -53,24 +56,24 @@ class ShellTest extends BaseTestCase
 		$this->assertEquals($iam, $shell->shell_exec('whoami'));
 	}
 
-	public function test_mock_shell___call_method()
+	public function testMockShell___callMethod()
 	{
-		$phpu_mock_shell = $this->getMock('Bart\Shell');
-		$phpu_mock_shell->expects($this->once())
+		$phpuMockShell = $this->getMock('Bart\Shell');
+		$phpuMockShell->expects($this->once())
 				->method('parse_ini_file')
 				->with($this->equalTo('/etc/php.ini'), $this->equalTo(false))
 				->will($this->returnValue('some parsed junk'));
-		$shell = new \Bart\Stub\MockShell($this, $phpu_mock_shell);
+		$shell = $this->createMockShell($phpuMockShell);
 		$parsed = $shell->parse_ini_file('/etc/php.ini', false);
 
 		$this->assertEquals('some parsed junk', $parsed);
 	}
 
 	// @Note not going to test for real since it echos straight out
-	public function test_passthru_mock()
+	public function testPassthru_mock()
 	{
 		// Does our Mock_Shell class work?
-		$shell = self::createMockShell($this);
+		$shell = $this->createMockShell();
 		$shell->expectPassthru('whoami', true);
 
 		$success = false;;
@@ -80,11 +83,7 @@ class ShellTest extends BaseTestCase
 		$shell->verify();
 	}
 
-	// @TODO (florian): add test_passthru_blank_line_returns_echo_and_new_line_on_unix()
-	// and on_windows() once the mocking of Shell has been improved to allow mocking only
-	// the passthru functions of the Shell object
-
-	public function test_exec_real()
+	public function testExec_real()
 	{
 		$iam = exec('whoami');
 		$shell = new Shell();
@@ -95,39 +94,49 @@ class ShellTest extends BaseTestCase
 		$this->assertSame(0, $returnVar, 'exec of whoami had bad return status');
 	}
 
-	public function test_exec_mock()
+	public function testExec_mock()
 	{
-		$shell = self::createMockShell($this);
-		$shell->expectExec('whoami', array('p diddy'), 0, 'mo money, mo problems');
+		$shell = $this->createMockShell();
+		$shell->expectExec('whoami', array('p diddy'), 0);
 
 		$lastLine = $shell->exec('whoami', $output, $returnVar);
 		$this->assertEquals('p diddy', $output[0], "P Diddy isn't who i am =(");
-		$this->assertEquals('mo money, mo problems', $lastLine, 'last line not returned from exec');
+		$this->assertEquals('p diddy', $lastLine, 'last line not returned from exec');
 		$this->assertSame(0, $returnVar, 'Return var incorrect from exec');
 
 		$shell->verify();
 	}
 
+	public function testMockShell_ExecNoOutput()
+	{
+		$shell = $this->createMockShell();
+		$shell->expectExec('pwd', array(), 0);
+
+		$returnVal = $shell->exec('pwd');
+		$this->assertEquals('', $returnVal, 'Last line of output');
+		$shell->verify();
+	}
+
 	public function testMockShell_StackedExec()
 	{
-		$mockShell = self::createMockShell();
+		$mockShell = $this->createMockShell();
 		$outputLs = array('file1', 'file2');
 		$outputCat = array('No such file', 'Sorry');
 		$mockShell
-			->expectExec('ls ~/ | xargs echo', $outputLs, $outputLs[1], 0)
-			->expectExec('cat README', $outputLs, $outputCat[1], 1);
+			->expectExec('ls ~/ | xargs echo', $outputLs, 0)
+			->expectExec('cat README', $outputCat, 1);
 
 		$actualCatOutput = array();
-		$lastCatLine = '';
-		$catExitStatus = $mockShell->exec('cat README', $actualCatOutput, $lastCatLine);
+		$catExitStatus = 1;
+		$lastCatLine = $mockShell->exec('cat README', $actualCatOutput, $catExitStatus);
 
-		$this->assertEquals($outputLs, $actualCatOutput, 'output');
+		$this->assertEquals($outputCat, $actualCatOutput, 'output');
 		$this->assertEquals('Sorry', $lastCatLine, 'last line of output');
 		$this->assertEquals(1, $catExitStatus, 'Exit status');
 
 		$actualLsOutput = array();
-		$lastLsLine = '';
-		$lsExitStatus = $mockShell->exec('ls ~/ | xargs echo', $actualLsOutput, $lastLsLine);
+		$lsExitStatus = 1;
+		$lastLsLine = $mockShell->exec('ls ~/ | xargs echo', $actualLsOutput, $lsExitStatus);
 
 		$this->assertEquals($outputLs, $actualLsOutput, 'output');
 		$this->assertEquals('file2', $lastLsLine, 'last line of output');
@@ -138,7 +147,7 @@ class ShellTest extends BaseTestCase
 
 	public function testMockShell_Verify()
 	{
-		$mockShell = self::createMockShell();
+		$mockShell = $this->createMockShell();
 		$mockShell->expectPassthru('ls', 0);
 
 		try
@@ -194,7 +203,7 @@ variable = value
 		});
 	}
 
-	public function testMkdir()
+	public function test_mkdir()
 	{
 		// Will create sub-directory based on file name in /tmp
 		$path = '/tmp/' . __CLASS__ . __FILE__ . __METHOD__;
