@@ -5,4 +5,14 @@
 	convertWarningsToExceptions="true"
 	convertErrorsToExceptions="true"
 	bootstrap="test/setup.php">
+		<filter>
+			<blacklist>
+				<file>src/Bart/bart-common.php</file>
+				<file>src/Bart/AutoladerPHP4.php</file>
+				<file>src/Bart/Autolader.php</file>
+				<file>src/Bart/EscapeColors.php</file>
+				<directory suffix='php'>/box/libexec/php/php/log4php/</directory>
+				<directory suffix='php'>/usr/lib/php/pear/share/pear/</directory>
+			</blacklist>
+		</filter>
 </phpunit>
