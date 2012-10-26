@@ -172,7 +172,7 @@ function getopts($options,$fromarr = null) {
 					if (!isset($optionslookup[$switchalias])) {
 						$optionslookup[$switchalias] = $optitem;
 					} else {
-						die("FATAL: \$options array has non-unique switches defined.\n");
+						throw new \Exception('$options array has non-unique switches defined.');
 					}
 				}
 		} else { // Create the $optionslookup ref as a simple pointer to the hash
@@ -186,16 +186,16 @@ function getopts($options,$fromarr = null) {
 			case GETOPT_MULTIVAL:
 			case GETOPT_VAL:
 				if (substr($fromarr[$i],0,1) == '-') // Throw error if the user tries to simply set another switch while the last one is still 'open'
-					die("The option '{$fromarr[$i]}' needs a value.\n");
+					throw new \Exception("The option '{$fromarr[$i]}' needs a value.\n");
 				GETOPT_setval($opts,$options,$inswitch_key,$fromarr[$i]);
 				$inswitch = GETOPT_NOTSWITCH; // Reset the reader to carry on reading normal stuff
 				break;
 			case GETOPT_KEYVAL: // Yes, the awkward one.
 				if (substr($fromarr[$i],0,1) == '-') // Throw error if the user tries to simply set another switch while the last one is still 'open'
-					die("The option '{$fromarr[$i]}' needs a value.\n");
+					throw new \Exception("The option '{$fromarr[$i]}' needs a value.\n");
 				$fromarr[$i] = strtr($fromarr[$i],':','='); // Replace all ':' with '=' (keeping things simple and fast.
 				if (strpos($fromarr[$i],'=') === false)
-					die("The option '$inswitch_userkey' needs a key-value pair. E.g. '-$inswitch_userkey option=value'");
+					throw new \Exception("The option '$inswitch_userkey' needs a key-value pair. E.g. '-$inswitch_userkey option=value'");
 				GETOPT_setval($opts,$options,$inswitch_key,explode('=',$fromarr[$i]));
 				$inswitch = GETOPT_NOTSWITCH; // Reset the reader to carry on reading normal stuff
 				break;
@@ -205,7 +205,7 @@ function getopts($options,$fromarr = null) {
 					if ((strlen($fromarr[$i]) == 2) || (substr($fromarr[$i],0,2) == '--')) { // Single switch OR long opt (might be a weird thing like VAL, MULTIVAL etc.)
 							$userkey = ltrim($fromarr[$i],'-');
 							if (!isset($optionslookup[$userkey]))
-									die("Unknown option '-$userkey'\n");
+									throw new \Exception("Unknown option '-$userkey'\n");
 								$hashkey = $optionslookup[$userkey]; // Replace with the REAL key
 							if (($options[$hashkey]['type'] == GETOPT_SWITCH) || ($options[$hashkey]['type'] == GETOPT_ACCUMULATE)) {
 								GETOPT_setval($opts,$options,$hashkey,1); // Simple enough - Single option specified in switch that needs no params.
@@ -219,9 +219,9 @@ function getopts($options,$fromarr = null) {
 						for ($o = 1; $o < strlen($fromarr[$i]); $o++) {
 							$hashkey = substr($fromarr[$i],$o,1);
 							if (!isset($optionslookup[$hashkey]))
-									die("Unknown option '-$hashkey'\n");
+									throw new \Exception("Unknown option '-$hashkey'\n");
 							if (($options[$optionslookup[$hashkey]]['type'] != GETOPT_SWITCH) && ($options[$optionslookup[$hashkey]]['type'] != GETOPT_ACCUMULATE))
-								die("Option '-$hashkey' requires a value.\n");
+								throw new \Exception("Option '-$hashkey' requires a value.\n");
 							GETOPT_setval($opts,$options,$optionslookup[$hashkey],1);
 						}
 					}
