@@ -59,25 +59,24 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * Assert that $anonFunc fails with exception of $type and $msg
+	 * Assert that $anonFunc throws $e, where $e: $type and $e.message contains $msg
 	 * @param string $type Exception type
-	 * @param string $msg Exception message
+	 * @param string $msgNeedle Text expected to occur within exception message.
+	 *                  Use empty string to ignore.
 	 * @param callable $anonFunc (PHPUnit) => () Anonymous function containing code expected to fail
 	 */
-	protected function assertThrows($type, $msg, $anonFunc)
+	protected function assertThrows($type, $msgNeedle, $anonFunc)
 	{
 		try
 		{
 			$anonFunc($this);
 			$this->fail('Expected test to fail, but it succeeded. '
-					. "Expected - exception $type; with msg: $msg");
+					. "Expected: exception = $type, message ~ $msgNeedle");
 		}
 		catch (\Exception $e)
 		{
-			$this->assertInstanceOf($type, $e,
-				'Expected thrown exception of type ' . $type);
-			$this->assertEquals($msg, $e->getMessage(),
-				'Expected thrown exception to have msg ' . $msg);
+			$this->assertInstanceOf($type, $e, 'Expected type of exception message');
+			$this->assertContains($msgNeedle, $e->getMessage(), 'Expected text in exception message');
 		}
 	}
 }
