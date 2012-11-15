@@ -115,7 +115,7 @@ class Shell
 	 */
 	public function mkdir($path, $mode = 0777, $createIntermediate = false)
 	{
-		mkdir($path, $mode, $createIntermediate);
+		return mkdir($path, $mode, $createIntermediate);
 	}
 
 	/**
@@ -158,5 +158,49 @@ class Shell
 	public function unlink($path)
 	{
 		return unlink($path);
+	}
+
+	/**
+	* Recursively copy a directory.
+	* Snagged from http://www.php.net/manual/en/function.copy.php#91010
+	*/
+	function copy_dir($src, $dst, $overwrite = false)
+	{
+		if ($this->is_dir($dst) && !$overwrite)
+		{
+			throw new \Exception("Cannot overwrite $dst. Directory exists");
+		}
+
+		$dir = null;
+		try
+		{
+			$dir = $this->opendir($src);
+			$this->mkdir($dst);
+
+			while(false !== ($file = $this->readdir($dir)))
+			{
+				if (($file != '.') && ($file != '..'))
+				{
+					if ($this->is_dir($src . '/' . $file))
+					{
+					   $this->copy_dir($src . '/' . $file,$dst . '/' . $file, $overwrite);
+					}
+					else
+					{
+						$this->copy($src . '/' . $file,$dst . '/' . $file);
+					}
+				}
+			}
+		}
+		catch(\Exception $e)
+		{
+			if ($dir !== null)
+			{
+				@$this->closedir($dir);
+			}
+			throw $e;
+		}
+
+		$this->closedir($dir);
 	}
 }
