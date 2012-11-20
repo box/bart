@@ -47,7 +47,7 @@ $git_dir = verify_param('git-dir');
 $repo = verify_param('repo');
 
 $hash = $opts['cmdline'][0];
-$witness = $opts['verbose'] ? new Witness() : new Witness_Silent();
+$witness = $opts['verbose'] ? new Witness() : new Witness\Silent();
 
 try
 {
