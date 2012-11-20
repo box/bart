@@ -96,7 +96,7 @@ class Pre_Receive_Runner_Test extends TestBase
 
 		$phpu = $this;
 		$create_conf = function($repoParam) use ($phpu, $mock_conf, $repo) {
-			$phpu->assertEquals($repo, $repoParam,
+			$phpu->assertEquals(array($repo), $repoParam,
 					'Repo param to Config_Parser constructor');
 
 			return $mock_conf;

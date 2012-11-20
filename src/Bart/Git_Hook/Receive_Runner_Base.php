@@ -19,7 +19,7 @@ class Receive_Runner_Base
 	public function __construct($git_dir, $repo, Witness $w)
 	{
 		// Use the repo as the environment when parsing conf
-		$parser = Diesel::create('Bart\Config_Parser', $repo);
+		$parser = Diesel::create('Bart\Config_Parser', array($repo));
 		$conf = $parser->parse_conf_file(BART_DIR . 'etc/php/hooks.conf');
 
 		$this->git_dir = $git_dir;
