@@ -82,21 +82,21 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 
 	/**  
 	 * Capture the output from the output buffer
-	 * E.g. echo output
+	 *
 	 * @note Use intelligently
-	 * @param $closure {anonymous functions} An anonymous function that presumably produces output.
-	 * @returns The output
+	 * @param closure $closure [(PHPUnit_Framework_TestCase) => string] Anonymous function that presumably produces output
+	 * @return string The output of the closure
 	 */
 	protected function captureOutputBuffer($closure)
 	{    
 		ob_start();
 		try  
 		{    
-			$closure();
+			$closure($this);
 			$output = ob_get_contents();
 			ob_end_clean();
 		}    
-		catch (Exception $e)
+		catch (\Exception $e)
 		{    
 			ob_end_clean();
 			throw $e;
