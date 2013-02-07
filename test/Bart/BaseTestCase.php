@@ -71,7 +71,7 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 		{
 			$anonFunc($this);
 			$this->fail('Expected test to fail, but it succeeded. '
-					. "Expected: exception = $type, message ~ $msgNeedle");
+				. "Expected: exception = $type, message ~ $msgNeedle");
 		}
 		catch (\Exception $e)
 		{
@@ -79,4 +79,29 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 			$this->assertContains($msgNeedle, $e->getMessage(), 'Expected text in exception message');
 		}
 	}
+
+	/**  
+	 * Capture the output from the output buffer
+	 * E.g. echo output
+	 * @note Use intelligently
+	 * @param $closure {anonymous functions} An anonymous function that presumably produces output.
+	 * @returns The output
+	 */
+	protected function captureOutputBuffer($closure)
+	{    
+		ob_start();
+		try  
+		{    
+			$closure();
+			$output = ob_get_contents();
+			ob_end_clean();
+		}    
+		catch (Exception $e)
+		{    
+			ob_end_clean();
+			throw $e;
+		}    
+
+		return $output;
+	}  
 }
