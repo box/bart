@@ -17,19 +17,18 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * Register the $stub with Diesel for requests for $class_name.
+	 * Register the $stub with Diesel for requests for $className.
 	 * @note this is mainly useful for parameter-less constructors
-	 * @param string $class_name
-	 * @param mixed $stub
+	 * @param string $className Name of class being registered
+	 * @param mixed $stub This will be returned by @see Diesel
 	 */
-	public function registerDiesel($class_name, $stub)
+	public function registerDiesel($className, $stub)
 	{
-		Diesel::registerInstantiator($class_name, function() use ($stub)
+		Diesel::registerInstantiator($className, function() use ($stub)
 		{
 			return $stub;
 		});
 	}
-
 
 	protected function assertArrayKeyNotExists($key, array $array, $message = '')
 	{
@@ -63,13 +62,13 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 	 * @param string $type Exception type
 	 * @param string $msgNeedle Text expected to occur within exception message.
 	 *                  Use empty string to ignore.
-	 * @param callable $anonFunc (PHPUnit) => () Anonymous function containing code expected to fail
+	 * @param callable $func (PHPUnit) => () Anonymous function containing code expected to fail
 	 */
-	protected function assertThrows($type, $msgNeedle, $anonFunc)
+	protected function assertThrows($type, $msgNeedle, $func)
 	{
 		try
 		{
-			$anonFunc($this);
+			$func($this);
 			$this->fail('Expected test to fail, but it succeeded. '
 				. "Expected: exception = $type, message ~ $msgNeedle");
 		}
@@ -84,15 +83,15 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 	 * Capture the output from the output buffer
 	 *
 	 * @note Use intelligently
-	 * @param closure $closure [(PHPUnit_Framework_TestCase) => string] Anonymous function that presumably produces output
+	 * @param callable $func [(PHPUnit_Framework_TestCase) => string] Anonymous function that presumably produces output
 	 * @return string The output of the closure
 	 */
-	protected function captureOutputBuffer($closure)
+	protected function captureOutputBuffer($func)
 	{    
 		ob_start();
 		try  
 		{    
-			$closure($this);
+			$func($this);
 			$output = ob_get_contents();
 			ob_end_clean();
 		}    
