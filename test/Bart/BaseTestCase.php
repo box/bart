@@ -74,6 +74,9 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
 		}
 		catch (\Exception $e)
 		{
+			// First make sure the caught exception is not from fail()
+			$this->assertNotInstanceOf('\PHPUnit_Framework_AssertionFailedError', $e, $e->getMessage());
+
 			$this->assertInstanceOf($type, $e, 'Expected type of exception message');
 			$this->assertContains($msgNeedle, $e->getMessage(), 'Expected text in exception message');
 		}
