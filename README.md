@@ -2,12 +2,17 @@
 
 *A collection of build and release tools.*
 
-A brief overview of the tools included are:
+Bart is the library of PHP classes that we use as the base of our command line tools.
 
-+ A stackable PHP Autoload register
-+ PHP dependency injection (Diesel)
-+ A generic and configurable git hook framework that may be used singularly used by several git projects hosted on the same machine
-+ A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP parameter references. E.g. exec($command, &$output, &$status);
+A quick look at some its features:
+
++ An intelligent PHP **Autoload** class that supports both namespaces and classic under-scored names (or a mix of the two)
++ An intuitive, lightweight **dependency injection** framework that has been tested and tried against thousands of lines of test code and situations
++ A PHP client to the **Jenkins** API
++ A PHP client to the **Gerrit** API
++ An easy to use SSH client wrapper
++ A generic and configurable git hook framework that may be shared by several git projects hosted on the same machine
++ A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP reference parameter. E.g. string exec ( string $command [, array &$output [, int &$return_var ]] );
 
 # Install
 Bart can be installed with the [composer](http://getcomposer.org/) package manager.
@@ -25,32 +30,25 @@ Put this in your project dependencies:
 Use this PHP code in your project's bootstrap:
 
 ```php
-$bartPath = "$root/vendor/box/bart/src/Bart/bart-common.php";
+$bartPath = "$projectRoot/vendor/box/bart/src/Bart/bart-common.php";
  
 if (!file_exists($bartPath)) {
-    echo 'Cannot find required Bart in local path.' . PHP_EOL;
-    echo 'Have you run `composer install`?' . PHP_EOL;
-    echo '' . PHP_EOL;
-    echo 'See https://github.com/box/bart' . PHP_EOL;
-    echo '' . PHP_EOL;
+    echo <<<MSG
+Cannot find required Bart in local path
+Have you run `composer install`?
+
+See https://github.com/box/bart
+
+MSG;
+
     exit(1);
 }
- 
- 
+
 require $bartPath;
   
-// Setup autoloading using Bart
-Bart\Autoloader::register_autoload_path("$root/src"); // Add this project's namespace
+// Configure the PHP __autoload using Bart
 Bart\Autoloader::register_autoload_path("$root/vendor/box/bart/src"); // Add Bart's namespace.
-```
-## System Checkout
-
-Alternatively, if you don't use composer. You can setup a system clone of Bart for use in other scripts, for example the pre-receive hook described below.
-
-Use the following script to install a cron to periodically fetch and reset from git hub.
-
-```
-$bart_home/maint/install-cron.sh --help
+Bart\Autoloader::register_autoload_path("$root/src"); // Add this project's namespace
 ```
 
 
