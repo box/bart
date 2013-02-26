@@ -163,9 +163,9 @@ class ShellTest extends BaseTestCase
 
 	public function test_gethostname()
 	{
-		$name = gethostname();
+		$phpHostname = gethostname();
 		$shell = new Shell();
-		$this->assertEquals($name, $shell->gethostname(), 'Hostnames did not match.');
+		$this->assertContains($phpHostname, $shell->gethostname(), 'Hostnames did not match.');
 	}
 
 	public function test_file_exists()

@@ -21,8 +21,8 @@ class Curl
 
 	/**
 	 * Set any authentication credentials desired for request(s)
-	 * @param type $user
-	 * @param type $pwd
+	 * @param string $user
+	 * @param string $pwd
 	 * @param int $method (optional) Curl constant for the auth method type
 	 */
 	public function setAuth($user, $pwd, $method = CURLAUTH_BASIC)
@@ -59,7 +59,7 @@ class Curl
 	 * @param array $getParams An associative array of get parameters
 	 * @param [array,string] $postData The data to send in your post
 	 *
-	 * @return Remote response body as string
+	 * @return string Remote response body
 	 */
 	public function post($path, array $getParams, $postData)
 	{
@@ -75,7 +75,7 @@ class Curl
 	 * @param mixed $body Optional array or string request body data to send
 	 * @param array $headers Optional headers to send with PUT
 	 *
-	 * @return Remote response body as string
+	 * @return string Remote response body
 	 */
 	public function put($path, array $getParams, $body = null, array $headers = null)
 	{
