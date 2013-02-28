@@ -84,7 +84,7 @@ class Diesel
 	 * @param string $className Name of class being injected
 	 * @param callable $instantiator Function to create instance of $className
 	 *        or existing instance to override singleton
-	 * @param boolean Singleton Class is a singleton
+	 * @param boolean $singleton Class is a singleton?
 	 * @testonly
 	 */
 	public static function registerInstantiator($className, $instantiator, $singleton = false)
