@@ -3,6 +3,7 @@ namespace Bart;
 
 use Bart\Diesel;
 use Bart\Shell;
+use Bart\Shell\CommandException;
 
 /**
  * Interact with Git
@@ -12,12 +13,12 @@ class Git
 	private static $blame_pattern = '/^(\S*)\s.*?\((.*?)\s(\d{4}-\d{2}-\d{2}).*?\s\d+\)\s(.*)$/';
 	private $git;
 	private $origin;
+	/** @var Shell */
 	private $shell;
 
 	/**
-	 * @param git_dir The git directory of interest
-	 * @param origin Upstream origin name
-	 * @param bin The git executable
+	 * @param string $dir The git directory of interest
+	 * @param string $origin Upstream origin name
 	 */
 	public function __construct($dir = '.git', $origin = 'origin')
 	{
@@ -58,8 +59,8 @@ class Git
 		$show = shell_exec($this->git . ' show -s --pretty="email" ' . $hash);
 		$show_lines = explode(PHP_EOL, trim($show));
 
-		list($trash, $author) = explode(': ', $show_lines[1]);
-		list($trash, $subject) = explode('[PATCH] ', $show_lines[3]);
+		list($_, $author) = explode(': ', $show_lines[1]);
+		list($_, $subject) = explode('[PATCH] ', $show_lines[3]);
 
 		$message_lines = array_slice($show_lines, 5);
 		$message = implode(PHP_EOL, $message_lines);
@@ -84,6 +85,13 @@ class Git
 		}
 
 		return $matches[1];
+	}
+
+	public function getRevListCount($revision = 'HEAD')
+	{
+		$cmd = $this->shell->command($this->git . ' rev-list --count %s', $revision);
+
+		return $cmd->run(true);
 	}
 
 	/**
@@ -190,13 +198,15 @@ class Git
 	 */
 	public function update_server_info()
 	{
-		$cmd = "{$this->git} update-server-info -f";
+		$cmd = $this->shell->command("{$this->git} update-server-info -f");
 
-		exec($cmd, $output, $exit_status);
-		if ($exit_status !== 0)
+		try
 		{
-			throw new Git_Exception('Unable to update server info.'
-				. "\nCmd: $cmd\nRet: $ret\nOutput: " . implode(PHP_EOL, $output));
+			$cmd->run();
+		}
+		catch (CommandException $e)
+		{
+			throw new Git_Exception('Unable to update server info. ' . $e->getMessage());
 		}
 	}
 

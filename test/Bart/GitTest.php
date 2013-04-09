@@ -123,4 +123,24 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 		$this->assertEquals('Some random commit message', $msg,
 			'Git did not return proper commit message');
 	}
+
+	public function testGetRevListCount()
+	{
+		$command = $this->getMock('\Bart\Shell\Command', array(), array(), '', false);
+		$command->expects($this->once())
+			->method('run')
+			->with(true)
+			->will($this->returnValue('42'));
+
+		$shell = $this->getMock('\Bart\Shell');
+		$shell->expects($this->once())
+			->method('command')
+			->will($this->returnValue($command));
+
+		$this->registerMockShell($shell);
+
+		$git = new Git('', 'origin');
+
+		$this->assertEquals('42', $git->getRevListCount(), 'rev list count');
+	}
 }
