@@ -7,6 +7,20 @@ namespace Bart;
 class Shell
 {
 	/**
+	 * @param string $commandFormat Command string to run, use sprintf format for argument placeholders
+	 * @param string $args, ... [Optional] All arguments
+	 * @return Shell\Command Safe to run
+	 */
+	public function command($commandFormat)
+	{
+		// Explicitly listing $commandFormat for usage hint
+		$args = func_get_args();
+
+		$commandClass = new \ReflectionClass('Bart\Shell\Command');
+		return $commandClass->newInstanceArgs($args);
+	}
+
+	/**
 	 * See http://php.net/manual/en/function.exec.php
 	 */
 	public function exec($command, &$output = null, &$return_var = null)

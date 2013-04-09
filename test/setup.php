@@ -17,3 +17,20 @@ require_once $root . 'test/Bart/BaseTestCase.php';
 // If you don't want to use Log4PHP, then we can create a stub class for it,
 // ...but at the time being, it's not a priority
 require_once 'log4php/Logger.php';
+
+\Logger::configure(array(
+	'rootLogger' => array(
+		'level' => 'off',
+		'appenders' => array('default'),
+	),
+	'appenders' => array(
+		'default' => array(
+			'class' => 'LoggerAppenderConsole',
+			'layout' => array(
+				'class' => 'Bart\Log4PHP\LoggerLayoutPatternWithException',
+			),
+			'params' => array(),
+		),
+	)
+));
+
