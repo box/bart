@@ -32,7 +32,7 @@ class CommandTest extends \Bart\BaseTestCase
 
 	public function testMultiLineCommand()
 	{
-		$c = new Command('ENV');
+		$c = new Command('php --version');
 		$outputArray = $c->run();
 
 		$this->assertGreaterThan(1, count($outputArray), 'Output array');
