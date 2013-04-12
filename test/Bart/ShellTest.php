@@ -59,6 +59,7 @@ class ShellTest extends BaseTestCase
 	public function testMockShell___callMethod()
 	{
 		$phpuMockShell = $this->getMock('Bart\Shell');
+        /** @var \Bart\Shell $phpuMockShell */
 		$phpuMockShell->expects($this->once())
 				->method('parse_ini_file')
 				->with($this->equalTo('/etc/php.ini'), $this->equalTo(false))
@@ -275,5 +276,198 @@ variable = value
 			$shell->touch($filename);
 			$phpu->assertTrue(file_exists($filename), 'File was not touched');
 		});
+	}
+
+	public function test_copy_dir__fails_on_dst_exists()
+	{
+		$existing_dir = '/Users/mattdamon';
+		$shell = $this->shmock('Shell', function($shell) use($existing_dir)
+		{
+			$shell->is_dir($existing_dir)->return_true();
+		});
+
+		$this->assert_error('Exception', "Cannot overwrite {$existing_dir}. Directory exists",
+			function() use ($shell, $existing_dir)
+			{
+				$shell->copy_dir('blah', $existing_dir);
+			});
+	}
+
+	public function test_copy_dir__fails_opening_dir()
+	{
+		$dir_to_copy = '/Users/mattdamon';
+		$e = new \Exception("I can't open that dir >:[");
+		$shell = $this->shmock('Shell', function($shmock) use ($e, $dir_to_copy)
+		{
+			$shmock->opendir($dir_to_copy)->throw_exception($e);
+		});
+
+		$this->assert_error('Exception', $e->getMessage(),
+			function() use ($shell, $dir_to_copy)
+			{
+				$shell->copy_dir($dir_to_copy, 'copyofdir');
+			}
+		);
+	}
+
+	public function test_copy_dir__fails_mkdir()
+	{
+		$dir_to_copy = 'test_dir_please_remove';
+		$copied_dir = 'copyofdir';
+		$real_shell = new Shell();
+		if ( !$real_shell->is_dir($dir_to_copy))
+		{
+			$real_shell->mkdir($dir_to_copy);
+		}
+
+		try {
+			// Mock the exception for the mkdir call that occurs
+			$e = new \Exception("I can't make that dir >:[");
+			$shell = $this->shmock('Shell', function($shmock) use ($e, $copied_dir)
+			{
+				$shmock->mkdir($copied_dir)->throw_exception($e);
+			});
+
+			$this->assert_error('Exception', $e->getMessage(),
+				function() use ($dir_to_copy, $shell, $copied_dir)
+				{
+					$shell->copy_dir($dir_to_copy, $copied_dir);
+				}
+			);
+		}
+		catch (\Exception $ex)
+		{
+			if($real_shell->is_dir($dir_to_copy))
+			{
+				$real_shell->rmdir($dir_to_copy);
+			}
+			throw $ex;
+		}
+
+		// Cleanup
+		if($real_shell->is_dir($dir_to_copy))
+		{
+			$real_shell->rmdir($dir_to_copy);
+		}
+	}
+
+	public function test_copy_dir__fails_readdir()
+	{
+		$dir_to_copy = 'test_dir_please_remove';
+		$copied_dir = 'copyofdir';
+		$dir_to_copy_resource = null;
+
+		$real_shell = new Shell();
+		if ( !$real_shell->is_dir($dir_to_copy))
+		{
+			$dir_to_copy_resource = $real_shell->mkdir($dir_to_copy);
+		}
+
+		try {
+			$e = new \Exception("I can't read that dir >:[");
+			$shell = $this->shmock('Shell', function($shmock) use ($dir_to_copy_resource, $e)
+			{
+				$shmock->readdir($dir_to_copy_resource)->throw_exception($e);
+			});
+
+			$this->assert_error('Exception', $e->getMessage(),
+				function() use ($dir_to_copy, $shell, $copied_dir)
+				{
+					$shell->copy_dir($dir_to_copy, $copied_dir);
+				}
+			);
+		}
+		catch (\Exception $ex)
+		{
+			// XXX: it feels like there should be a better/cleaner way to do this..
+			if($real_shell->is_dir($dir_to_copy))
+			{
+				$real_shell->rmdir($dir_to_copy);
+			}
+			if($real_shell->is_dir($copied_dir))
+			{
+				$real_shell->rmdir($copied_dir);
+			}
+		}
+
+		// Cleanup
+		if($real_shell->is_dir($dir_to_copy))
+		{
+			$real_shell->rmdir($dir_to_copy);
+		}
+		if($real_shell->is_dir($copied_dir))
+		{
+			$real_shell->rmdir($copied_dir);
+		}
+	}
+
+	public function test_copy_dir__dotfiles()
+	{
+		$this->markTestIncomplete();
+		// TODO: this function should test that the '.' and '..' files aren't copied (since they reference current and parent directories). Is this genuinely testable? How?
+	}
+
+	private function generate_file_list($seed)
+	{
+		return array("file1-$seed.txt", "file2-$seed.txt");
+	}
+
+	public function test_copy_dir__single_level_directory()
+	{
+		// Directory and file listing
+		$dest_dir = 'test_copied_to_dir_please_remove';
+		$test_dir = 'test_dir_please_remove';
+		$test_files = array(
+			"another_file.txt",
+			"somefile",
+		);
+
+		$dirname = 'level0';
+		for ($f = 1; $f < 5; $f++)
+		{
+			$files = $this->generate_file_list($f);
+			$dirname .= DIRECTORY_SEPARATOR . "level$f";
+
+			$this->create_dir_with_files($dirname, $files);
+		}
+
+        // Create the shell that'll do the operations
+        $shell = new Shell();
+
+		try {
+			// Create a single-level directory with some files
+			$this->create_dir_with_files($test_dir, $test_files);
+
+			// Run copy_dir
+			$shell->copy_dir($test_dir, $dest_dir);
+
+			// Verify a file listing from copy_dir matches the array above
+			$dest_dir_resource = $shell->opendir($dest_dir);
+			$dest_files = array();
+			while(false !== ($file = $shell->readdir($dest_dir_resource)))
+			{
+				if (($file != ".") && ($file != ".."))
+				{
+					$dest_files[] = $file;
+				}
+			}
+
+			$this->assertEquals($test_files, $dest_files, "Directory listings");
+		}
+		catch (\Exception $ex)
+		{
+			@$shell->rmdir($dest_dir, true);
+			@$shell->rmdir($test_dir, true);
+			throw $ex;
+		}
+
+		// Cleanup
+		@$shell->rmdir($dest_dir, true);
+		@$shell->rmdir($test_dir, true);
+	}
+
+	public function test_copy_dir__multiple_level_directory()
+	{
+		$this->markTestIncomplete();
 	}
 }
