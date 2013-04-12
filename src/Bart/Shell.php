@@ -158,6 +158,21 @@ class Shell
 		file_put_contents($filename, $data, $flags, $context);
 	}
 
+    /**
+     * http://php.net/manual/en/function.file-get-contents.php
+     */
+    public function file_get_contents($filename, $flags = null, $context = null, $offset = -1, $maxLen = null)
+    {
+        if($maxLen === null)
+        {
+            return file_get_contents($filename, $flags, $context, $offset);
+        }
+        else
+        {
+            return file_get_contents($filename, $flags, $context, $offset, $maxLen);
+        }
+    }
+
 	/**
 	 * http://php.net/manual/en/function.touch.php
 	 */

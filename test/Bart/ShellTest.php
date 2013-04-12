@@ -249,6 +249,18 @@ variable = value
 		});
 	}
 
+    public function test_file_get_contents()
+    {
+        $this->doStuffToTempFile(function(BaseTestCase $phpu, Shell $shell, $filename)
+        {
+            $data = 'data';
+            file_put_contents($filename, $data);
+            $actual = $shell->file_get_contents($filename);
+            $phpu->assertEquals($data, $actual, 'File data not read correctly');
+        });
+    }
+
+
 	public function test_mktempdir()
 	{
 		$shell = new Shell();
