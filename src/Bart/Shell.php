@@ -75,7 +75,7 @@ class Shell
 	 */
 	public function chdir($directory)
 	{
-		chdir($directory);
+		return chdir($directory);
 	}
 
 	/**
@@ -129,7 +129,7 @@ class Shell
 	 */
 	public function mkdir($path, $mode = 0777, $createIntermediate = false)
 	{
-		mkdir($path, $mode, $createIntermediate);
+		return mkdir($path, $mode, $createIntermediate);
 	}
 
 	/**
