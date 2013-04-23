@@ -206,17 +206,22 @@ variable = value
 	public function test_mkdir()
 	{
 		// Will create sub-directory based on file name in /tmp
-		$path = '/tmp/' . __CLASS__ . __FILE__ . __METHOD__;
+		$path = '/tmp/' . __CLASS__;
 		try {
 			$shell = new Shell();
-			$shell->mkdir($path, 0777, true);
 
+			$success = $shell->mkdir($path, 0777, true);
+			$this->assertTrue($success, "Could not mkdir $path");
 			$this->assertTrue(is_dir($path));
-			@rmdir($path);
+
+			$failure = @$shell->mkdir($path, 0777, true);
+			$this->assertFalse($failure);
+
+			@rmdir($path); // Clean up
 		}
 		catch (\Exception $e)
 		{
-			@rmdir($path);
+			@rmdir($path); // Clean up
 			throw $e;
 		}
 	}
@@ -263,9 +268,21 @@ variable = value
 
 	public function test_mktempdir()
 	{
-		$shell = new Shell();
-		$dir = $shell->mktempdir();
-		$this->assertTrue(file_exists($dir), 'Temp dir was not created');
+		try
+		{
+			$shell = new Shell();
+			$dir = $shell->mktempdir();
+			$this->assertTrue(file_exists($dir), 'Temp dir was not created');
+			@rmdir($dir); // Clean up
+		}
+		catch (\Exception $e)
+		{
+			if ($dir)
+			{
+				@rmdir($path); // Clean up
+			}
+			throw $e;
+		}
 	}
 
 	public function test_touch()
@@ -275,5 +292,33 @@ variable = value
 			$shell->touch($filename);
 			$phpu->assertTrue(file_exists($filename), 'File was not touched');
 		});
+	}
+
+	public function test_chdir()
+	{
+		try
+		{
+			$shell = new Shell();
+			$dir = $shell->mktempdir();
+			$this->assertTrue(file_exists($dir), 'Temp dir was not created');
+
+			$success = $shell->chdir($dir);
+			$this->assertTrue($success, "Could not chdir $dir");
+
+			$non_existent_dir = "/a/non/existent/$dir";
+			// @ to prevent E_WARNING from being thrown
+			$failure = @$shell->chdir($non_existent_dir);
+			$this->assertFalse($failure, "chdir to $non_existent_dir should have failed");
+
+			@rmdir($dir); // Clean up
+		}
+		catch (\Exception $e)
+		{
+			if ($dir)
+			{
+				@rmdir($path); // Clean up
+			}
+			throw $e;
+		}
 	}
 }
