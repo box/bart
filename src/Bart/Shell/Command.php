@@ -34,6 +34,11 @@ class Command
 		$this->logger->debug('Set safe command string ' . $this->safeCommandStr);
 	}
 
+	public function __toString()
+	{
+		return "{$this->safeCommandStr}";
+	}
+
 	/**
 	 * @param bool $returnOutputAsString [Optional] By default, command output is returned as an array
 	 * @return array|string Output of command
