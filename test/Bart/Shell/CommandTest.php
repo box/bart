@@ -55,7 +55,7 @@ class CommandTest extends \Bart\BaseTestCase
 	{
 		// @note digits treated as strings
 		$c = new Command('echo %s %s %s %s', 'hello', 'world', 1, 2);
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = "$c";
 
 		$this->assertEquals("echo 'hello' 'world' '1' '2'", $safeStr, 'safe command');
 	}
@@ -63,7 +63,7 @@ class CommandTest extends \Bart\BaseTestCase
 	public function testEscapesSingleQuotes()
 	{
 		$c = new Command('echo %s', "joe's a baller");
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = "$c";
 
 		$this->assertEquals("echo 'joe'\\''s a baller'", $safeStr, 'single quotes');
 	}
@@ -71,7 +71,7 @@ class CommandTest extends \Bart\BaseTestCase
 	public function testDigitsNotSupported()
 	{
 		$c = new Command('echo %d %d %s', 42, 43, 108);
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = "$c";
 
 		$this->assertEquals("echo 0 0 '108'", $safeStr, 'Safe string');
 	}
@@ -79,7 +79,7 @@ class CommandTest extends \Bart\BaseTestCase
 	public function testWithUnsafeBackticks()
 	{
 		$c = new Command('echo %s', '`cat /etc/password`');
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = "$c";
 
 		$this->assertEquals('echo \'`cat /etc/password`\'', $safeStr, 'safe command');
 	}
@@ -87,7 +87,7 @@ class CommandTest extends \Bart\BaseTestCase
 	public function testWithUnsafeSubshell()
 	{
 		$c = new Command('echo %s', '$(cat /etc/password)');
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = "$c";
 
 		$this->assertEquals("echo '\$(cat /etc/password)'", $safeStr, 'safe command');
 	}
@@ -95,7 +95,7 @@ class CommandTest extends \Bart\BaseTestCase
 	public function testWithUnsafeEnvVariableArg()
 	{
 		$c = new Command('echo %s', '$variable');
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = "$c";
 
 		$this->assertEquals("echo '\$variable'", $safeStr, 'safe command');
 	}
@@ -107,17 +107,10 @@ class CommandTest extends \Bart\BaseTestCase
 
 		$cExpected = new Command('echo %s %s %d', 'hello', 'world', 42);
 
-		$safeActual = self::getSafeCommandFrom($cActual);
-		$safeExpected = self::getSafeCommandFrom($cExpected);
+		$safeActual = "$cActual";
+		$safeExpected = "$cExpected";
 
 		$this->assertEquals($safeExpected, $safeActual, 'safe commands');
-	}
-
-	private static function getSafeCommandFrom(Command $c)
-	{
-		$field = \Bart\Util\Reflection_Helper::get_property('Bart\Shell\Command', 'safeCommandStr');
-
-		return $field->getValue($c);
 	}
 }
 
