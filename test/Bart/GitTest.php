@@ -129,8 +129,7 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 		$command = $this->getMock('\Bart\Shell\Command', array(), array(), '', false);
 		$command->expects($this->once())
 			->method('run')
-			->with(true)
-			->will($this->returnValue('42'));
+			->will($this->returnValue(array(1,2,3,4,5,6,7,8,9)));
 
 		$shell = $this->getMock('\Bart\Shell');
 		$shell->expects($this->once())
@@ -141,6 +140,6 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 
 		$git = new Git('', 'origin');
 
-		$this->assertEquals('42', $git->getRevListCount(), 'rev list count');
+		$this->assertEquals(9, $git->getRevListCount(), 'rev list count');
 	}
 }

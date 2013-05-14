@@ -89,9 +89,11 @@ class Git
 
 	public function getRevListCount($revision = 'HEAD')
 	{
-		$cmd = $this->shell->command($this->git . ' rev-list --count %s', $revision);
+		$cmd = $this->shell->command($this->git . ' rev-list --all %s', $revision);
 
-		return $cmd->run(true);
+		$commits = $cmd->run();
+
+		return count($commits);
 	}
 
 	/**
