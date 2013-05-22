@@ -12,7 +12,8 @@ A quick look at some its features:
 + A PHP client to the **Gerrit** API
 + An easy to use SSH client wrapper
 + A generic and configurable git hook framework that may be shared by several git projects hosted on the same machine
-+ A shell class and mock shell class that allow the tester to mock out PHP global system functions, including those with PHP reference parameter. E.g. string exec ( string $command [, array &$output [, int &$return_var ]] );
++ A `Shell` class and mock shell class that allow the tester to mock out several of the PHP global system functions, including those with PHP reference parameter. E.g. `string exec ( string $command [, array &$output [, int &$return_var ]] );`
+++ A `Command` class that completely replaces the need to use `exec() or shell_exec()` at all
 
 # Install
 Bart can be installed with the [composer](http://getcomposer.org/) package manager.
@@ -67,6 +68,10 @@ Diesel is a simple and useful dependency injection framework for PHP. It does no
 Check out http://box.github.com/eng-services/blog/2012/05/03/introducting-diesel-php-dependency-injection/ for a brief description. Feel free to tweet at us @BoxEngServices with questions.
 
 See ```./src/Bart/Diesel.php``` and ```./test/Bart/Diesel_Test.php```
+
+## Shell and Command
+
+Replace your uses of `shell_exec` and `exec` with the much safer `Command` class. `Command` will shell escape all your command line arguments as well as your overall command. This makes building and running commands much safer. Failed commands will raise exceptions. Successful command output can be returned as arrays or a single string. See usage instructions at http://asheepapart.blogspot.com/2013/05/say-goodbye-to-php-shellexec-and-php.html
 
 ## Pre-Receive
 
