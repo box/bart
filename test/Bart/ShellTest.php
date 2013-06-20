@@ -316,9 +316,20 @@ variable = value
 		{
 			if ($dir)
 			{
-				@rmdir($path); // Clean up
+				@rmdir($dir); // Clean up
 			}
 			throw $e;
 		}
+	}
+
+	public function test_get_effective_user_name()
+	{
+		// Guessing this test should be accurate most of the time... unless run via sudo
+		$whoami = trim(shell_exec('whoami'));
+
+		$shell = new Shell();
+		$username = $shell->get_effective_user_name();
+
+		$this->assertEquals($whoami, $username, 'Effective user name');
 	}
 }

@@ -188,4 +188,20 @@ class Shell
 	{
 		return unlink($path);
 	}
+
+	/**
+	 * Get user name of effective user
+	 * More details about effective user versus real {@link http://www.lst.de/~okir/blackhats/node23.html}
+	 * @return string User name of effective user
+	 */
+	public function get_effective_user_name()
+	{
+		if (function_exists('posix_getpwuid'))
+		{
+			$info = posix_getpwuid(posix_geteuid());
+			return $info['name'];
+		}
+
+		return getenv('USERNAME');
+	}
 }
