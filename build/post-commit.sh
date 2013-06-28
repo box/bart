@@ -20,8 +20,8 @@ $(git show --name-status)
 
 set -x
 
-# PHPUnit doesn't have a --no-colors option,
-# ...sorry if the escapes mess up your output in jenkins
+# PHPUnit doesn't have a --no-colors option
+# For jenkins, check out https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
 phpunit \
   --log-junit build/reports/phpunit.xml \
   test/
