@@ -1,5 +1,6 @@
 <?php
 namespace Bart;
+use Bart\Shell\CommandException;
 
 /**
  * Class to encapsulate global functions involved in shelling out commands
@@ -131,6 +132,21 @@ class Shell
 	{
 		return mkdir($path, $mode, $createIntermediate);
 	}
+
+	/**
+	 * @param string $path A path on disk
+	 * @return array If $path is a dir, the files and directories in $path; else the path
+	 */
+	public function ls($path)
+	{
+		if (file_exists($path))
+		{
+			return is_dir($path) ? scandir($path) : array($path);
+		}
+
+		throw new CommandException('No such file or directory: ' . $path);
+	}
+
 
 	/**
 	 * Wrap the php function require_once so it can be stubbed in unit tests

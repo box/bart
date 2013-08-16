@@ -277,12 +277,46 @@ variable = value
 		}
 		catch (\Exception $e)
 		{
-			if ($dir)
-			{
-				@rmdir($path); // Clean up
+			if ($dir) {
+				@rmdir($dir); // Clean up
 			}
+
 			throw $e;
 		}
+	}
+
+	public function testLs_withDir()
+	{
+		$shell = new Shell();
+		$dir = $shell->mktempdir();
+
+		for ($i = 0; $i < 5; $i += 1) {
+			$shell->touch("$dir/blah-$i");
+		}
+
+		try
+		{
+			$files = $shell->ls($dir);
+			$this->assertCount(5 + 2, $files, 'Dir file count');
+			@rmdir($dir);
+		}
+		catch (\Exception $e)
+		{
+			@rmdir($dir);
+			throw $e;
+		}
+	}
+
+	public function testLs_withFile()
+	{
+		$this->doStuffToTempFile(function(BaseTestCase $phpu, Shell $shell, $filename)
+		{
+			$shell->touch($filename);
+			$files = $shell->ls($filename);
+
+			$phpu->assertCount(1, $files, 'File count of file ls');
+			$phpu->assertEquals($files[0], $filename);
+		});
 	}
 
 	public function test_touch()
