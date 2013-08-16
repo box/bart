@@ -297,7 +297,7 @@ variable = value
 		try
 		{
 			$files = $shell->ls($dir);
-			$this->assertCount(5 + 2, $files, 'Dir file count');
+			$this->assertCount(5, $files, 'Dir file count');
 			@rmdir($dir);
 		}
 		catch (\Exception $e)

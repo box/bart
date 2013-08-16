@@ -139,9 +139,22 @@ class Shell
 	 */
 	public function ls($path)
 	{
-		if (file_exists($path))
-		{
-			return is_dir($path) ? scandir($path) : array($path);
+		if (file_exists($path)) {
+			if (is_dir($path)) {
+				$files = scandir($path);
+
+				$ignore = array('.', '..');
+				$items = array();
+				foreach ($files as $file) {
+					if (in_array($file, $ignore)) continue;
+
+					$items[] = $file;
+				}
+
+				return $items;
+			}
+
+			return array($path);
 		}
 
 		throw new CommandException('No such file or directory: ' . $path);
