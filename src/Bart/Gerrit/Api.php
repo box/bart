@@ -19,6 +19,7 @@ class Api
 	{
 		$this->w = $w ?: new Witness\Silent();
 
+		/** @var \Bart\Ssh ssh */
 		$this->ssh = Diesel::create('Bart\Ssh', $conf['host']);
 		$this->ssh->use_auto_user();
 		$this->ssh->set_port($conf['port']);
@@ -36,6 +37,15 @@ class Api
 			'commit' => $commit_hash,
 			'label'=> 'CodeReview=10',
 		));
+	}
+
+	public function review($change_id, $score, $comment)
+	{
+		$score = "--code-review=$score";
+
+		// TODO commit or change id??
+		// TODO Escape single quotes?
+		$query = "review $score --message=$comment -- $commit";
 	}
 
 	/**

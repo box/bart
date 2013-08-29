@@ -58,6 +58,28 @@ abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Provide a temporary directory path to use for tests and always make sure it gets removed
+	 * @param callable $func (TestCase, String) => () Will do the stuff to the temporary directory
+	 */
+	protected function doStuffWithTempDir($func)
+	{
+		$shell = new Shell();
+		$dir = $shell->mktempdir();
+
+		try
+		{
+			$func($this, $dir);
+		}
+		catch (\Exception $e)
+		{
+			@unlink($dir);
+			throw $e;
+		}
+
+		@unlink($dir);
+	}
+
+	/**
 	 * Assert that $anonFunc throws $e, where $e: $type and $e.message contains $msg
 	 * @param string $type Exception type
 	 * @param string $msgNeedle Text expected to occur within exception message.

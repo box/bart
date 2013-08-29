@@ -24,7 +24,7 @@ class Gerrit_Approved extends Base
 		// Let exception bubble up if no change id
 		$change_id = $this->git->get_change_id($commit_hash);
 
-		$data;
+		$data = null;
 		try
 		{
 			$this->w->report('Getting data from gerrit: ' . $change_id);
