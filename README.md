@@ -126,15 +126,33 @@ This hook will verify the latest commit has been approved in Gerrit. See below
 for example configuration.
 
 
+    // BART_DIR/etc/php/hooks.conf
     [gerrit]
-    class = Gerrit_Approved
-    host = gerrit.internal-ip.company.com
-    port = 29418
-    
     ; Show progress as hook runs
     verbose = yes
-
     enabled = yes
+    
+    // BART_DIR/etc/php/gerrit.conf
+	[gerrit]
+	; Required. The host running the service
+	host = gerrit.example.com
+
+	[www]
+	; Valid options: https (default), http
+	scheme = http
+	; default (empty)
+	port = 8080
+
+	[ssh]
+	; Defaults to 29418
+	port = 29418
+	; User and key file to use for ssh connections to the Gerrit server
+	; Generally, this user and key file should be managed via a tool like Puppet
+	user = gerrit
+	key_file = "/home/gerrit/.ssh/id_rsa"
+
+
+
 
 
 [![Build Status](https://secure.travis-ci.org/box/bart.png?branch=master)](http://travis-ci.org/box/bart)
