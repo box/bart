@@ -7,6 +7,7 @@ use Bart\Config_Parser;
 
 /**
  * Ssh wrapper, shells out to command line
+ * @deprecated See \Bart\SshWrapper
  */
 class Ssh
 {

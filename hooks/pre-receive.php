@@ -3,6 +3,8 @@
  * Run all pre-receive scripts, failing early if problems
  */
 namespace Bart;
+use Bart\Configuration\Configuration;
+
 error_reporting(E_ALL);
 
 $root = dirname(__DIR__) . '/';
@@ -48,6 +50,11 @@ $repo = verify_param('repo');
 
 $hash = $opts['cmdline'][0];
 $witness = $opts['verbose'] ? new Witness() : new Witness\Silent();
+
+// Put all new fangled configurations in here
+// @NOTE Newer bart code will likely leave this invocation code up to the cloner
+// ...this is here for reference
+Configuration::configure(BART_DIR . 'etc/php');
 
 try
 {

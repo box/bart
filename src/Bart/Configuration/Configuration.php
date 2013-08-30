@@ -4,6 +4,8 @@ use Bart\Diesel;
 
 /**
  * Configuration base. All configuration classes must extend this.
+ * All children are required to define a README method which can be used
+ * to see how each class expects its conf files to look.
  */
 abstract class Configuration
 {
@@ -11,6 +13,11 @@ abstract class Configuration
 	private static $configCache = array();
 	/** @var array */
 	protected $configurations;
+
+	/**
+	 * @return string Sample of how configuration is intended to be defined
+	 */
+	public abstract function README();
 
 	/**
 	 * @param string $path Root path to all configuration
@@ -101,11 +108,6 @@ abstract class Configuration
 
 		$this->configurations = self::$configCache[$filePath];
 	}
-
-	/**
-	 * @return string Sample of how configuration is intended to be defined
-	 */
-	public abstract function README();
 
 	/**
 	 * @return array

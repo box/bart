@@ -1,0 +1,13 @@
+Historically this directory contained any configuration files for Bart PHP
+scripts. This approach has ended up being a bit of a pain to maintain.
+Particularly as more people are composing other projects on top of Bart.
+
+Future configuration code written in Bart will aim to use the new framework
+stemming from \Bart\Configuration\Configuration, which allows the user to
+configure a separate root configuration directory (i.e. not in the git tree)
+in which all configurations can be found.
+
+The intended use is for scripts to configure the Configuration framework when
+starting; and for configuration files to be managed externally by a system
+configuration tool like Puppet or Chef in a directory like /etc/php/app
+

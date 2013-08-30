@@ -1,51 +1,66 @@
 <?php
 namespace Bart\Gerrit;
 
+use Bart\Configuration\GerritConfig;
 use Bart\Diesel;
-use Bart\Witness;
-use Bart\Ssh;
+use Bart\JSON;
+use Bart\JSONParseException;
+use Bart\Shell\CommandException;
 
 /**
  * Wrapper for the Gerrit API
  */
 class Api
 {
+	/** @var \Bart\SshWrapper */
 	private $ssh;
+	/** @var \Logger */
+	private $logger;
 
 	/**
 	 * @param array $conf Configurations for reaching Gerrit server
 	 */
-	public function __construct(array $conf, Witness $w = null)
+	public function __construct()
 	{
-		$this->w = $w ?: new Witness\Silent();
+		/** @var \Bart\Configuration\GerritConfigs $config */
+		$config = Diesel::create('Bart\Configuration\GerritConfigs');
 
-		/** @var \Bart\Ssh ssh */
-		$this->ssh = Diesel::create('Bart\Ssh', $conf['host']);
-		$this->ssh->use_auto_user();
-		$this->ssh->set_port($conf['port']);
+		/** @var \Bart\SshWrapper $ssh */
+		$ssh = Diesel::create('Bart\SshWrapper', $config->host(), $config->sshPort());
+		$ssh->setCredentials($config->sshUser(), $config->sshKeyFile());
+
+		$this->ssh = $ssh;
+
+		$this->logger = \Logger::getLogger(__CLASS__);
+		$this->logger->trace("Configured Gerrit API using ssh {$ssh}");
 	}
 
 	/**
 	 * Query gerrit for an approved change
-	 *
-	 * @param type $change_id Gerrit Change-Id
-	 * @param type $commit_hash Latest commit hash pushed to gerrit
+	 * @param string $change_id Gerrit Change-Id
+	 * @param string $commit_hash Latest commit hash pushed to gerrit
 	 */
-	public function get_approved_change($change_id, $commit_hash)
+	public function getApprovedChange($change_id, $commit_hash)
 	{
-		return $this->get_change($change_id, array(
+		return $this->getChange($change_id, array(
 			'commit' => $commit_hash,
 			'label'=> 'CodeReview=10',
 		));
 	}
 
-	public function review($change_id, $score, $comment)
+	/**
+	 * Review a patchset
+	 * @param string $commitHash Gerrit uses this to find patch set
+	 * @param string $score E.g. +2
+	 * @param string $comment Comment to leave with review
+	 */
+	public function review($commitHash, $score, $comment)
 	{
-		$score = "--code-review=$score";
+		$score = "--code-review $score";
 
-		// TODO commit or change id??
-		// TODO Escape single quotes?
-		$query = "review $score --message=$comment -- $commit";
+		$query = "gerrit review $score --message '$comment' $commitHash";
+
+		$this->send($query);
 	}
 
 	/**
@@ -54,42 +69,31 @@ class Api
 	 *  'label' => 'CodeReview=10',
 	 * )
 	 * See http://scm.dev.box.net:8080/Documentation/user-search.html
+	 * @return array Decoded json of change, or null if none matching
 	 */
-	private function get_change($change_id, array $filters)
+	private function getChange($changeId, array $filters)
 	{
-		$filter_str = self::make_filter_string($filters);
+		$filterStr = self::makeFilterString($filters);
 
-		$remote_query = 'gerrit query --format=JSON ' . $change_id . $filter_str;
-		$this->w->report("Calling gerrit $remote_query");
-		$result = $this->ssh->execute($remote_query);
+		$remoteQuery = 'gerrit query --format=JSON ' . $changeId . $filterStr;
 
-		if ($result['exit_status'] != 0)
-		{
-			throw new \Exception('Gerrit API Exception: ' . print_r($result['output'], true));
+		$records = $this->send($remoteQuery, true);
+
+		if (count($records) > 1) {
+			throw new GerritException('More than one gerrit record matched');
 		}
 
-		$gerrit_page = $result['output'];
-
-		// No data returned, e.g.
-		// ...[0] => {"type":"stats","rowCount":0,"runTimeMilliseconds":17}
-		$record_count = count($gerrit_page);
-		if ($record_count == 1)
-		{
+		if (count($records) == 0) {
 			return null;
 		}
 
-		if ($record_count > 2)
-		{
-			throw new \Exception('More than one gerrit record matched');
-		}
-
-		return json_decode($gerrit_page[0], true);
+		return $records[0];
 	}
 
 	/**
-	 * @return All the filters as a string
+	 * @return string All the filters as a string
 	 */
-	private static function make_filter_string(array $filters)
+	private static function makeFilterString(array $filters)
 	{
 		$str = '';
 		foreach($filters as $name => $filter)
@@ -99,4 +103,47 @@ class Api
 
 		return $str;
 	}
+
+	/**
+	 * @param string $remoteQuery Gerrity query
+	 * @param boolean $processResponse If a JSON response is expected
+	 * @return mixed Array of json decoded results, or nil
+	 * @throws GerritException
+	 */
+	private function send($remoteQuery, $processResponse = false)
+	{
+		try {
+			$this->logger->debug("Calling gerrit with: $remoteQuery");
+			$gerritResponseArray = $this->ssh->exec($remoteQuery);
+
+			if (!$processResponse) {
+				return;
+			}
+
+			$stats = JSON::decode(array_pop($gerritResponseArray));
+
+			if ($stats['type'] == 'error') {
+				throw new GerritException($stats['message']);
+			}
+
+			$records = array();
+			foreach ($gerritResponseArray as $json) {
+				$records[] = JSON::decode($json);
+			}
+
+			return $records;
+		}
+		catch (CommandException $e) {
+			$this->logger->warn('Gerrit query failed', $e);
+			throw new GerritException('Query to gerrit failed', 0, $e);
+		}
+		catch (JSONParseException $e) {
+			$this->logger->warn('Gerrit query returned bad json', $e);
+			throw new GerritException('Gerrit query returned bad json', 0, $e);
+		}
+	}
+}
+
+class GerritException extends \Exception
+{
 }

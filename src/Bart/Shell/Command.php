@@ -6,6 +6,7 @@ namespace Bart\Shell;
  */
 class Command
 {
+	/** @var \Logger */
 	private $logger;
 	private $safeCommandStr;
 

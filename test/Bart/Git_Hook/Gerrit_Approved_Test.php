@@ -21,7 +21,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$mockApi = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
 		$mockApi->expects($this->once())
-			->method('get_approved_change')
+			->method('getApprovedChange')
 			->with($this->equalTo($change_id), $this->equalTo($commit_hash))
 					// Just some non-null value
 			->will($this->returnValue(array('id' => $change_id)));
@@ -39,7 +39,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$mockApi = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
 		$mockApi->expects($this->once())
-			->method('get_approved_change')
+			->method('getApprovedChange')
 			->with($this->equalTo($change_id), $this->equalTo($commit_hash))
 			->will($this->returnValue(null));
 
@@ -61,7 +61,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$mockApi = $this->getMock('\\Bart\\Gerrit\\Api', array(), array(), '', false);
 		$mockApi->expects($this->once())
-			->method('get_approved_change')
+			->method('getApprovedChange')
 			->with($this->equalTo($change_id), $this->equalTo($commit_hash))
 			->will($this->throwException(new \Exception()));
 
@@ -80,13 +80,9 @@ class Gerrit_Approved_Test extends TestBase
 		$phpu = $this;
 		$conf = self::$conf['gerrit'];
 		$mock_git = $this->getGitStub();
-		\Bart\Diesel::registerInstantiator('Bart\Gerrit\Api',
-			function($gerritConf) use($phpu, $conf, $mockApi) {
-				$phpu->assertEquals($conf, $gerritConf,
-						'Expected params to contain gerrit conf');
-
-				return $mockApi;
-			});
+		\Bart\Diesel::registerInstantiator('Bart\Gerrit\Api', function() use($mockApi) {
+			return $mockApi;
+		});
 
 		$mock_git->expects($this->once())
 			->method('get_change_id')

@@ -13,11 +13,11 @@ class GerritConfig extends Configuration
 	{
 		return <<<README
 [gerrit]
-; Required, the host running the service
+; Required. The host running the service
 host = gerrit.example.com
 
 [www]
-; valid options: https (default), http
+; Valid options: https (default), http
 scheme = http
 ; default (empty)
 port = 8080
