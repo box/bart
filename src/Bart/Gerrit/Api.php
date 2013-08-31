@@ -22,8 +22,8 @@ class Api
 	 */
 	public function __construct()
 	{
-		/** @var \Bart\Configuration\GerritConfigs $config */
-		$config = Diesel::create('Bart\Configuration\GerritConfigs');
+		/** @var \Bart\Configuration\GerritConfig $config */
+		$config = Diesel::create('Bart\Configuration\GerritConfig');
 
 		/** @var \Bart\SshWrapper $ssh */
 		$ssh = Diesel::create('Bart\SshWrapper', $config->host(), $config->sshPort());

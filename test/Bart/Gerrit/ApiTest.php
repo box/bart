@@ -102,7 +102,7 @@ class ApiTest extends BaseTestCase
 				return $ssh;
 			});
 
-		/** @var GerritConfig $gerritConfigs */
+		/** @var GerritConfig $gerritConfig */
 		$gerritConfigs = $this->getMock('Bart\Configuration\GerritConfig', array(), array(), '', false);
 		$gerritConfigs->expects($this->once())
 			->method('host')->will($this->returnValue('gerrit.example.com'));
@@ -113,7 +113,7 @@ class ApiTest extends BaseTestCase
 		$gerritConfigs->expects($this->once())
 			->method('sshKeyFile')->will($this->returnValue('~/.ssh/keyFile'));
 
-		Diesel::registerInstantiator('Bart\Configuration\GerritConfigs', function() use ($gerritConfigs) {
+		Diesel::registerInstantiator('Bart\Configuration\GerritConfig', function() use ($gerritConfigs) {
 			return $gerritConfigs;
 		});
 
