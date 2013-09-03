@@ -180,6 +180,7 @@ function getopts($options,$fromarr = null) {
 		}
 	}
 
+	$processFlags = true;
 	$inswitch = GETOPT_NOTSWITCH;
 	for ($i = 1; $i < count($fromarr); $i++) {
 		switch ($inswitch) {
@@ -200,7 +201,11 @@ function getopts($options,$fromarr = null) {
 				$inswitch = GETOPT_NOTSWITCH; // Reset the reader to carry on reading normal stuff
 				break;
 			case GETOPT_NOTSWITCH: // General invokation of no previously complex cmdline options (i.e. i have no idea what to expect next)
-				if (substr($fromarr[$i],0,1) == '-') {
+				if ($fromarr[$i] == '--') {
+					$processFlags = false;
+					continue;
+				}
+				if ($processFlags && substr($fromarr[$i],0,1) == '-') {
 					// Probably the start of a switch
 					if ((strlen($fromarr[$i]) == 2) || (substr($fromarr[$i],0,2) == '--')) { // Single switch OR long opt (might be a weird thing like VAL, MULTIVAL etc.)
 							$userkey = ltrim($fromarr[$i],'-');
@@ -225,9 +230,11 @@ function getopts($options,$fromarr = null) {
 							GETOPT_setval($opts,$options,$optionslookup[$hashkey],1);
 						}
 					}
-				} else {
-					$opts['cmdline'][] = $fromarr[$i]; // Just detritus on the cmdline
 				}
+				else {
+					$opts['cmdline'][] = $fromarr[$i];
+				}
+
 				break;
 		}
 	}
