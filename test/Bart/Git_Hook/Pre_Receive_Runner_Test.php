@@ -76,7 +76,7 @@ class Pre_Receive_Runner_Test extends TestBase
 		$pre_receive = $this->configure_for($hook_conf, $repo);
 
 		$phpu = $this;
-		Diesel::registerInstantiator('phpu', function() use ($phpu){
+		Diesel::registerInstantiator('Bart\Git_Hook\For_Testing', function() use ($phpu){
 			return $phpu;
 		});
 
@@ -124,7 +124,7 @@ class For_Testing extends Base
 	public function verify($commit_hash)
 	{
 		// Make sure everything got passed through as expected
-		$phpu = Diesel::create('phpu');
+		$phpu = Diesel::create('Bart\Git_Hook\For_Testing');
 		$phpu->assertEquals('Isengard', $this->repo, 'Wrong repo passed');
 		$phpu->assertEquals('.git', $this->dir, 'Wrong git dir passed');
 		$phpu->assertEquals('duper', $this->conf['jenkins']['super'], 'Wrong conf passed');

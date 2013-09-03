@@ -20,41 +20,50 @@ class Diesel_Test extends \Bart\BaseTestCase
 
 	public function testLocateNew_AnonymousFunctionNoArgs()
 	{
-		Diesel::registerInstantiator('Braynard', function() {
+		Diesel::registerInstantiator('Bart\DieselTestClassNoParams', function() {
 			return 42;
 		});
 
-		$fortyTwo = Diesel::create('Braynard');
+		$fortyTwo = Diesel::create('Bart\DieselTestClassNoParams');
 		$this->assertEquals(42, $fortyTwo, 'forty two');
 	}
 
 	public function testLocateNew_AnonymousFunctionWithArgs()
 	{
-		Diesel::registerInstantiator('Braynard', function($a, $b) {
+		Diesel::registerInstantiator('Bart\DieselTestClassNoParams', function($a, $b) {
 			return $b;
 		});
 
-		$fortyTwo = Diesel::create('Braynard', 34, 42);
+		$fortyTwo = Diesel::create('Bart\DieselTestClassNoParams', 34, 42);
 		$this->assertEquals(42, $fortyTwo, 'forty two');
 	}
 
 	public function testLocateNew_AnonymousFunctionAlreadyRegistered()
 	{
-		Diesel::registerInstantiator('Braynard', function($a, $b) {});
+		Diesel::registerInstantiator('Bart\DieselTestClassNoParams', function($a, $b) {});
 
-		$this->assertThrows('\Exception', 'A function is already registered for Braynard',
+		$this->assertThrows('\Bart\DieselException', 'A function is already registered for Bart\DieselTestClassNoParams',
 			function() {
-				Diesel::registerInstantiator('Braynard', function($a, $b) {});
+				Diesel::registerInstantiator('Bart\DieselTestClassNoParams', function($a, $b) {});
 			});
 	}
 
 	public function testLocateNew_AnonymousFunctionNonFunction()
 	{
-		$this->assertThrows('\Exception',
+		$this->assertThrows('\Bart\DieselException',
 				'Only functions may be registered as instantiators',
 				function() {
-					Diesel::registerInstantiator('', '');
+					Diesel::registerInstantiator('Bart\DieselTestClassNoParams', '');
 				});
+	}
+
+	public function testOnlyExistingClassesCanBeRegistered()
+	{
+		$this->assertThrows('\Bart\DieselException',
+			'Cannot register instantiator for Braynard because it does not exist',
+			function() {
+				Diesel::registerInstantiator('Braynard', '');
+			});
 	}
 
 	public function testLocateNew_WithReferenceArgs()
@@ -80,7 +89,7 @@ class Diesel_Test extends \Bart\BaseTestCase
 
 	public function testSingleton_WithArgs()
 	{
-		$this->assertThrows('Exception', 'Diesel::singleton only accepts no-argument classes', function() {
+		$this->assertThrows('\Bart\DieselException', 'Diesel::singleton only accepts no-argument classes', function() {
 			Diesel::singleton('ignored', 'some argument');
 		});
 	}

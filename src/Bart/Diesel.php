@@ -51,7 +51,7 @@ class Diesel
 	public static function singleton($className)
 	{
 		if (func_num_args() > 1) {
-			throw new \Exception('Diesel::singleton only accepts no-argument classes');
+			throw new DieselException('Diesel::singleton only accepts no-argument classes');
 		}
 
 		if (!array_key_exists($className, self::$singletons)) {
@@ -64,7 +64,7 @@ class Diesel
 	private static function createInstance($className, array $arguments)
 	{
 		if (!self::$allowDefaults) {
-			throw new \Exception("No singleton or instantiator defined for $className");
+			throw new DieselException("No singleton or instantiator defined for $className");
 		}
 
 		$argCount = count($arguments);
@@ -94,12 +94,17 @@ class Diesel
 			return;
 		}
 
+		if (!class_exists($className))
+		{
+			throw new DieselException("Cannot register instantiator for $className because it does not exist");
+
+		}
 		if (!is_callable($instantiator)) {
-			throw new \Exception('Only functions may be registered as instantiators');
+			throw new DieselException('Only functions may be registered as instantiators');
 		}
 
 		if (array_key_exists($className, self::$instantiators)) {
-			throw new \Exception("A function is already registered for $className");
+			throw new DieselException("A function is already registered for $className");
 		}
 
 		self::$instantiators[$className] = $instantiator;
@@ -121,4 +126,8 @@ class Diesel
 	{
 		self::$allowDefaults = false;
 	}
+}
+
+class DieselException extends \Exception
+{
 }
