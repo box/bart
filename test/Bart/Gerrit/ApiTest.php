@@ -55,7 +55,7 @@ class ApiTest extends BaseTestCase
 
 	}
 
-	public function testLegitResponse()
+	public function testLegitResponseFromGetApprovedChange()
 	{
 		$json = array(
 			'{"project":"scm","branch":"v5-dev","topic":"remove_collab",'
@@ -75,27 +75,53 @@ class ApiTest extends BaseTestCase
 				'Gerrit change status not parsed correclty');
 	}
 
+	public function testReviewWithEscapedSingleQuotes()
+	{
+		$comment = "Reviewin' like a boss";
+		$api = $this->createGerritApiForReview("'Reviewin'\\'' like a boss'");
+
+		$api->review($this->commitHash, -1, $comment);
+	}
+
 	private function createGerritApiForQuery($status, $json)
 	{
 		$changeId = $this->changeId;
 		$commitHash = $this->commitHash;
 
-		$remote_gerrit_cmd = 'gerrit query --format=JSON ' . $changeId
+		$remoteGerritCmd = 'gerrit query --format=JSON ' . $changeId
 				. " commit:$commitHash label:CodeReview=10";
 
 		$will = ($status != 0) ?
 			$this->throwException(new CommandException($status)) :
 			$this->returnValue($json);
 
+		return $this->configureApiForCmd($remoteGerritCmd, $will);
+	}
+
+	private function createGerritApiForReview($comment)
+	{
+		$commitHash = $this->commitHash;
+		$remoteGerritCmd = "gerrit review --code-review -1 --message $comment $commitHash";
+
+		return $this->configureApiForCmd($remoteGerritCmd, $this->returnValue(''));
+	}
+
+	/**
+	 * @param String $remoteGerritCmd
+	 * @param \PHPUnit_Framework_MockObject_Stub $will
+	 * @return Api
+	 */
+	private function configureApiForCmd($remoteGerritCmd, $will)
+	{
 		$ssh = $this->getMock('\\Bart\\SshWrapper', array(), array(), '', false);
 		$ssh->expects($this->once())
-				->method('exec')
-				->with($this->equalTo($remote_gerrit_cmd))
-				->will($will);
+			->method('exec')
+			->with($this->equalTo($remoteGerritCmd))
+			->will($will);
 
 		$phpu = $this;
 		Diesel::registerInstantiator('Bart\SshWrapper',
-			function($server, $port) use($ssh, $phpu) {
+			function ($server, $port) use ($ssh, $phpu) {
 				$phpu->assertEquals('gerrit.example.com', $server, 'gerrit server');
 				$phpu->assertEquals(29418, $port, 'gerrit ssh port');
 
@@ -113,7 +139,7 @@ class ApiTest extends BaseTestCase
 		$gerritConfigs->expects($this->once())
 			->method('sshKeyFile')->will($this->returnValue('~/.ssh/keyFile'));
 
-		Diesel::registerInstantiator('Bart\Configuration\GerritConfig', function() use ($gerritConfigs) {
+		Diesel::registerInstantiator('Bart\Configuration\GerritConfig', function () use ($gerritConfigs) {
 			return $gerritConfigs;
 		});
 

@@ -56,9 +56,14 @@ class Api
 	 */
 	public function review($commitHash, $score, $comment)
 	{
-		$score = "--code-review $score";
+		// This gets injected as a command argument, which will itself get escaped
+		// ...so, it needs to be double escaped
+		$escapedComment = escapeshellarg($comment);
 
-		$query = "gerrit review $score --message '$comment' $commitHash";
+		$review = "--code-review $score";
+		$message = "--message $escapedComment";
+
+		$query = "gerrit review $review $message $commitHash";
 
 		$this->send($query);
 	}
