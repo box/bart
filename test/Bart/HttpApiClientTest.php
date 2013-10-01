@@ -244,6 +244,26 @@ class HttpApiClientTest extends BaseTestCase{
 		$this->assertEquals("NoCookies", $hac->get()->get_body(), "Seeing cookies when they shouldn't be");
 	}
 
+	public function testHttpApiClientSetAuth()
+	{
+		$mockCurl = $this->setupMockCurl("http://localhost",80);
+
+		$mockCurl->expects($this->once())
+			->method("setAuth")
+			->with($this->equalTo("user"),
+				$this->equalTo("password"),
+				$this->equalTo(CURLAUTH_BASIC));
+
+		$mockCurl->expects($this->once())
+			->method("Get")
+			->will($this->returnValue($this->getResponseArray()));
+
+		$hac = new HttpApiClient("http://localhost");
+
+		$hac->setAuth("user", "password");
+
+		$hac->get();
+	}
 
 
 

@@ -30,9 +30,6 @@ class HttpApiClient
 	/** @var int default connection timeout */
 	protected $timeout = 15;
 
-    /** @var  \Bart\Curl curl object to use for curl interactions*/
-    protected $curler;
-
 	/** @var  string[] string holding the cookies! */
 	protected $cookies = null;
 
@@ -61,13 +58,13 @@ class HttpApiClient
 	 */
 	public function setAuth($username,$password, $method = CURLAUTH_BASIC)
 	{
-		if(is_string($username))
+		if(!is_string($username))
 		{
 
 			throw new HttpApiClientException("Username must be a string");
 		}
 
-		if(is_string($password))
+		if(!is_string($password))
 		{
 			throw new HttpApiClientException("Password must be a string");
 		}
@@ -105,10 +102,14 @@ class HttpApiClient
 	 */
 	public function setGlobalGetVars($globalGetVars)
 	{
-		if($this->validateKeyValueArray($globalGetVars) || $globalGetVars === null)
+		if($this->validateKeyValueArray($globalGetVars))
 		{
-			$this->globalGetVars = (gettype($globalGetVars) == "array")? $globalGetVars : array();
+			$this->globalGetVars = $globalGetVars;
 
+		}
+		elseif($globalGetVars === null)
+		{
+			$this->globalGetVars = array();
 		}
 		else
 		{
@@ -132,10 +133,14 @@ class HttpApiClient
 	 */
 	public function setGlobalHeaders($globalHeaders)
 	{
-		if($this->validateKeyValueArray($globalHeaders) || $globalHeaders === null)
+		if($this->validateKeyValueArray($globalHeaders))
 		{
-			$this->globalHeaders = (gettype($globalHeaders) == "array")? $globalHeaders : array();
+			$this->globalHeaders = $globalHeaders;
 
+		}
+		elseif( $globalHeaders === null)
+		{
+			$this->globalHeaders = array();
 		}
 		else
 		{
@@ -251,7 +256,6 @@ class HttpApiClient
 		$this->setTimeout($timeout, $curler);
 
 		$validatedGetVars = $this->getValidatedGetVars($getVars);
-
 		$validatedHeaders = $this->getValidatedHeaders($headers);
 
 		$response = $curler->post($path,
