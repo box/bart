@@ -17,6 +17,7 @@ class Curl
 	{
 		$this->hostUri = $hostUri;
 		$this->port = $port;
+		$ops[CURLOPT_HEADER] = true;
 	}
 
 	/**
@@ -86,7 +87,6 @@ class Curl
 	private function request($httpMethod, $path, array $getParams, $body, array $headers = null, $cookies = null)
 	{
 		$uri = $this->buildFullUri($path, $getParams);
-		print "full uri: $uri";
 		$ch = curl_init($uri);
 		curl_setopt($ch, CURLOPT_PORT, $this->port);
 
@@ -123,10 +123,6 @@ class Curl
 		// Set all user defined options last
 		curl_setopt_array($ch, $this->opts);
 
-		//make this explicit and override user-input
-		//they should get headers through the return array
-		curl_setopt($ch, CURLOPT_HEADER, true);
-
 		$returnContent = curl_exec($ch);
 		$info = curl_getinfo($ch);
 
@@ -139,19 +135,35 @@ class Curl
 
 		curl_close($ch);
 
-
-		list($headers_string,$content) = explode("\r\n\r\n", $returnContent);
-
-		$headers = $this->parseHeaders($headers_string);
-
-		print $headers_string;
-		return array(
+		$response_array = array(
 			'info' => $info,
-			'content' => $content,
-			'headers' => $headers
 		);
+
+		if(array_key_exists(CURLOPT_HEADER, $this->opts) && $this->opts[CURLOPT_HEADER])
+		{
+			// Split the headers and the body out of the return
+			// this is the most consistently accepted method I've been able
+			// to find. still feels janky =|
+			list($headers_string,$content) = explode("\r\n\r\n", $returnContent);
+
+			$response_array['headers'] = $this->parseHeaders($headers_string);
+			$response_array['content'] = $content;
+		}
+		else
+		{
+			$response_array['content'] = $returnContent;
+		}
+
+
+		return $response_array;
 	}
 
+	/**
+	 * Parse the headers into an array that matches that pattern of
+	 * http://php.net/manual/en/function.http-parse-headers.php
+	 * @param $headerString
+	 * @return array
+	 */
 	private function parseHeaders($headerString)
 	{
 		preg_match_all("/^([-a-zA-Z0-9_]+): (.+)$/m",$headerString,$matches,PREG_SET_ORDER);
@@ -163,7 +175,7 @@ class Curl
 
 			//check for duplicate headers and group into arrays
 			//necessary for Set-Cookie in particular
-			if(array_key_exists($m[1],$headers))
+			if(array_key_exists($header,$headers))
 			{
 
 				if(is_array($headers[$header]) )
@@ -172,12 +184,9 @@ class Curl
 				}
 				else
 				{
-					// take the key -> value and set it to
-					// key -> array
-					// this matches the pattern of
-					// http://php.net/manual/en/function.http-parse-headers.php
-					$oldValue = $headers[$header];
-					$headers[$header] = array($oldValue, $value);
+					// Convert to array of Header values
+					$currentValue = $headers[$header];
+					$headers[$header] = array($currentValue, $value);
 				}
 			}
 			else

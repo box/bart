@@ -2,7 +2,9 @@
 namespace Bart;
 
 /**
- * Please provide a description
+ * PHPUnit Test class for HttpApiClient
+ *
+ * @author Jeremy Pollard <jpollard@bpx.com>
  */ 
 class HttpApiClientTest extends BaseTestCase{
 

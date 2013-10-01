@@ -2,7 +2,9 @@
 namespace Bart;
 
 /**
- * Please provide a description
+ * A wrapper around Bart\Curl to make it more session aware and API friendly
+ *
+ * @author Jeremy Pollard <jpollard@box.com>
  */ 
 class HttpApiClient
 {
@@ -32,10 +34,13 @@ class HttpApiClient
     protected $curler;
 
 	/** @var  string[] string holding the cookies! */
-	protected $cookies = array();
+	protected $cookies = null;
 
 	/** @var bool true to track cookies automatically, false to ignore recieved cookies */
 	protected $trackCookies = true;
+
+	/** @var bool enable/disable ssl peer verification, enabled by default */
+	protected $sslPeerVerification = true;
 
 
 
@@ -95,7 +100,7 @@ class HttpApiClient
 
 	/**
 	 * Set Global 'Get' variables to be sent with every request
-	 * @param \string[] $globalGetVars
+	 * @param string[] $globalGetVars
 	 * @throws HttpApiClientException
 	 */
 	public function setGlobalGetVars($globalGetVars)
@@ -122,7 +127,8 @@ class HttpApiClient
 
 	/**
 	 * Set Global Headers to be sent with each request
-	 * @param \string[] $globalHeaders
+	 * @param string[] $globalHeaders
+	 * @throws HttpApiClientException
 	 */
 	public function setGlobalHeaders($globalHeaders)
 	{
@@ -148,10 +154,24 @@ class HttpApiClient
 	}
 
 	/**
-	 * Sets the tack cookies flag.
-	 * If true, automatically track cookies sent from the server
-	 * If flase, do not track cookies sent from the server
-	 * @param $track
+	 * Enable/Disable ssl peer verification
+	 * @param bool $verify enable disable peer verification
+	 * @throws HttpApiClientException
+	 */
+	public function sslPeerVerification($verify)
+	{
+		if(!is_bool($verify))
+		{
+			throw new HttpApiClientException("expects boolean");
+		}
+
+		$this->sslPeerVerification = $verify;
+	}
+
+	/**
+	 * Enable or disable cookie tracking. (Enabled by default.)
+	 * Tracked cookies will be included with subsequent requests.
+	 * @param bool $track When true, track all cookies sent from server; otherwise ignore cookies
 	 * @throws HttpApiClientException
 	 */
 	public function trackCookies($track)
@@ -165,11 +185,15 @@ class HttpApiClient
 
 	}
 
+	/**
+	 * @param array $cookies
+	 * @throws HttpApiClientException
+	 */
 	public function setCookies(array $cookies)
 	{
 		if($this->validateKeyValueArray($cookies) || $cookies === null)
 		{
-			$this->cookies = (gettype($cookies) == "array")? $cookies : array();
+			$this->cookies = $cookies;
 
 		}
 		else
@@ -179,28 +203,33 @@ class HttpApiClient
 	}
 
 	/**
+	 * @return string[]
+	 */
+	public function getCookies()
+	{
+		return $this->cookies;
+	}
+
+	/**
 	 * Perform a HTTP Get request
 	 * @param string $path
-	 * @param null|string[] $getVars
-	 * @param null|string[] $headers
-	 * @param null|int $timeout
+	 * @param string[] $getVars
+	 * @param string[] $headers
+	 * @param int $timeout
 	 * @return HttpApiClientResponse
 	 */
 	public function get($path = "/", $getVars = null, $headers = null, $timeout = null)
 	{
-		$this->initCurl();
-		$this->setTimeout($timeout);
+		$curler = $this->initCurl();
+		$this->setTimeout($timeout, $curler);
 
 		$validatedGetVars = $this->getValidatedGetVars($getVars);
 		$validatedHeaders = $this->getValidatedHeaders($headers);
 
-		//if we haven't set any cookies, provide null
-		$cookies = (count($this->cookies) > 0) ? $this->cookies : null;
-
-		$response = $this->curler->get($path,
+		$response = $curler->get($path,
 			$validatedGetVars,
 			$validatedHeaders,
-			$cookies
+			$this->cookies
 		);
 
 		return $this->processResponse($response);
@@ -210,29 +239,26 @@ class HttpApiClient
 	/**
 	 * Perform a HTTP Post request
 	 * @param string $path
-	 * @param null|string[] $getVars
-	 * @param null|string|string[] $postVars
-	 * @param null|string[] $headers
-	 * @param null|int $timeout
+	 * @param string[] $getVars
+	 * @param string|string[] $postVars
+	 * @param string[] $headers
+	 * @param int $timeout
 	 * @return HttpApiClientResponse
 	 */
 	public function post($path = "/", $getVars = null, $postVars = null, $headers = null, $timeout = null)
 	{
-		$this->initCurl();
-		$this->setTimeout($timeout);
+		$curler = $this->initCurl();
+		$this->setTimeout($timeout, $curler);
 
 		$validatedGetVars = $this->getValidatedGetVars($getVars);
 
 		$validatedHeaders = $this->getValidatedHeaders($headers);
 
-		//if we haven't set any cookies, provide null
-		$cookies = (count($this->cookies) > 0) ? $this->cookies : null;
-
-		$response = $this->curler->post($path,
+		$response = $curler->post($path,
 			$validatedGetVars,
 			$this->getValidatedPostVars($postVars),
 			$validatedHeaders,
-			$cookies
+			$this->cookies
 		);
 
 		return $this->processResponse($response);
@@ -247,22 +273,23 @@ class HttpApiClient
 	 */
 	private function processResponse(array $response)
 	{
-		$tempCookies = array();
-		if(array_key_exists('Set-Cookie', $response['headers']))
+		if($this->trackCookies)
 		{
-			foreach($response['headers']['Set-Cookie'] as $c)
+			if(array_key_exists('Set-Cookie', $response['headers']))
 			{
-				$keyValue = strstr($c,';', true);
-				list($key, $value) = explode('=', $keyValue);
-				$tempCookies[$key] = $value;
+				if($this->cookies === null )
+				{
+					$this->cookies = array();
+				}
+				foreach($response['headers']['Set-Cookie'] as $c)
+				{
+					$keyValue = strstr($c,';', true);
+					list($key, $value) = explode('=', $keyValue);
+					$this->cookies[$key] = $value;
+				}
 			}
 		}
 
-		//merge cookies
-		if($this->trackCookies)
-		{
-			$this->cookies = array_merge($this->cookies,$tempCookies);
-		}
 		return new HttpApiClientResponse(
 			$response['info']['http_code'],
 			$response['content'],
@@ -280,14 +307,15 @@ class HttpApiClient
 	 */
 	private function getValidatedHeaders($headers)
 	{
+		//no headers sent, return the global ones
+		if($headers === null)
+		{
+			return $this->globalHeaders;
+		}
+
 		if(!$this->validateKeyValueArray($headers) && $headers !== null)
 		{
 			throw new HttpApiClientException("Invalid Headers: " . print_r($headers, true));
-		}
-
-		if($headers === null)
-		{
-			$headers = array();
 		}
 
 		return array_merge($this->globalHeaders,$headers);
@@ -303,14 +331,14 @@ class HttpApiClient
 	 */
 	private function getValidatedGetVars($getVars)
 	{
+		if($getVars === null)
+		{
+			return $this->globalGetVars;
+		}
+
 		if(!$this->validateKeyValueArray($getVars) && $getVars !== null)
 		{
 			throw new HttpApiClientException("Invalid Get Vars: " . print_r($getVars, true));
-		}
-
-		if($getVars === null)
-		{
-			$getVars = array();
 		}
 
 		//merge instance getVars with globalGetVars
@@ -331,8 +359,6 @@ class HttpApiClient
 		{
 			throw new HttpApiClientException("Invalid Post Vars: " . print_r($postVars, true));
 		}
-
-
 
 		return $postVars;
 	}
@@ -387,16 +413,6 @@ class HttpApiClient
 	 */
 	protected function initCurl()
 	{
-		if( !is_null($this->curler) )
-		{
-			//close it just to be safe
-			$this->curler = null;
-		}
-
-		if($this->authMethod !== null)
-		{
-			$this->curler->setAuth($this->username, $this->password, $this->authMethod);
-		}
 
 		$port = 80;
 		//#http(s)?://{^:]+:(\d+)($|/)#
@@ -409,44 +425,45 @@ class HttpApiClient
 		//so will just path fully validated URI with request
 
 		/** @var \Bart\Curl curler */
-		$this->curler = Diesel::create('\Bart\Curl', $this->baseUri, $port);
+		$curler = Diesel::create('\Bart\Curl', $this->baseUri, $port);
 
+		if($this->authMethod !== null)
+		{
+			$curler->setAuth($this->username, $this->password, $this->authMethod);
+		}
 
-		$this->curler->setPhpCurlOpts(array(
-			CURLOPT_TIMEOUT => $this->timeout,
-			CURLOPT_SSL_VERIFYPEER => false
-		));
+		$curlOpts = array(CURLOPT_TIMEOUT => $this->timeout,
+							CURLOPT_HEADER => true);
+		if(!$this->sslPeerVerification)
+		{
+			$curlOpts[CURLOPT_SSL_VERIFYPEER] = false;
+		}
+
+		$curler->setPhpCurlOpts($curlOpts);
+
+		return $curler;
 
 	}
 
 	/**
 	 * Set the timeout for curl attempts in seconds
 	 * @param int $timeout timeout in seconds, must be > 0
+	 * @param \Bart\Curl $curler curl object to set timeout on
 	 * @throws HttpApiClientException Invalid Timeout in the event that the timeout is non-numeric or non > 0
 	 */
-	protected function setTimeout($timeout)
+	protected function setTimeout($timeout, $curler)
 	{
-		if($this->curler === null)
-		{
-			$this->initCurl();
-		}
 		if(is_int($timeout) && $timeout > 0)
 		{
-			$this->curler->setPhpCurlOpts(array(CURLOPT_TIMEOUT => $timeout));
+			$curler->setPhpCurlOpts(array(CURLOPT_TIMEOUT => $timeout));
 		}
 		elseif($timeout !== null)
 		{
-			throw $this->newException("Invalid timeout: '$timeout'");
+			throw new HttpApiClientException("Invalid timeout: '$timeout'");
 		}
 	}
 
-	/**
-	 * @return string[]
-	 */
-	public function getCookies()
-	{
-		return $this->cookies;
-	}
+
 
 
 
