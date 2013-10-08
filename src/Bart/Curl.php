@@ -6,7 +6,7 @@ namespace Bart;
  */
 class Curl
 {
-	private $uri;
+	private $hostUri;
 	private $port;
 	private $opts = array();
 
@@ -15,8 +15,9 @@ class Curl
 	 */
 	public function __construct($hostUri, $port = 80)
 	{
-		$this->uri = $hostUri;
+		$this->hostUri = $hostUri;
 		$this->port = $port;
+		$ops[CURLOPT_HEADER] = true;
 	}
 
 	/**
@@ -50,42 +51,43 @@ class Curl
 
 	public function get($path, array $getParams, array $headers = null, $cookies = null)
 	{
-		return $this->request(null, $this->uri . $path,
+		return $this->request(null, $path,
 			$getParams, null, $headers, $cookies);
 	}
 
 	/**
-	 * @param string $path relative path from base uri
+	 * @param string $path relative path from base hostUri
 	 * @param array $getParams An associative array of get parameters
 	 * @param [array,string] $postData The data to send in your post
 	 *
 	 * @return string Remote response body
 	 */
-	public function post($path, array $getParams, $postData)
+	public function post($path, array $getParams, $postData, array $headers = null, $cookies = null)
 	{
-		return $this->request(CURLOPT_POST, $this->uri . $path,
-			$getParams, $postData);
+		return $this->request(CURLOPT_POST, $path,
+			$getParams, $postData, $headers, $cookies);
 	}
 
 	/**
 	 * PUT a json body
 	 *
-	 * @param string $path relative path from base uri
+	 * @param string $path relative path from base hostUri
 	 * @param array $getParams An associative array of get parameters
 	 * @param mixed $body Optional array or string request body data to send
 	 * @param array $headers Optional headers to send with PUT
 	 *
 	 * @return string Remote response body
 	 */
-	public function put($path, array $getParams, $body = null, array $headers = null)
+	public function put($path, array $getParams, $body = null, array $headers = null, $cookies = null)
 	{
-		return $this->request(CURLOPT_PUT, $this->uri . $path,
-			$getParams, $body, $headers);
+		return $this->request(CURLOPT_PUT, $path,
+			$getParams, $body, $headers, $cookies);
 	}
 
-	private function request($httpMethod, $uri, array $getParams, $body, array $headers = null, $cookies = null)
+	private function request($httpMethod, $path, array $getParams, $body, array $headers = null, $cookies = null)
 	{
-		$ch = curl_init($uri . '?' . http_build_query($getParams));
+		$uri = $this->buildFullUri($path, $getParams);
+		$ch = curl_init($uri);
 		curl_setopt($ch, CURLOPT_PORT, $this->port);
 
 		if ($headers != null)
@@ -121,10 +123,10 @@ class Curl
 		// Set all user defined options last
 		curl_setopt_array($ch, $this->opts);
 
-		$content = curl_exec($ch);
+		$returnContent = curl_exec($ch);
 		$info = curl_getinfo($ch);
 
-		if ((curl_errno($ch) != 0) || ($content === FALSE))
+		if ((curl_errno($ch) != 0) || ($returnContent === FALSE))
 		{
 			$error = curl_error($ch);
 			curl_close($ch);
@@ -133,9 +135,113 @@ class Curl
 
 		curl_close($ch);
 
-		return array(
+		$response_array = array(
 			'info' => $info,
-			'content' => $content,
 		);
+
+		if(array_key_exists(CURLOPT_HEADER, $this->opts) && $this->opts[CURLOPT_HEADER])
+		{
+			// Split the headers and the body out of the return
+			// this is the most consistently accepted method I've been able
+			// to find. still feels janky =|
+			list($headers_string,$content) = explode("\r\n\r\n", $returnContent);
+
+			$response_array['headers'] = $this->parseHeaders($headers_string);
+			$response_array['content'] = $content;
+		}
+		else
+		{
+			$response_array['content'] = $returnContent;
+		}
+
+
+		return $response_array;
+	}
+
+	/**
+	 * Parse the headers into an array that matches that pattern of
+	 * http://php.net/manual/en/function.http-parse-headers.php
+	 * @param $headerString
+	 * @return array
+	 */
+	private function parseHeaders($headerString)
+	{
+		preg_match_all("/^([-a-zA-Z0-9_]+): (.+)$/m",$headerString,$matches,PREG_SET_ORDER);
+		$headers = array();
+		foreach($matches as $m)
+		{
+			$header = $m[1];
+			$value = $m[2];
+
+			//check for duplicate headers and group into arrays
+			//necessary for Set-Cookie in particular
+			if(array_key_exists($header,$headers))
+			{
+
+				if(is_array($headers[$header]) )
+				{
+					$headers[$header][] = $value;
+				}
+				else
+				{
+					// Convert to array of Header values
+					$currentValue = $headers[$header];
+					$headers[$header] = array($currentValue, $value);
+				}
+			}
+			else
+			{
+				$headers[$header] = $value;
+			}
+		}
+		return $headers;
+	}
+
+	/**
+	 * build the full URI request
+	 * @param string $path the path portion of the URI provided with this request
+	 * @param string[] $getVars array of GET params
+	 * @return string full hostUri including GET params
+	 */
+	private function buildFullUri($path, $getVars)
+	{
+		$fullPath = $this->buildFullPath($path);
+
+		if (!$getVars) {
+			return $fullPath;
+		}
+
+		$query = http_build_query($getVars);
+
+		// does the URI have existing query params?
+		if(strpos($fullPath, '?') !== false) {
+			return $fullPath . "&$query";
+		}
+
+		// Default; the path is just the path with no params
+		return $fullPath . "?$query";
+
+	}
+
+	private function buildFullPath($subUri)
+	{
+		if (!$subUri) {
+			return $this->hostUri;
+		}
+
+		$hostHasSlash = (substr($this->hostUri, -1) == "/");
+		$subHasSlash = (substr($subUri, 0, 1) == "/");
+
+		if ($hostHasSlash && $subHasSlash) {
+			// leave the trailing slash, remove the leading
+			return sprintf("%s%s",$this->hostUri,substr($subUri,1));
+		}
+
+		if(!$hostHasSlash && !$subHasSlash) {
+			return sprintf("%s/%s",$this->hostUri, $subUri);
+		}
+
+		// one has the slash and the other doesn't
+		return sprintf("%s%s",$this->hostUri,$subUri);
 	}
 }
