@@ -13,7 +13,7 @@ A quick look at some its features:
 + An easy to use SSH client wrapper
 + A generic and configurable git hook framework that may be shared by several git projects hosted on the same machine
 + A `Shell` class and mock shell class that allow the tester to mock out several of the PHP global system functions, including those with PHP reference parameter. E.g. `string exec ( string $command [, array &$output [, int &$return_var ]] );`
-++ A `Command` class that completely replaces the need to use `exec() or shell_exec()` at all
++ A `Command` class that completely replaces the need to use `exec() or shell_exec()` at all
 
 # Install
 Bart can be installed with the [composer](http://getcomposer.org/) package manager.
@@ -65,7 +65,7 @@ http://developers.blog.box.com/2011/10/27/php-autoloader-building-your-own-regis
 
 Diesel is a simple and useful dependency injection framework for PHP. It does not require major changes to your code base, nor does it require odd configurations in non-PHP.
 
-Check out http://box.github.com/eng-services/blog/2012/05/03/introducting-diesel-php-dependency-injection/ for a brief description. Feel free to tweet at us @BoxEngServices with questions.
+Check out http://asheepapart.blogspot.com/2012/07/php-dependency-injection-part-2.html for a brief description.
 
 See ```./src/Bart/Diesel.php``` and ```./test/Bart/Diesel_Test.php```
 
