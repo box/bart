@@ -57,6 +57,26 @@ class ConfigurationTest extends BaseTestCase
 		});
 	}
 
+	public function testUnderscoresSupported()
+	{
+		Diesel::registerInstantiator('\Bart\Shell', function () {
+			// Actually want to see how this works with a real Shell
+			return new Shell();
+		});
+
+		$this->doStuffWithTempDir(function (BaseTestCase $phpu, $dirName) {
+			Configuration::configure($dirName);
+
+			// Copy sample INI file to path Configuration will look for TestConfig INI
+			copy(BART_DIR . '/test/etc/conf-parser.conf', $dirName . '/test_underscore.conf');
+
+			$configs = new Test_Underscore_Config(false);
+
+			$phpu->assertEquals(42, $configs->number(), 'Underscore Configs number');
+			$phpu->assertEquals('Quail', $configs->wildGame(), 'Underscore Configs wildGame');
+		});
+	}
+
 	public function testRequiredConfigsWhenMissing()
 	{
 		$configs = new TestConfig();
@@ -161,4 +181,11 @@ class TestConfig extends Configuration
 		self::$pathField->setValue(null, null);
 		self::$configCacheField->setValue(null, array());
 	}
+}
+
+/**
+ * Config class with several an underscores
+ */
+class Test_Underscore_Config extends TestConfig
+{
 }

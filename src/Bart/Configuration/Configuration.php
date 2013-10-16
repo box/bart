@@ -98,7 +98,9 @@ abstract class Configuration
 		// Strip off namespace
 		$subclass = substr($subclass, strrpos($subclass, '\\') + 1);
 		// Strip off "Config"
-		$name = strtolower(basename($subclass, 'Config'));
+		$subclass = substr($subclass, 0, -1 * strlen('Config'));
+		// Chop any trailing underscore for non-camel cased names
+		$name = strtolower(chop($subclass, '_'));
 
 		$filePath = self::$path . "/$name.conf";
 
