@@ -5,9 +5,6 @@ use Bart\Diesel;
 use Bart\Shell;
 use Bart\Util\Reflection_Helper;
 
-/**
- * Please provide a concise description
- */
 class ConfigurationTest extends BaseTestCase
 {
 	private static $sampleConfigs = array(
@@ -27,7 +24,7 @@ class ConfigurationTest extends BaseTestCase
 
 	public function testSetConfigurationTwiceFails()
 	{
-		$this->assertThrows('Bart\Configuration\Configuration_Exception', 'Already set to path 1', function () {
+		$this->assertThrows('Bart\Configuration\ConfigurationException', 'Already set to path 1', function () {
 			Configuration::configure('path 1');
 			Configuration::configure('path 2');
 		});
@@ -35,7 +32,7 @@ class ConfigurationTest extends BaseTestCase
 
 	public function testLoadThrowsWhenNotConfigured()
 	{
-		$this->assertThrows('Bart\Configuration\Configuration_Exception', 'path not set!', function () {
+		$this->assertThrows('Bart\Configuration\ConfigurationException', 'path not set!', function () {
 			new TestConfig(false);
 		});
 	}
@@ -66,7 +63,7 @@ class ConfigurationTest extends BaseTestCase
 		$configs->configureForTesting(self::$sampleConfigs);
 
 		$this->assertThrows(
-			'Bart\Configuration\Configuration_Exception',
+			'Bart\Configuration\ConfigurationException',
 			'No value set for required favorites.food',
 			function () use ($configs) {
 				$configs->food();
@@ -91,7 +88,7 @@ class ConfigurationTest extends BaseTestCase
 	public function testNumericWhenNotInt()
 	{
 		$this->assertThrows(
-			'\Bart\Configuration\Configuration_Type_Conversion_Exception',
+			'\Bart\Configuration\ConfigurationTypeConversionException',
 			'Non-numeric provided',
 			function() {
 				$configs = new TestConfig();

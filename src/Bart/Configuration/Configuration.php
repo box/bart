@@ -21,14 +21,14 @@ abstract class Configuration
 
 	/**
 	 * @param string $path Root path to all configuration
-	 * @throws Configuration_Exception If already configured
+	 * @throws ConfigurationException If already configured
 	 */
 	public static function configure($path)
 	{
 		if (self::$path) {
 			// If this becomes innapppropriate, it can be lifted
 			// It feels apppropriate based on my current understanding of use cases
-			throw new Configuration_Exception('Cannot reconfigure configuration path. Already set to ' . self::$path);
+			throw new ConfigurationException('Cannot reconfigure configuration path. Already set to ' . self::$path);
 		}
 
 		self::$path = $path;
@@ -45,7 +45,7 @@ abstract class Configuration
 	 * @param mixed $default If not required, the default to use
 	 * @param bool $required If an exception should be raised when value is missing
 	 * @return mixed Configured value or default
-	 * @throws Configuration_Exception
+	 * @throws ConfigurationException
 	 */
 	protected function getValue($section, $key, $default = null, $required = true)
 	{
@@ -60,7 +60,7 @@ abstract class Configuration
 		// Complain when the value is required and no default passed
 		// ...Provides path for non-required when the default is literally null
 		if ($default === null && $required) {
-			throw new Configuration_Exception("No value set for required ${section}.${key}");
+			throw new ConfigurationException("No value set for required ${section}.${key}");
 		}
 
 		return $default;
@@ -81,7 +81,7 @@ abstract class Configuration
 			return $rawVal;
 		}
 
-		throw new Configuration_Type_Conversion_Exception("Non-numeric provided for ${section}.${key}");
+		throw new ConfigurationTypeConversionException("Non-numeric provided for ${section}.${key}");
 	}
 
 	/**
@@ -91,7 +91,7 @@ abstract class Configuration
 	private function load()
 	{
 		if (!self::$path) {
-			throw new Configuration_Exception('Configuration root path not set! Please call configure()');
+			throw new ConfigurationException('Configuration root path not set! Please call configure()');
 		}
 
 		$subclass = get_called_class();
@@ -103,7 +103,7 @@ abstract class Configuration
 		$filePath = self::$path . "/$name.conf";
 
 		if (!array_key_exists($filePath, self::$configCache)) {
-			self::$configCache[$filePath] = $this->load_configurations_from_disk($filePath, $subclass);
+			self::$configCache[$filePath] = $this->loadConfigurationsFromDisk($filePath, $subclass);
 		}
 
 		$this->configurations = self::$configCache[$filePath];
@@ -111,14 +111,14 @@ abstract class Configuration
 
 	/**
 	 * @return array
-	 * @throws Configuration_Exception
+	 * @throws ConfigurationException
 	 */
-	private function load_configurations_from_disk($filePath, $subclass)
+	private function loadConfigurationsFromDisk($filePath, $subclass)
 	{
 		/** @var \Bart\Shell $shell */
 		$shell = Diesel::create('\Bart\Shell');
 		if (!$shell->file_exists($filePath)) {
-			throw new Configuration_Exception("No configuration file found for $subclass at $filePath");
+			throw new ConfigurationException("No configuration file found for $subclass at $filePath");
 		}
 
 		// @NOTE we're not using the ConfigResolver to resolve environment
@@ -128,10 +128,10 @@ abstract class Configuration
 	}
 }
 
-class Configuration_Exception extends \Exception
+class ConfigurationException extends \Exception
 {
 }
 
-class Configuration_Type_Conversion_Exception extends \Exception
+class ConfigurationTypeConversionException extends \Exception
 {
 }
