@@ -61,7 +61,7 @@ class StrictReturnValueMap
 	 * @param mixed[] $requests
 	 * @throws \Exception if $requests is not an array
 	 */
-	public function __construct($phpu, $requests)
+	public function __construct(\Bart\BaseTestCase $phpu, $requests)
 	{
 		$this->phpu = $phpu;
 		if(!is_array($requests))
@@ -81,7 +81,9 @@ class StrictReturnValueMap
 	{
 		$expectedInvocation = array_shift($this->invocations);
 
+		// the response is the last element of the array, pop it off
 		$response = array_pop($expectedInvocation);
+
 		$this->phpu->assertEquals($expectedInvocation, $parameters, "StrictReturnValueMap Error: Actual parameters do not match expected");
 
 		return $response;
