@@ -13,7 +13,7 @@
  *		// This method is called numerous times and you need to ensure it is passed the correct
  *		// $command and $timeout as well as return the expected response.
  *
- *      public function test_Shmock_With_OrderedReturnValueMap_syntax()
+ *      public function test_Shmock_With_StrictReturnValueMap_syntax()
  *		{
  * 			// we need to pass the PHPUnit object in, but can't use 'this'
  * 			$phpu = $this;
@@ -21,18 +21,18 @@
  * 			// Create an array of arrays. each sub array contains and ordered element of the
  * 			// expected parameters the mocked method expects to receive. The LAST element of the
  * 			// array is the response that will be returned.
- * 			$run_command_expects = new \Bart\OrderedReturnValueMap($phpu, array(
+ * 			$run_command_expects = new \Bart\StrictReturnValueMap($phpu, array(
  *				array("first command", 10, "first response"),
- * 				array("second command", 10, "second response)
+ * 				array("second command", 10, "second response")
  * 			));
  *
  *
  *			$ssh_mock = $this->shmock('\Foo\Ssh',
- * 				function($shmock) use ($phpu, $run_expects)
+ * 				function($shmock) use ($run_command_expects)
  *				{
  *					$shmock->run_command()->any()->will(function(\PHPUnit_Framework_MockObject_Invocation $invocation) use ($run_command_expects)
  *					{
- *						return $run_command_expects->check_request($invocation->parameters);
+ *						return $run_command_expects->checkInvocation($invocation->parameters);
  *					});
  *				}
  * 			);
@@ -47,11 +47,11 @@
 namespace Bart;
 
 
-class OrderedReturnValueMap
+class StrictReturnValueMap
 {
 
 	/** @var array  */
-	protected $requests;
+	protected $invocations;
 
 	/** @var  \Bart\BaseTestCase */
 	protected $phpu;
@@ -69,7 +69,7 @@ class OrderedReturnValueMap
 			throw new \Exception("Requests must be an array");
 		}
 
-		$this->requests = $requests;
+		$this->invocations = $requests;
 	}
 
 	/**
@@ -77,12 +77,12 @@ class OrderedReturnValueMap
 	 * @param mixed[] $parameters array of expected parameters and associated response
 	 * @return mixed
 	 */
-	public function check_request($parameters)
+	public function checkInvocation($parameters)
 	{
-		$expected_request = array_shift($this->requests);
+		$expectedInvocation = array_shift($this->invocations);
 
-		$response = array_pop($expected_request);
-		$this->phpu->assertEquals($expected_request, $parameters, "OrderedReturnValueMap Error: Actual parameters do not match expected");
+		$response = array_pop($expectedInvocation);
+		$this->phpu->assertEquals($expectedInvocation, $parameters, "StrictReturnValueMap Error: Actual parameters do not match expected");
 
 		return $response;
 	}
@@ -92,6 +92,6 @@ class OrderedReturnValueMap
 	 */
 	public function verify()
 	{
-		$this->phpu->assertEmpty($this->requests, "OrderedReturnValueMap Error: Not all requests were completed");
+		$this->phpu->assertEmpty($this->invocations, "StrictReturnValueMap Error: Not all requests were completed");
 	}
 }
