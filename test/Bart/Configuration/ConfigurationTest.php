@@ -116,6 +116,45 @@ class ConfigurationTest extends BaseTestCase
 				$configs->number();
 			});
 	}
+
+	public function testGetArrayHandlesSingleElement()
+	{
+		$configs = new TestConfig();
+		$configs->configureForTesting(array(
+			'favorites' => array(
+				'nicknames' => 'bubba velociraptor',
+			),
+		));
+
+		$nicknames = $configs->nicknames();
+		$this->assertEquals(array('bubba velociraptor'), $nicknames);
+	}
+
+	public function testGetArrayHandlesZeroOrOneSpace()
+	{
+		$configs = new TestConfig();
+		$configs->configureForTesting(array(
+			'favorites' => array(
+				'nicknames' => 'bubba, hingle,mccringle',
+			),
+		));
+
+		$nicknames = $configs->nicknames();
+		$this->assertEquals(array('bubba', 'hingle', 'mccringle'), $nicknames);
+	}
+
+	public function testGetArrayIgnoresSpacesNotProcededByCommas()
+	{
+		$configs = new TestConfig();
+		$configs->configureForTesting(array(
+			'favorites' => array(
+				'nicknames' => 'bubba, hingle mccringle',
+			),
+		));
+
+		$nicknames = $configs->nicknames();
+		$this->assertEquals(array('bubba', 'hingle mccringle'), $nicknames);
+	}
 }
 
 class TestConfig extends Configuration
@@ -161,6 +200,11 @@ class TestConfig extends Configuration
 	public function speed()
 	{
 		return $this->getValue('travel', 'speed', null, false);
+	}
+
+	public function nicknames()
+	{
+		return $this->getArray('favorites', 'nicknames');
 	}
 
 	/**

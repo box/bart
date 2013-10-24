@@ -85,6 +85,20 @@ abstract class Configuration
 	}
 
 	/**
+	 * @return string[] String list of value split by comma
+	 * @throws ConfigurationTypeConversionException
+	 */
+	protected function getArray($section, $key, array $default = null, $required = true)
+	{
+		$rawVal = $this->getValue($section, $key, $default, $required);
+
+		// I considered accepting a "split" parameter, but decided that for now
+		// ...enforcing a convention of at most one space after the comma will
+		// ...encourage cleaner configuration files
+		return preg_split('/,(\s)?/', $rawVal);
+	}
+
+	/**
 	 * Load the configurations from the config file for subclass
 	 * @return array The parsed array from the configuration file
 	 */
