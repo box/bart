@@ -109,8 +109,13 @@ abstract class Configuration
 		}
 
 		$subclass = get_called_class();
-		// Strip off namespace
-		$subclass = substr($subclass, strrpos($subclass, '\\') + 1);
+
+		$ind_slash = strrpos($subclass, '\\');
+		if ($ind_slash !== false) {
+			// Strip off namespace
+			$subclass = substr($subclass, $ind_slash + 1);
+		}
+
 		// Strip off "Config"
 		$subclass = substr($subclass, 0, -1 * strlen('Config'));
 		// Chop any trailing underscore for non-camel cased names
