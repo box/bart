@@ -1,5 +1,6 @@
 <?php
 namespace Bart\Configuration;
+
 use Bart\BaseTestCase;
 use Bart\Diesel;
 use Bart\Shell;
@@ -110,7 +111,7 @@ class ConfigurationTest extends BaseTestCase
 		$this->assertThrows(
 			'\Bart\Configuration\ConfigurationTypeConversionException',
 			'Non-numeric provided',
-			function() {
+			function () {
 				$configs = new TestConfig();
 				$configs->configureForTesting(array('favorites' => array('number' => 'a string')));
 				$configs->number();
@@ -154,6 +155,58 @@ class ConfigurationTest extends BaseTestCase
 
 		$nicknames = $configs->nicknames();
 		$this->assertEquals(array('bubba', 'hingle mccringle'), $nicknames);
+	}
+
+	/**
+	 * Asserts that the sample conf returned by README() on $configurationClassName
+	 * can be parsed successfully by the class.
+	 *
+	 * This is a good practice to ensure that READMEs stay up to date with their class
+	 *
+	 * Technical details:
+	 *    Will parse and use $configurationClassName::README() as the configuration
+	 *    and call public methods on the class. Any missing or misconfigured
+	 *    samples in the README will raise exceptions.
+	 *
+	 * @param BaseTestCase $case The current test instance running
+	 * @param string $configurationClassName FQCN E.g. \Bart\Configuration\GerritConfig
+	 * @param string $configFileName E.g. gerrit.conf
+	 */
+	public static function assertREADME(BaseTestCase $case, $configurationClassName, $configFileName)
+	{
+		TestConfig::resetConfigurations();
+		Diesel::registerInstantiator('\Bart\Shell', function () {
+			return new Shell();
+		});
+
+		$case->doStuffWithTempDir(function ($_, $dirName)
+		use ($configurationClassName, $configFileName) {
+			$logger = \Logger::getLogger(__CLASS__);
+			$logger->debug("Starting README test for $configurationClassName");
+
+			$logger->debug('Configured configurations to load from $dirName');
+			Configuration::configure($dirName);
+
+			$logger->debug("Writing README to $configFileName");
+			file_put_contents("{$dirName}/$configFileName", $configurationClassName::README());
+
+			$configs = new $configurationClassName();
+
+			$reflect = new \ReflectionClass($configurationClassName);
+			$methods = $reflect->getMethods(\ReflectionMethod::IS_PUBLIC);
+
+			$logger->debug("Iterating over relevant methods for $configurationClassName");
+			foreach ($methods as $method) {
+				if ($method->isStatic()) continue;
+				if ($method->isConstructor()) continue;
+
+				$logger->debug("Calling {$method->getName()} for $configurationClassName");
+				$methodName = $method->getName();
+
+				// Let's call the method! E.g. $gerritConfig::sshUser()
+				$configs->$methodName();
+			}
+		});
 	}
 }
 
