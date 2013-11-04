@@ -172,24 +172,28 @@ class ConfigurationTest extends BaseTestCase
 	 * @param string $configurationClassName FQCN E.g. \Bart\Configuration\GerritConfig
 	 * @param string $configFileName E.g. gerrit.conf
 	 */
-	public static function assertREADME(BaseTestCase $case, $configurationClassName, $configFileName)
+	public static function assertREADME(BaseTestCase $phpu, $configurationClassName, $configFileName)
 	{
-		TestConfig::resetConfigurations();
 		Diesel::registerInstantiator('\Bart\Shell', function () {
 			return new Shell();
 		});
 
-		$case->doStuffWithTempDir(function ($_, $dirName)
+		$phpu->doStuffWithTempDir(function (BaseTestCase $phpu, $dirName)
 		use ($configurationClassName, $configFileName) {
 			$logger = \Logger::getLogger(__CLASS__);
 			$logger->debug("Starting README test for $configurationClassName");
 
-			$logger->debug('Configured configurations to load from $dirName');
-			Configuration::configure($dirName);
+			// Setup cache so we can skip loading until we've written the actual configs
+			// We need to do (something like) this because README() is not static
+			TestConfig::resetConfigurations($dirName, $configFileName, array());
+			$configs = new $configurationClassName();
 
 			$logger->debug("Writing README to $configFileName");
-			file_put_contents("{$dirName}/$configFileName", $configurationClassName::README());
+			file_put_contents("{$dirName}/$configFileName", $configs->README());
 
+			// Reset the cache so that the configs will be read from disk
+			$logger->debug("Configuring system to load configs from $dirName");
+			TestConfig::resetConfigurations($dirName);
 			$configs = new $configurationClassName();
 
 			$reflect = new \ReflectionClass($configurationClassName);
@@ -204,7 +208,7 @@ class ConfigurationTest extends BaseTestCase
 				$methodName = $method->getName();
 
 				// Let's call the method! E.g. $gerritConfig::sshUser()
-				$configs->$methodName();
+				$phpu->assertNotEmpty($configs->$methodName(), "$methodName()");
 			}
 		});
 	}
@@ -268,15 +272,20 @@ class TestConfig extends Configuration
 		$this->configurations = $configsArray;
 	}
 
-	public static function resetConfigurations()
+	public static function resetConfigurations($path = null, $confName = null, $value = null)
 	{
 		if (!self::$pathField) {
 			self::$pathField = Reflection_Helper::get_property('Bart\Configuration\Configuration', 'path');
 			self::$configCacheField = Reflection_Helper::get_property('Bart\Configuration\Configuration', 'configCache');
 		}
 
-		self::$pathField->setValue(null, null);
-		self::$configCacheField->setValue(null, array());
+		$cache = array();
+		if ($confName) {
+			$cache["$path/$confName"] = $value;
+		}
+
+		self::$pathField->setValue(null, $path);
+		self::$configCacheField->setValue(null, $cache);
 	}
 }
 
