@@ -130,7 +130,7 @@ class Curl
 		{
 			$error = curl_error($ch);
 			curl_close($ch);
-			throw new \Exception("Error posting to $uri, curl error: $error");
+			throw new \Exception("Error requesting $uri, curl error: $error");
 		}
 
 		curl_close($ch);

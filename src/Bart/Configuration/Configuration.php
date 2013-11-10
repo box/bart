@@ -124,7 +124,7 @@ abstract class Configuration
 		$filePath = self::$path . "/$name.conf";
 
 		if (!array_key_exists($filePath, self::$configCache)) {
-			self::$configCache[$filePath] = $this->loadConfigurationsFromDisk($filePath, $subclass);
+			self::$configCache[$filePath] = $this->loadConfigurationsFromDisk($filePath, $name);
 		}
 
 		$this->configurations = self::$configCache[$filePath];
