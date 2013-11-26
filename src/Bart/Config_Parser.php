@@ -46,6 +46,11 @@ class Config_Parser
 	{
 		$conf = parse_ini_file($file_location, 1);
 
+		if (!$conf)
+		{
+			throw new \Exception('Error parsing configuration file at ' . $file_location);
+		}
+
 		// Will hold the final configuration, with respect to current environment
 		$conf_final = array();
 
@@ -115,11 +120,14 @@ class Config_Parser
 			foreach ($param as $p => $v)
 			{
 				$matches = array();
-				while (preg_match('/<<([\w\d]+)>>/', $conf_final[$section][$p], $matches)
-                && $param[$matches[1]])
+				while (preg_match('/<<([\w\d]+)>>/', $conf_final[$section][$p], $matches))
 				{
-					$conf_final[$section][$p] =
-            preg_replace('/<<[\w\d]+>>/', $param[$matches[1]], $conf_final[$section][$p], 1);
+					if (!array_key_exists($matches[1], $param))
+					{
+						throw new \Exception("Reference by key '{$p}' to undefined key '{$matches[1]}' in section '{$section}'.");
+					}
+
+					$conf_final[$section][$p] = preg_replace('/<<[\w\d]+>>/', $param[$matches[1]], $conf_final[$section][$p], 1);
 				}
 			}
 		}
