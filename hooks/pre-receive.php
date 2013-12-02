@@ -5,7 +5,7 @@
 namespace Bart;
 use Bart\Configuration\Configuration;
 
-error_reporting(E_ALL);
+error_reporting(E_ALL | E_STRICT);
 
 $root = dirname(__DIR__) . '/';
 require_once $root . 'src/Bart/bart-common.php';
@@ -49,7 +49,16 @@ $git_dir = verify_param('git-dir');
 $repo = verify_param('repo');
 
 $hash = $opts['cmdline'][0];
-$witness = $opts['verbose'] ? new Witness() : new Witness\Silent();
+
+$witness = new Witness\Silent();
+$level = 'warn';
+if ($opts['verbose']) {
+	$witness = new Witness();
+	$level = 'info';
+}
+
+require_once 'log4php/Logger.php';
+Log4PHP::initForConsole($level);
 
 // Put all new fangled configurations in here
 // @NOTE Newer bart code will likely leave this invocation code up to the cloner

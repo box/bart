@@ -53,7 +53,7 @@ class Log4PHP
 			'appenders' => array(
 				'default-file' => array(
 					'class' => 'LoggerAppenderDailyFile',
-					"params" => array('file' => "/box/var/log/anthology/${file}-%s.log"),
+					"params" => array('file' => "${file}-%s.log"),
 					'layout' => self::$defaultLayout,
 				)
 			),

@@ -12,6 +12,27 @@ class ApiTest extends BaseTestCase
 	public $changeId = 'Iabcde123f';
 	public $commitHash = 'abcde123fg';
 
+	/** @var GerritConfig $gerritConfig */
+	private $gerritConfigs;
+
+	public function setUp()
+	{
+		/** @var GerritConfig $gerritConfig */
+		$gerritConfigs = $this->getMock('Bart\Configuration\GerritConfig', array(), array(), '', false);
+		$gerritConfigs->expects($this->once())
+			->method('host')->will($this->returnValue('gerrit.example.com'));
+		$gerritConfigs->expects($this->once())
+			->method('sshPort')->will($this->returnValue(29418));
+		$gerritConfigs->expects($this->once())
+			->method('sshUser')->will($this->returnValue('gerrit'));
+		$gerritConfigs->expects($this->once())
+			->method('sshKeyFile')->will($this->returnValue('~/.ssh/keyFile'));
+
+		$this->gerritConfigs = $gerritConfigs;
+
+		parent::setUp();
+	}
+
 	public function testSshFailureCaptured()
 	{
 		$g = $this->createGerritApiForQuery(255, '');
@@ -88,6 +109,11 @@ class ApiTest extends BaseTestCase
 		$changeId = $this->changeId;
 		$commitHash = $this->commitHash;
 
+		$this->gerritConfigs->expects($this->once())
+			->method('reviewScore')->will($this->returnValue(10));
+		$this->gerritConfigs->expects($this->once())
+			->method('verifiedScore')->will($this->returnValue(null));
+
 		$remoteGerritCmd = 'gerrit query --format=JSON ' . $changeId
 				. " commit:$commitHash label:CodeReview=10";
 
@@ -119,6 +145,11 @@ class ApiTest extends BaseTestCase
 			->with($this->equalTo($remoteGerritCmd))
 			->will($will);
 
+		$gerritConfigs = $this->gerritConfigs;
+		Diesel::registerInstantiator('Bart\Configuration\GerritConfig', function () use ($gerritConfigs) {
+			return $gerritConfigs;
+		});
+
 		$phpu = $this;
 		Diesel::registerInstantiator('Bart\SshWrapper',
 			function ($server, $port) use ($ssh, $phpu) {
@@ -127,21 +158,6 @@ class ApiTest extends BaseTestCase
 
 				return $ssh;
 			});
-
-		/** @var GerritConfig $gerritConfig */
-		$gerritConfigs = $this->getMock('Bart\Configuration\GerritConfig', array(), array(), '', false);
-		$gerritConfigs->expects($this->once())
-			->method('host')->will($this->returnValue('gerrit.example.com'));
-		$gerritConfigs->expects($this->once())
-			->method('sshPort')->will($this->returnValue(29418));
-		$gerritConfigs->expects($this->once())
-			->method('sshUser')->will($this->returnValue('gerrit'));
-		$gerritConfigs->expects($this->once())
-			->method('sshKeyFile')->will($this->returnValue('~/.ssh/keyFile'));
-
-		Diesel::registerInstantiator('Bart\Configuration\GerritConfig', function () use ($gerritConfigs) {
-			return $gerritConfigs;
-		});
 
 		return new Api();
 	}

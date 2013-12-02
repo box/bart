@@ -14,6 +14,8 @@ class Api
 {
 	/** @var \Bart\SshWrapper */
 	private $ssh;
+	/** @var \Bart\Configuration\GerritConfig */
+	private $config;
 	/** @var \Logger */
 	private $logger;
 
@@ -30,6 +32,7 @@ class Api
 		$ssh->setCredentials($config->sshUser(), $config->sshKeyFile());
 
 		$this->ssh = $ssh;
+		$this->config = $config;
 
 		$this->logger = \Logger::getLogger(__CLASS__);
 		$this->logger->trace("Configured Gerrit API using ssh {$ssh}");
@@ -42,9 +45,17 @@ class Api
 	 */
 	public function getApprovedChange($change_id, $commit_hash)
 	{
+		$reviewScore = $this->config->reviewScore();
+		$verifiedScore = $this->config->verifiedScore();
+
+		$verifiedOption = '';
+		if ($verifiedScore !== null) {
+			$verifiedOption = ",Verified={$verifiedScore}";
+		}
+
 		return $this->getChange($change_id, array(
 			'commit' => $commit_hash,
-			'label'=> 'CodeReview=10',
+			'label'=> "CodeReview={$reviewScore}{$verifiedOption}",
 		));
 	}
 

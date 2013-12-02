@@ -30,6 +30,14 @@ port = 29418
 user = gerrit
 key_file = "/home/gerrit/.ssh/id_rsa"
 
+[review]
+; Optional, required score to be considered approved
+; default 10
+score = 2
+; Optional, required verification score to be considered approved
+; default (empty) meaning no verification is required
+verified = 1
+
 README;
 	}
 
@@ -51,5 +59,22 @@ README;
 	public function sshKeyFile()
 	{
 		return $this->getValue('ssh', 'key_file');
+	}
+
+	/**
+	 * @return int Required review score for a review to be considered approved
+	 */
+	public function reviewScore()
+	{
+		return $this->getNumeric('review', 'score', 10);
+	}
+
+	/**
+	 * @return int|null Required verification score for a review to be considered approved.
+	 * null if verification not required
+	 */
+	public function verifiedScore()
+	{
+		return $this->getNumeric('review', 'verified', null);
 	}
 }

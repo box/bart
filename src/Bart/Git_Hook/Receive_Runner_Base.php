@@ -2,6 +2,7 @@
 namespace Bart\Git_Hook;
 
 use Bart\Diesel;
+use Bart\Log4PHP;
 use Bart\Witness;
 use Bart\Config_Parser;
 
@@ -15,6 +16,8 @@ class Receive_Runner_Base
 	protected $hooks;
 	protected $conf;
 	protected $w;
+	/** @var \Logger */
+	protected $logger;
 
 	public function __construct($git_dir, $repo, Witness $w)
 	{
@@ -27,6 +30,7 @@ class Receive_Runner_Base
 		$this->hooks = explode(',', $conf[static::$type]['names']);
 		$this->conf = $conf;
 		$this->w = $w;
+		$this->logger = Log4PHP::getLogger(get_called_class());
 	}
 
 	public function verify_all($commit_hash)
