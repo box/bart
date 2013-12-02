@@ -104,6 +104,18 @@ class ApiTest extends BaseTestCase
 		$api->review($this->commitHash, -1, $comment);
 	}
 
+	public function testMarkReviewMerged()
+	{
+		$updateSql = "UPDATE changes SET open = 'N', status = 'M', mergeable = 'Y' "
+			. "WHERE change_key = '{$this->changeId}' LIMIT 1;";
+		$remoteGerritCmd = 'gerrit gsql --format=JSON -c "' . $updateSql . '"';
+
+		$json = array('{"type":"update-stats","rowCount":1,"runTimeMilliseconds":1}');
+		$api = $this->configureApiForCmd($remoteGerritCmd, $this->returnValue($json));
+
+		$api->markReviewMerged($this->changeId);
+	}
+
 	private function createGerritApiForQuery($status, $json)
 	{
 		$changeId = $this->changeId;

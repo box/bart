@@ -40,10 +40,10 @@ class Api
 
 	/**
 	 * Query gerrit for an approved change
-	 * @param string $change_id Gerrit Change-Id
-	 * @param string $commit_hash Latest commit hash pushed to gerrit
+	 * @param string $changeId Gerrit Change-Id
+	 * @param string $commitHash Latest commit hash pushed to gerrit
 	 */
-	public function getApprovedChange($change_id, $commit_hash)
+	public function getApprovedChange($changeId, $commitHash)
 	{
 		$reviewScore = $this->config->reviewScore();
 		$verifiedScore = $this->config->verifiedScore();
@@ -53,8 +53,8 @@ class Api
 			$verifiedOption = ",Verified={$verifiedScore}";
 		}
 
-		return $this->getChange($change_id, array(
-			'commit' => $commit_hash,
+		return $this->getChange($changeId, array(
+			'commit' => $commitHash,
 			'label'=> "CodeReview={$reviewScore}{$verifiedOption}",
 		));
 	}
@@ -80,6 +80,29 @@ class Api
 	}
 
 	/**
+	 * Use GSQL to mark review as merged.
+	 * This is useful if reviews are being merged manually outside of Gerrit
+	 * @param string $changeId Gerrit Change-Id key to review
+	 */
+	public function markReviewMerged($changeId)
+	{
+		// Query to undo: UPDATE changes SET open = 'Y', status = 'n', mergeable = 'N' WHERE change_id = 76641 LIMIT 1;
+		$safeChangeId = escapeshellarg($changeId);
+		$gsql = "UPDATE changes SET open = 'N', status = 'M', mergeable = 'Y' WHERE change_key = {$safeChangeId} LIMIT 1;";
+
+		$result = $this->send("gerrit gsql --format=JSON -c \"$gsql\"", true);
+		$stats = $result['stats'];
+
+		$rowCount = $stats['rowCount'];
+		if ($rowCount != 1) {
+			$this->logger->warn("Unexpected row count ({$rowCount}) affected for change id {$changeId}");
+		}
+		else {
+			$this->logger->info("Marked review {$changeId} as merged");
+		}
+	}
+
+	/**
 	 * @param array $filters e.g. array(
 	 * 	'commit' => '$commit_hash',
 	 *  'label' => 'CodeReview=10',
@@ -93,8 +116,10 @@ class Api
 
 		$remoteQuery = 'gerrit query --format=JSON ' . $changeId . $filterStr;
 
-		$records = $this->send($remoteQuery, true);
+		$result = $this->send($remoteQuery, true);
+		$records = $result['records'];
 
+		// NOTE can probably use :stats here
 		if (count($records) > 1) {
 			throw new GerritException('More than one gerrit record matched');
 		}
@@ -147,7 +172,10 @@ class Api
 				$records[] = JSON::decode($json);
 			}
 
-			return $records;
+			return array(
+				'stats' => $stats,
+				'records' => $records
+			);
 		}
 		catch (CommandException $e) {
 			$this->logger->warn('Gerrit query failed', $e);
