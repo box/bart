@@ -118,6 +118,67 @@ class ConfigurationTest extends BaseTestCase
 			});
 	}
 
+	public function testGetBoolWhenLiteralTrue()
+	{
+		$favorites = parse_ini_string('has_favorites = true', false);
+		$configs = new TestConfig();
+		$configs->configureForTesting(array('favorites' => $favorites));
+		$this->assertTrue($configs->hasFavorites(), 'hasFavorites');
+	}
+
+	public function testGetBoolWhenQuotedTrue()
+	{
+		// Use quotes around value
+		$favorites = parse_ini_string('has_favorites = "true"', false);
+		$configs = new TestConfig();
+		$configs->configureForTesting(array('favorites' => $favorites));
+		$this->assertTrue($configs->hasFavorites(), 'hasFavorites');
+	}
+
+	public function testGetBoolWhenYes()
+	{
+		// Unbelievable...
+		$favorites = parse_ini_string('has_favorites = yes', false);
+		$configs = new TestConfig();
+		$configs->configureForTesting(array('favorites' => $favorites));
+		$this->assertTrue($configs->hasFavorites(), 'hasFavorites');
+	}
+
+	public function testGetBoolWhenQuotedYes()
+	{
+		// Quoted value should be treated like a string
+		$favorites = parse_ini_string('has_favorites = "yes"', false);
+		$configs = new TestConfig();
+		$configs->configureForTesting(array('favorites' => $favorites));
+		$this->assertFalse($configs->hasFavorites(), 'hasFavorites');
+	}
+
+	public function testGetBoolWhen1()
+	{
+		// Amazing...
+		$favorites = parse_ini_string('has_favorites = 1', false);
+		$configs = new TestConfig();
+		$configs->configureForTesting(array('favorites' => $favorites));
+		$this->assertTrue($configs->hasFavorites(), 'hasFavorites');
+	}
+
+	public function testGetBoolWhenQuoted1()
+	{
+		// Quoted value should be treated like a string, but 1 is not
+		$favorites = parse_ini_string('has_favorites = "1"', false);
+		$configs = new TestConfig();
+		$configs->configureForTesting(array('favorites' => $favorites));
+		$this->assertTrue($configs->hasFavorites(), 'hasFavorites');
+	}
+
+	public function testGetBoolFalse()
+	{
+		$favorites = parse_ini_string('has_favorites = false', false);
+		$configs = new TestConfig();
+		$configs->configureForTesting(array('favorites' => $favorites));
+		$this->assertFalse($configs->hasFavorites(), 'hasFavorites');
+	}
+
 	public function testGetArrayHandlesSingleElement()
 	{
 		$configs = new TestConfig();
@@ -262,6 +323,11 @@ class TestConfig extends Configuration
 	public function nicknames()
 	{
 		return $this->getArray('favorites', 'nicknames');
+	}
+
+	public function hasFavorites()
+	{
+		return $this->getBool('favorites', 'has_favorites');
 	}
 
 	/**

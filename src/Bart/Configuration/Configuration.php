@@ -99,6 +99,17 @@ abstract class Configuration
 	}
 
 	/**
+	 * @return bool If the value equals the literal string "true"
+	 */
+	protected function getBool($section, $key, $default = null, $required = true)
+	{
+		$value = $this->getValue($section, $key, $default, $required);
+		// will equal 'true' when conf is quoted, will equal '1' when literal boolean used!
+		// See the unit tests for more fun realities of parse_ini_*()
+		return ($value === 'true' || $value === '1');
+	}
+
+	/**
 	 * Load the configurations from the config file for subclass
 	 * @return array The parsed array from the configuration file
 	 */
