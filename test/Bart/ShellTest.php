@@ -163,6 +163,8 @@ class ShellTest extends BaseTestCase
 
 	public function test_gethostname()
 	{
+		$this->markTestSkipped('`hostname` implementation differs too much between distros');
+
 		$phpHostname = gethostname();
 		$shell = new Shell();
 		$this->assertContains($phpHostname, $shell->gethostname(), 'Hostnames did not match.');

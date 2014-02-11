@@ -47,9 +47,10 @@ class Shell
 	 */
 	public function gethostname()
 	{
-		// Classic PHP!
-		// -> On OpenSUSE, gethostname returns only the name of the host
-		// -> On Fedora, gethostname returns the host name and domain
+		// PHP appears to shell directly out to the system `hostname`
+		// ...which differs in implementation between distros
+		// The -f option ensures the FQDN is returned
+		// NOTE: This may encounter issues with lxc when the hostname is not set properly
 		return \trim($this->shell_exec('hostname -f'));
 	}
 
