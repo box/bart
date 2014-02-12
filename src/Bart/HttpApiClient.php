@@ -216,6 +216,32 @@ class HttpApiClient
 	}
 
 	/**
+	 * Perform a HTTP Delete request
+	 * @param string $path
+	 * @param string[] $getVars
+	 * @param string[] $headers
+	 * @param int $timeout
+	 * @return HttpApiClientResponse
+	 */
+	public function delete($path = "/", $getVars = null, $headers = null, $timeout = null)
+	{
+		$curler = $this->initCurl();
+		$this->setTimeout($timeout, $curler);
+
+		$validatedGetVars = $this->getValidatedGetVars($getVars);
+		$validatedHeaders = $this->getValidatedHeaders($headers);
+
+		$response = $curler->delete($path,
+			$validatedGetVars,
+			$validatedHeaders,
+			$this->cookies
+		);
+
+		return $this->processResponse($response);
+
+	}
+
+	/**
 	 * Perform a HTTP Get request
 	 * @param string $path
 	 * @param string[] $getVars
@@ -259,6 +285,33 @@ class HttpApiClient
 		$validatedHeaders = $this->getValidatedHeaders($headers);
 
 		$response = $curler->post($path,
+			$validatedGetVars,
+			$this->getValidatedPostVars($postVars),
+			$validatedHeaders,
+			$this->cookies
+		);
+
+		return $this->processResponse($response);
+	}
+
+	/**
+	 * Perform a HTTP Put request
+	 * @param string $path
+	 * @param string[] $getVars
+	 * @param string|string[] $postVars
+	 * @param string[] $headers
+	 * @param int $timeout
+	 * @return HttpApiClientResponse
+	 */
+	public function put($path = "/", $getVars = null, $postVars = null, $headers = null, $timeout = null)
+	{
+		$curler = $this->initCurl();
+		$this->setTimeout($timeout, $curler);
+
+		$validatedGetVars = $this->getValidatedGetVars($getVars);
+		$validatedHeaders = $this->getValidatedHeaders($headers);
+
+		$response = $curler->put($path,
 			$validatedGetVars,
 			$this->getValidatedPostVars($postVars),
 			$validatedHeaders,

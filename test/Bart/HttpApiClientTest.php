@@ -266,7 +266,34 @@ class HttpApiClientTest extends BaseTestCase{
 	}
 
 
+	public function testHttpApiClientDelete()
+	{
+		$mockCurl = $this->setupMockCurl("http://localhost",80);
+		$mockCurl->expects($this->once())
+			->method("Delete")
+			->will($this->returnValue($this->getResponseArray()));
 
+		$hac = new HttpApiClient("http://localhost");
+
+		$hac->delete();
+
+
+	}
+
+
+	public function testHttpApiClientPut()
+	{
+		$mockCurl = $this->setupMockCurl("http://localhost",80);
+		$mockCurl->expects($this->once())
+			->method("Put")
+			->will($this->returnValue($this->getResponseArray()));
+
+		$hac = new HttpApiClient("http://localhost");
+
+		$hac->put();
+
+
+	}
 
 	// setup a mock curl object and register it with diesel
     private function setupMockCurl($testUrl, $testPort)
