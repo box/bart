@@ -470,17 +470,15 @@ class HttpApiClient
 	 */
 	protected function initCurl()
 	{
-
-		$port = 80;
-		//#http(s)?://{^:]+:(\d+)($|/)#
+		// Set default port and update if specified
+		$port = (substr($this->baseUri, 0, 5) == 'https') ? 443 : 80;
 		if(preg_match('#http[s]?://[^:]+:(\d+)($|/)#',$this->baseUri, $matches))
 		{
 			$port = $matches[1];
 		}
 
-		//Bart\Curl does no validation of URLS and simply concats hostURI and path
-		//so will just path fully validated URI with request
-
+		// Bart\Curl does no validation of URLS and simply concats hostURI and path
+		// so we will just pass fully validated URI with request
 		/** @var \Bart\Curl curler */
 		$curler = Diesel::create('\Bart\Curl', $this->baseUri, $port);
 

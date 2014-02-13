@@ -58,12 +58,30 @@ class HttpApiClientTest extends BaseTestCase{
 
 	}
 
-	/**
-	 *
-	 */
+	public function testInitCurlChoosesPort443WhenHttps()
+	{
+		// https scheme should default to port 443
+		$mockCurl = $this->setupMockCurl('https://localhost/', 443);
+
+		$mockCurl->expects($this->exactly(1))
+			->method('Get')
+			->with($this->equalTo('v1/device'),
+				$this->equalTo(array()),
+				$this->anything())
+			->will($this->returnValue(array(
+				'headers' => array(),
+				'content' => 'asdf', 'info' => array('http_code' => 200) ))
+			);
+
+		$hac = new HttpApiClient('https://localhost/');
+		$response = $hac->get('v1/device');
+
+		$this->assertEquals('asdf', $response->get_body());
+	}
+
 	public function testHttpApiClientBasicGET()
 	{
-		$mockCurl = $this->setupMockCurl("https://localhost:4743/",4743);
+		$mockCurl = $this->setupMockCurl("https://localhost:4743/", 4743);
 
 		$mockCurl->expects($this->exactly(1))
 			->method('Get')
@@ -77,7 +95,6 @@ class HttpApiClientTest extends BaseTestCase{
 		$response = $hac->get("v1/device");
 
 		$this->assertEquals('asdf', $response->get_body());
-
 	}
 
 	/**
