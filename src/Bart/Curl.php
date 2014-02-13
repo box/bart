@@ -10,6 +10,8 @@ class Curl
 	private $port;
 	private $opts = array();
 
+	const CURLOPT_DELETE = "DELETE";
+
 	/**
 	 * Curl to $hostUri on $port
 	 */
@@ -49,6 +51,29 @@ class Curl
 		}
 	}
 
+	/**
+	 * HTTP Delete Request
+	 * @param $path
+	 * @param array $getParams
+	 * @param array $headers
+	 * @param null $cookies
+	 * @return array
+	 */
+	public function delete($path, array $getParams, array $headers = null, $cookies = null)
+	{
+		//there is no CURLOPT_DELETE so put it in as a string and then do a custom header in $this->request()
+		return $this->request(static::CURLOPT_DELETE, $path,
+			$getParams, null, $headers, $cookies);
+	}
+
+	/**
+	 * HTTP Get Request
+	 * @param $path
+	 * @param array $getParams
+	 * @param array $headers
+	 * @param null $cookies
+	 * @return array
+	 */
 	public function get($path, array $getParams, array $headers = null, $cookies = null)
 	{
 		return $this->request(null, $path,
@@ -56,11 +81,13 @@ class Curl
 	}
 
 	/**
+	 * HTTP Post Request
 	 * @param string $path relative path from base hostUri
 	 * @param array $getParams An associative array of get parameters
-	 * @param [array,string] $postData The data to send in your post
-	 *
-	 * @return string Remote response body
+	 * @param string|array $postData The data to send in your post
+	 * @param string[] $headers associative array of headers to include
+	 * @param string $cookies Cookies to include
+	 * @return array Remote response body
 	 */
 	public function post($path, array $getParams, $postData, array $headers = null, $cookies = null)
 	{
@@ -75,8 +102,9 @@ class Curl
 	 * @param array $getParams An associative array of get parameters
 	 * @param mixed $body Optional array or string request body data to send
 	 * @param array $headers Optional headers to send with PUT
+	 * @param string $cookies Cookies to include
 	 *
-	 * @return string Remote response body
+	 * @return array Remote response body
 	 */
 	public function put($path, array $getParams, $body = null, array $headers = null, $cookies = null)
 	{
@@ -107,6 +135,10 @@ class Curl
 			if ($httpMethod == CURLOPT_PUT)
 			{
 				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+			}
+			elseif($httpMethod == static::CURLOPT_DELETE)
+			{
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
 			}
 			else
 			{
