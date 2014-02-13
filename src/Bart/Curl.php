@@ -67,12 +67,13 @@ class Curl
 	}
 
 	/**
-	 * HTTP Get Request
-	 * @param $path
-	 * @param array $getParams
-	 * @param array $headers
-	 * @param null $cookies
-	 * @return array
+	 * @param string $path The resource path to be appended to the base URI
+	 * @param array $getParams key-value pairs
+	 * @param array $headers array of valid HTTP header strings; e.g. ['Accept: application/json']
+	 * @param array $cookies The contents of the "Cookie: " header to be used in
+	 * the HTTP request. Note that multiple cookies are separated with a semicolon followed by a space
+	 *
+	 * @return array Response and info
 	 */
 	public function get($path, array $getParams, array $headers = null, $cookies = null)
 	{

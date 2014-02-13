@@ -245,7 +245,7 @@ class HttpApiClient
 	 * Perform a HTTP Get request
 	 * @param string $path
 	 * @param string[] $getVars
-	 * @param string[] $headers
+	 * @param string[] $headers All the header strings, e.g. 'Accept: application/json'
 	 * @param int $timeout
 	 * @return HttpApiClientResponse
 	 */
@@ -356,26 +356,28 @@ class HttpApiClient
 
 
 	/**
-	 * return a set of validated headers.
-	 * ensure a single dimensional array of strings
-	 * @param $headers
-	 * @return array
+	 * Ensures that the headers array contains only strings
+	 * @param string[] $headers
+	 * @return string[]
 	 * @throws HttpApiClientException
 	 */
 	private function getValidatedHeaders($headers)
 	{
-		//no headers sent, return the global ones
+		// no headers sent, return the global ones
 		if($headers === null)
 		{
 			return $this->globalHeaders;
 		}
 
-		if(!$this->validateKeyValueArray($headers) && $headers !== null)
+		foreach ($headers as $header)
 		{
-			throw new HttpApiClientException("Invalid Headers: " . print_r($headers, true));
+			if (!is_string($header))
+			{
+				throw new HttpApiClientException('Header must be an array of strings');
+			}
 		}
 
-		return array_merge($this->globalHeaders,$headers);
+		return array_merge($this->globalHeaders, $headers);
 	}
 
 	/**
