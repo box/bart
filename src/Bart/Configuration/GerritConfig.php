@@ -46,6 +46,16 @@ README;
 		return $this->getValue('gerrit', 'host');
 	}
 
+	public function wwwScheme()
+	{
+		return $this->getValue('www', 'scheme', 'http');
+	}
+
+	public function wwwPort()
+	{
+		return $this->getValue('www', 'port', 8080);
+	}
+
 	public function sshPort()
 	{
 		return $this->getNumeric('ssh', 'port', 29418);
