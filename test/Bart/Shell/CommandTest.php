@@ -1,7 +1,10 @@
 <?php
 namespace Bart\Shell;
 
-class CommandTest extends \Bart\BaseTestCase
+use Bart\BaseTestCase;
+use Bart\Shell;
+
+class CommandTest extends BaseTestCase
 {
 	public function testItCanRun()
 	{
@@ -54,61 +57,53 @@ class CommandTest extends \Bart\BaseTestCase
 	public function testWithMoreThanOneArgument()
 	{
 		// @note digits treated as strings
-		$c = new Command('echo %s %s %s %s', 'hello', 'world', 1, 2);
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = Command::makeSafeString('echo %s %s %s %s', array('hello', 'world', 1, 2));
 
 		$this->assertEquals("echo 'hello' 'world' '1' '2'", $safeStr, 'safe command');
 	}
 
 	public function testEscapesSingleQuotes()
 	{
-		$c = new Command('echo %s', "joe's a baller");
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = Command::makeSafeString('echo %s', array("joe's a baller"));;
 
 		$this->assertEquals("echo 'joe'\\''s a baller'", $safeStr, 'single quotes');
 	}
 
 	public function testDigitsNotSupported()
 	{
-		$c = new Command('echo %d %d %s', 42, 43, 108);
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = Command::makeSafeString('echo %d %d %s', array(42, 43, 108));
 
 		$this->assertEquals("echo 0 0 '108'", $safeStr, 'Safe string');
 	}
 
 	public function testWithUnsafeBackticks()
 	{
-		$c = new Command('echo %s', '`cat /etc/password`');
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = Command::makeSafeString('echo %s', array('`cat /etc/password`'));
 
 		$this->assertEquals('echo \'`cat /etc/password`\'', $safeStr, 'safe command');
 	}
 
 	public function testWithUnsafeSubshell()
 	{
-		$c = new Command('echo %s', '$(cat /etc/password)');
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = Command::makeSafeString('echo %s', array('$(cat /etc/password)'));
 
 		$this->assertEquals("echo '\$(cat /etc/password)'", $safeStr, 'safe command');
 	}
 
 	public function testWithUnsafeEnvVariableArg()
 	{
-		$c = new Command('echo %s', '$variable');
-		$safeStr = self::getSafeCommandFrom($c);
+		$safeStr = Command::makeSafeString('echo %s', array('$variable'));
 
 		$this->assertEquals("echo '\$variable'", $safeStr, 'safe command');
 	}
 
 	public function testShellAliasMethod()
 	{
-		$shell = new \Bart\Shell();
+		$shell = new Shell();
 		$cActual = $shell->command('echo %s %s %d', 'hello', 'world', 42);
 
-		$cExpected = new Command('echo %s %s %d', 'hello', 'world', 42);
-
 		$safeActual = self::getSafeCommandFrom($cActual);
-		$safeExpected = self::getSafeCommandFrom($cExpected);
+		$safeExpected = Command::makeSafeString('echo %s %s %d', array('hello', 'world', 42));
 
 		$this->assertEquals($safeExpected, $safeActual, 'safe commands');
 	}

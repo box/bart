@@ -24,20 +24,34 @@ class Command
 		$safeCommandFormat = escapeshellcmd($commandFormat);
 
 		$args = func_get_args();
-		array_shift($args);
+		array_shift($args); // bump off the format string from the front
 
-		$safeArgs = array($safeCommandFormat);
-		foreach ($args as $arg) {
-			$safeArgs[] = escapeshellarg($arg);
-		}
-
-		$this->safeCommandStr = call_user_func_array('sprintf', $safeArgs);
+		$this->safeCommandStr = self::makeSafeString($safeCommandFormat, $args);
 		$this->logger->debug('Set safe command string ' . $this->safeCommandStr);
 	}
 
 	public function __toString()
 	{
 		return "{$this->safeCommandStr}";
+	}
+
+	/**
+	 * Safely format a string for use on command line.
+	 * You should aim to always use {@see self} for building execution strings,
+	 * but sometimes it's not possible
+	 *
+	 * @param string $format The sprintf-like formatted string (Note all placeholders must be strings)
+	 * @param string[] $args The arguments to the formatted string
+	 * @return string The put together string
+	 */
+	public static function makeSafeString($format, array $args)
+	{
+		$safeArgs = array($format);
+		foreach ($args as $arg) {
+			$safeArgs[] = escapeshellarg($arg);
+		}
+
+		return call_user_func_array('sprintf', $safeArgs);
 	}
 
 	/**

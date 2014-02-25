@@ -5,6 +5,7 @@ use Bart\Configuration\GerritConfig;
 use Bart\Diesel;
 use Bart\JSON;
 use Bart\JSONParseException;
+use Bart\Shell\Command;
 use Bart\Shell\CommandException;
 
 /**
@@ -39,6 +40,7 @@ class Api
 	}
 
 	/**
+	 * @deprecated Use {@see \Bart\Gerrit\Change}
 	 * Query gerrit for an approved change
 	 * @param string $changeId Gerrit Change-Id
 	 * @param string $commitHash Latest commit hash pushed to gerrit
@@ -80,29 +82,35 @@ class Api
 	}
 
 	/**
-	 * Use GSQL to mark review as merged.
-	 * This is useful if reviews are being merged manually outside of Gerrit
-	 * @param string $changeId Gerrit Change-Id key to review
+	 * @param string $query
+	 * @param string[] $args
+	 * @return ApiResult
 	 */
-	public function markReviewMerged($changeId)
+	public function query($query, array $args)
 	{
-		// Query to undo: UPDATE changes SET open = 'Y', status = 'n', mergeable = 'N' WHERE change_id = 76641 LIMIT 1;
-		$safeChangeId = escapeshellarg($changeId);
-		$gsql = "UPDATE changes SET open = 'N', status = 'M', mergeable = 'Y' WHERE change_key = {$safeChangeId} LIMIT 1;";
+		$safeQuery = Command::makeSafeString("gerrit query --format=JSON $query" , $args);
 
-		$result = $this->send("gerrit gsql --format=JSON -c \"$gsql\"", true);
-		$stats = $result['stats'];
+		$result = $this->send($safeQuery, true);
 
-		$rowCount = $stats['rowCount'];
-		if ($rowCount != 1) {
-			$this->logger->warn("Unexpected row count ({$rowCount}) affected for change id {$changeId}");
-		}
-		else {
-			$this->logger->info("Marked review {$changeId} as merged");
-		}
+		return new ApiResult($result['stats'], $result['records']);
 	}
 
 	/**
+	 * @param string $gsql
+	 * @param string[] $args
+	 * @return ApiResult
+	 */
+	public function gsql($gsql, array $args)
+	{
+		$safeGsql = Command::makeSafeString($gsql, $args);
+
+		$result = $this->send("gerrit gsql --format=JSON -c \"$safeGsql\"", true);
+
+		return new ApiResult($result['stats'], $result['records']);
+	}
+
+	/**
+	 * @deprecated Use {@see \Bart\Gerrit\Change}
 	 * @param array $filters e.g. array(
 	 * 	'commit' => '$commit_hash',
 	 *  'label' => 'CodeReview=10',
@@ -132,6 +140,7 @@ class Api
 	}
 
 	/**
+	 * @deprecated Build these by hand for now and use generic :gsql and :query methods
 	 * @return string All the filters as a string
 	 */
 	private static function makeFilterString(array $filters)
@@ -172,6 +181,8 @@ class Api
 				$records[] = JSON::decode($json);
 			}
 
+			// TODO after removing deprecated methods, convert this to
+			// TODO ...return a ApiResult
 			return array(
 				'stats' => $stats,
 				'records' => $records
