@@ -20,7 +20,7 @@ abstract class Base
 
 	/**
 	 * @param array $hook_conf Configuration for this hook type
-	 * @param type $repo Name of the repository
+	 * @param string $repo Name of the repository
 	 */
 	public function __construct(array $hook_conf, $git_dir, $repo, Witness $w)
 	{
@@ -33,7 +33,9 @@ abstract class Base
 	}
 
 	/**
-	 * @param $commit_hash Hash of commit to verify
+	 * Run the hook
+	 * @param $commitHash string of commit to verify
+	 * @throws GitHookException if requirement fails
 	 */
-	public abstract function verify($commit_hash);
+	public abstract function run($commitHash);
 }

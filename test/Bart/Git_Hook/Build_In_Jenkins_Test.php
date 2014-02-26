@@ -18,7 +18,7 @@ class Build_In_Jenkins_Test extends TestBase
 
 		// PHP will complain that the configuration is missing the jenkins host
 		$this->assertThrows('\Exception', 'Undefined index: host', function() use ($jg) {
-			$jg['j']->verify('HEAD');
+			$jg['j']->run('HEAD');
 		});
 	}
 
@@ -32,7 +32,7 @@ class Build_In_Jenkins_Test extends TestBase
 		$jg = $this->configure_for(array('jenkins' => array()), $msg, self::$repo);
 
 		// Expect early return and error thrown on misconfiguration if failed
-		$jg['j']->verify('HEAD');
+		$jg['j']->run('HEAD');
 	}
 
 	public function test_deploy_job()
@@ -51,7 +51,7 @@ class Build_In_Jenkins_Test extends TestBase
 			)));
 
 		// Expect a jenkins job created for Vlad
-		$jg['j']->verify('HEAD');
+		$jg['j']->run('HEAD');
 	}
 
 	public function test_typical_commit()
@@ -69,7 +69,7 @@ class Build_In_Jenkins_Test extends TestBase
 			)));
 
 		// Expect a jenkins job created for Vlad
-		$jg['j']->verify('HEAD');
+		$jg['j']->run('HEAD');
 	}
 
 	/**

@@ -3,7 +3,6 @@ namespace Bart\Git_Hook;
 
 use Bart\Diesel;
 use Bart\Witness;
-use Bart\Jenkins\Job;
 
 /**
  * Create a build in jenkins for the latest commit. Following exceptions apply:
@@ -25,21 +24,21 @@ class Build_In_Jenkins extends Base
 		parent::__construct($jenkins_conf, $git_dir, $repo, $w);
 	}
 
-	public function verify($commit_hash)
+	public function run($commitHash)
 	{
-		$info = $this->git->get_pretty_email($commit_hash);
+		$info = $this->git->get_pretty_email($commitHash);
 		$msg = $info['subject'] . PHP_EOL . $info['message'];
 		if (preg_match('/\{nobuild\:\s(\".+?\")\}/', $msg, $matches) > 0)
 		{
 			$reason = $matches[1];
-			$this->w->report('Skipping build with message: ' . $reason);
+			$this->logger->debug('Skipping build with message: ' . $reason);
 			return;
 		}
 
 		$jobName = $this->hook_conf['job_name'];
 		// Default parameters that all jobs may use, but may otherwise ignore
 		$params = array(
-			'GIT_HASH' => $commit_hash,
+			'GIT_HASH' => $commitHash,
 			'Project_Name' => $this->repo,
 			'Requested_By' => $info['author'],
 		);
@@ -52,7 +51,7 @@ class Build_In_Jenkins extends Base
 			$params['DEPLOY'] = 'true';
 		}
 
-		// return new Job($params['host'], $params['job_name'], $params['w']);
+		/** @var \Bart\Jenkins\Job $job */
 		$job = Diesel::create('Bart\Jenkins\Job',
 				$this->hook_conf['host'], $jobName, $this->w);
 

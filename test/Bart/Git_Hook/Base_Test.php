@@ -26,7 +26,7 @@ class Base_Test extends \Bart\BaseTestCase
 		});
 
 		$hook = new Test_Git_Hook($conf, '.git', 'grinder');
-		$hook->verify($this);
+		$hook->run($this);
 	}
 }
 
@@ -40,7 +40,7 @@ class Test_Git_Hook extends Base
 		parent::__construct($hook_conf, $git_dir, $repo, new \Bart\Witness());
 	}
 
-	public function verify($phpu)
+	public function run($phpu)
 	{
 		$phpu->assertNotNull($this->git,
 				'Expected git to be defined by Base constructor');

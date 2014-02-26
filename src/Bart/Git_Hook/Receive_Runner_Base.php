@@ -33,43 +33,46 @@ class Receive_Runner_Base
 		$this->logger = Log4PHP::getLogger(get_called_class());
 	}
 
-	public function verify_all($commit_hash)
+	public function verify_all($commitHash)
 	{
-		foreach ($this->hooks as $hook_name)
+		foreach ($this->hooks as $hookName)
 		{
-			$hook = $this->create_hook_for($hook_name);
+			/** @var \Bart\Git_Hook\Base $hook */
+			$hook = $this->createHookFor($hookName);
 
 			if ($hook === null) continue;
 
 			// Verify will throw exceptions on failure
-			$hook->verify($commit_hash);
+			$hook->run($commitHash);
 		}
 	}
 
 	/**
-	 * Instantiate a new hook of type $hook_name
-	 * Throws error or returns null if bad conf or disabled
+	 * Instantiate a new hook of type $hookName
+	 * @param string $hookName
+	 * @return \Bart\Git_Hook\Base or null if hook is disabled
+	 * @throws GitHookException If bad conf
 	 */
-	private function create_hook_for($hook_name)
+	private function createHookFor($hookName)
 	{
-		if (!array_key_exists($hook_name, $this->conf))
+		if (!array_key_exists($hookName, $this->conf))
 		{
-			throw new \Exception("No configuration section for hook $hook_name");
+			throw new GitHookException("No configuration section for hook $hookName");
 		}
 
 		// All configurations for this hook
-		$hook_conf = $this->conf[$hook_name];
-		$class = 'Bart\\Git_Hook\\' . $hook_conf['class'];
+		$hookConf = $this->conf[$hookName];
+		$class = 'Bart\\Git_Hook\\' . $hookConf['class'];
+
+		if (!$hookConf['enabled']) return null;
 
 		if (!class_exists($class))
 		{
-			throw new \Exception("Class for hook does not exist! ($class)");
+			throw new GitHookException("Class for hook does not exist! ($class)");
 		}
 
-		if (!$hook_conf['enabled']) return null;
-
-		$w = ($hook_conf['verbose']) ? new Witness() : $this->w;
-		$w->report('...' . static::$type . ' verifying ' . $hook_name);
+		$w = ($hookConf['verbose']) ? new Witness() : $this->w;
+		$w->report('...' . static::$type . ' verifying ' . $hookName);
 
 		return new $class($this->conf, $this->git_dir, $this->repo, $w);
 	}

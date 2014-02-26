@@ -6,7 +6,7 @@ use Bart\Witness;
 use Bart\Jenkins;
 
 /**
- * Prevent commits from progressing if they are not fixing a broken build
+ * Reject commits against broken line unless the commit is fixing the build
  */
 class Stop_The_Line extends Base
 {
@@ -27,25 +27,24 @@ class Stop_The_Line extends Base
 				$stl_conf['host'], $stl_conf['job_name'], $w);
 	}
 
-	public function verify($commit_hash)
+	public function run($commitHash)
 	{
 		if ($this->job->is_healthy())
 		{
-			$this->w->report('Jenkins job is healthy.');
+			$this->logger->debug('Jenkins job is healthy.');
 			return;
 		}
 
-		// Check if commit has hash
-		$this->w->report('Jenkins job is not healthy...', null, false);
-		$this->w->report('asserting that commit message contains {buildfix} hash');
+		$this->logger->info('Jenkins job is not healthy...asserting that commit message contains {buildfix} hash');
 
-		$msg = $this->git->get_commit_msg($commit_hash);
+		// Check if commit has buildfix directive
+		$msg = $this->git->get_commit_msg($commitHash);
 		if (preg_match('/\{buildfix\}/', $msg) > 0)
 		{
 			// Commit attempts to fix the build
 			return;
 		}
 
-		throw new \Exception('Jenkins not healthy');
+		throw new GitHookException('Jenkins not healthy and commit does not fix it');
 	}
 }

@@ -1,7 +1,6 @@
 <?php
 namespace Bart\Git_Hook;
 
-use Bart\Configuration\GerritConfig;
 use Bart\Diesel;
 use Bart\Witness;
 
@@ -22,26 +21,26 @@ class Gerrit_Approved extends Base
 		$this->api = Diesel::create('Bart\Gerrit\Api');
 	}
 
-	public function verify($commit_hash)
+	public function run($commitHash)
 	{
 		// Let exception bubble up if no change id
-		$change_id = $this->git->get_change_id($commit_hash);
+		$change_id = $this->git->get_change_id($commitHash);
 
 		$data = null;
 		try
 		{
 			$this->w->report('Getting data from gerrit: ' . $change_id);
-			$data = $this->api->getApprovedChange($change_id, $commit_hash);
+			$data = $this->api->getApprovedChange($change_id, $commitHash);
 		}
 		catch(\Exception $e)
 		{
-			throw new \Exception('Error getting Gerrit review info', $e->getCode(), $e);
+			throw new GitHookException('Error getting Gerrit review info', $e->getCode(), $e);
 		}
 
 		if ($data == null)
 		{
-			throw new \Exception ('An approved review was not found in Gerrit for'
-					. " commit $commit_hash with Change-Id $change_id");
+			throw new GitHookException ('An approved review was not found in Gerrit for'
+					. " commit $commitHash with Change-Id $change_id");
 		}
 
 		$this->w->report('Gerrit approved.');

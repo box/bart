@@ -29,7 +29,10 @@ class Pre_Receive_Runner_Test extends TestBase
 		$monty = 'sir_not_appearing_in_this_film';
 		$hook_conf = array(
 			'pre-receive' => array('names' => 'jenkins'),
-			'jenkins' => array('class' => $monty),
+			'jenkins' => array(
+				'class' => $monty,
+				'enabled' => true,
+			),
 		);
 
 		$pre_receive = $this->configure_for($hook_conf, $repo);
@@ -38,7 +41,7 @@ class Pre_Receive_Runner_Test extends TestBase
 		$closure = function() use ($pre_receive) {
 			$pre_receive->verify_all('doesnt matter');
 		};
-		$this->assertThrows('\Exception', $msg, $closure);
+		$this->assertThrows('\Bart\Git_Hook\GitHookException', $msg, $closure);
 	}
 
 	public function test_disabled_class()
@@ -121,7 +124,7 @@ class For_Testing extends Base
 		$this->repo = $repo;
 	}
 
-	public function verify($commit_hash)
+	public function run($commit_hash)
 	{
 		// Make sure everything got passed through as expected
 		$phpu = Diesel::create('Bart\Git_Hook\For_Testing');

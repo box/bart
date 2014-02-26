@@ -17,13 +17,13 @@ class Stop_The_Line_Test extends TestBase
 		$conf['jenkins']['job_name'] = 'jenkins php unit job';
 
 		$stlg = $this->configure_for($conf, true, $conf['jenkins']['job_name']);
-		$stlg['stl']->verify('hash');
+		$stlg['stl']->run('hash');
 	}
 
 	public function test_green_jenkins_job_with_default_job_name()
 	{
 		$stlg = $this->configure_for(self::$conf, true, 'Gorg');
-		$stlg['stl']->verify('hash');
+		$stlg['stl']->run('hash');
 	}
 
 	public function test_commit_msg_does_not_contain_buildfix()
@@ -38,7 +38,7 @@ class Stop_The_Line_Test extends TestBase
 			->will($this->returnValue('The commit message'));
 
 		$this->assertThrows('\Exception', 'Jenkins not healthy', function() use($stl) {
-			$stl->verify('hash');
+			$stl->run('hash');
 		});
 	}
 
@@ -62,7 +62,7 @@ class Stop_The_Line_Test extends TestBase
 			->with($this->equalTo('hash'))
 			->will($this->returnValue($msg));
 
-		$stl->verify('hash');
+		$stl->run('hash');
 	}
 
 	private function configure_for($conf, $is_healthy, $job_name)

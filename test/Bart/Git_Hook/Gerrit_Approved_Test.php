@@ -29,7 +29,7 @@ class Gerrit_Approved_Test extends TestBase
 		$this->configure_for($change_id, $commit_hash, $mockApi);
 
 		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w);
-		$hook->verify($commit_hash);
+		$hook->run($commit_hash);
 	}
 
 	public function test_change_not_found()
@@ -50,7 +50,7 @@ class Gerrit_Approved_Test extends TestBase
 		$msg = 'An approved review was not found in Gerrit for commit '
 		. $commit_hash . ' with Change-Id ' . $change_id;
 		$this->assertThrows('\Exception', $msg, function() use($hook, $commit_hash){
-			$hook->verify($commit_hash);
+			$hook->run($commit_hash);
 		});
 	}
 
@@ -71,7 +71,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$msg = 'Error getting Gerrit review info';
 		$this->assertThrows('\Exception', $msg, function() use($hook, $commit_hash){
-			$hook->verify($commit_hash);
+			$hook->run($commit_hash);
 		});
 	}
 
