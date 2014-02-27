@@ -30,16 +30,11 @@ class Base_Test extends \Bart\BaseTestCase
 	}
 }
 
-/*
+/**
  * Silly class to help us test that the base class will do its stuff
  */
 class Test_Git_Hook extends Base
 {
-	public function __construct(array $hookConf, $gitDir, $repo)
-	{
-		parent::__construct($hookConf, $gitDir, $repo);
-	}
-
 	public function run($phpu)
 	{
 		$phpu->assertNotNull($this->git,

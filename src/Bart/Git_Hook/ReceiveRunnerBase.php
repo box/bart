@@ -7,7 +7,7 @@ use Bart\Log4PHP;
 /**
  * Base of pre- and post-receive hooks
  */
-class Receive_Runner_Base
+class ReceiveRunnerBase
 {
 	protected $gitDir;
 	protected $repo;
@@ -36,7 +36,7 @@ class Receive_Runner_Base
 		$this->logger = Log4PHP::getLogger(get_called_class());
 	}
 
-	public function verify_all($commitHash)
+	public function verifyAll($commitHash)
 	{
 		foreach ($this->hooks as $hookName)
 		{

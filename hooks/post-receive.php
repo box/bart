@@ -62,8 +62,8 @@ Configuration::configure(BART_DIR . 'etc/php');
 
 try
 {
-	$hook = new Git_Hook\Post_Receive_Runner($git_dir, $repo);
-	$hook->verify_all($hash);
+	$hook = new Git_Hook\PostReceiveRunner($git_dir, $repo);
+	$hook->verifyAll($hash);
 }
 catch(\Exception $e)
 {
