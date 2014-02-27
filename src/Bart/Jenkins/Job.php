@@ -1,9 +1,8 @@
 <?php
 namespace Bart\Jenkins;
 
-use Bart\Curl;
 use Bart\Diesel;
-use Bart\Witness;
+use Bart\Log4PHP;
 
 /**
  * Interface to Jenkins jobs
@@ -14,12 +13,13 @@ class Job
 	private $default_params = array();
 	private $my_build_id;
 	private $metadata;
-	private $witness;
+	/** @var \Logger */
+	private $logger;
 
 	/**
 	 * Load metadata about a project
 	 */
-	public function __construct($domain, $job_name, Witness $witness)
+	public function __construct($domain, $job_name)
 	{
 		if (!$domain)
 		{
@@ -31,10 +31,10 @@ class Job
 			throw new \Exception('Must provide a job name');
 		}
 
-		$this->witness = $witness;
+		$this->logger = Log4PHP::getLogger(__CLASS__);
 
 		$this->base_job_url = "http://$domain:8080/job/" . rawurlencode($job_name) . '/';
-		$this->witness->report('Base uri: ' . $this->base_job_url);
+		$this->logger->debug('Base uri: ' . $this->base_job_url);
 
 		$this->metadata = $this->get_json(array());
 
@@ -84,7 +84,7 @@ class Job
 	public function start(array $build_params = array())
 	{
 		$last_completed_build_id = $this->last_build_id(true);
-		$this->witness->report('Last completed build: ' . $last_completed_build_id);
+		$this->logger->debug('Last completed build: ' . $last_completed_build_id);
 
 		$params_json = $this->build_params_json($build_params);
 		$this->post_json(
@@ -101,7 +101,7 @@ class Job
 		{
 			// Build is queued, but must wait and hasn't been assigned a number
 			$this->my_build_id = $metadata['nextBuildNumber'];
-			$this->witness->report('Queued build: ' . $this->my_build_id);
+			$this->logger->debug('Queued build: ' . $this->my_build_id);
 
 			// @TODO Sleep until build should be running?
 			// sleep($metadata['queueItem']['buildableStartMilliseconds']);
@@ -111,7 +111,7 @@ class Job
 			// If no builds blocking (system wide), this build starts right away
 			// ...and has been assigned a build number
 			$this->my_build_id = $this->last_build_id(false);
-			$this->witness->report('Started build: ' . $this->my_build_id);
+			$this->logger->debug('Started build: ' . $this->my_build_id);
 		}
 
 		if ($last_completed_build_id == $this->my_build_id)
@@ -190,7 +190,7 @@ class Job
 	 *
 	 * @param array $resource_items
 	 * @param array $post_data if null, then curl uses GET, otherwise POSTs data
-	 * @returns JSON data decoded as PHP array
+	 * @returns array JSON data decoded as PHP array
 	 */
 	private function curl(array $resource_items, array $post_data = null)
 	{
@@ -198,8 +198,9 @@ class Job
 
 		$url = $this->base_job_url . $resource_path . '/api/json';
 		$is_post = ($post_data != null);
-		$this->witness->report('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
+		$this->logger->debug('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
 
+		/** @var \Bart\Curl $c */
 		$c = Diesel::create('Bart\Curl', $url, 8080);
 		$response = $is_post ?
 			$c->post('', array(), $post_data) :
@@ -214,7 +215,7 @@ class Job
 	 * The JSON representation of the build parameters expected by the job
 	 * coalescing defaults and @param $override values
 	 *
-	 * @param $override Override the default values defined by project
+	 * @param array $override Override the default values defined by project
 	 */
 	private function build_params_json(array $override)
 	{

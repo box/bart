@@ -35,9 +35,9 @@ class Base_Test extends \Bart\BaseTestCase
  */
 class Test_Git_Hook extends Base
 {
-	public function __construct(array $hook_conf, $git_dir, $repo)
+	public function __construct(array $hookConf, $gitDir, $repo)
 	{
-		parent::__construct($hook_conf, $git_dir, $repo, new \Bart\Witness());
+		parent::__construct($hookConf, $gitDir, $repo);
 	}
 
 	public function run($phpu)

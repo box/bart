@@ -50,26 +50,20 @@ $repo = verify_param('repo');
 
 $hash = $opts['cmdline'][0];
 
-$witness = new Witness\Silent();
 $level = 'warn';
 if ($opts['verbose']) {
-	$witness = new Witness();
 	$level = 'info';
 }
 
 require_once 'log4php/Logger.php';
 Log4PHP::initForConsole($level);
 
-// Put all new fangled configurations in here
-// @NOTE Newer bart code will likely leave this invocation code up to the cloner
-// ...this is here for reference
 Configuration::configure(BART_DIR . 'etc/php');
 
 try
 {
-	$hook = new Git_Hook\Pre_Receive_Runner($git_dir, $repo, $witness);
+	$hook = new Git_Hook\Pre_Receive_Runner($git_dir, $repo);
 	$hook->verify_all($hash);
-	$witness->report('All hooks passed');
 }
 catch(\Exception $e)
 {

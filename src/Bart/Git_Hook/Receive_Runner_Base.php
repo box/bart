@@ -3,33 +3,36 @@ namespace Bart\Git_Hook;
 
 use Bart\Diesel;
 use Bart\Log4PHP;
-use Bart\Witness;
-use Bart\Config_Parser;
 
 /**
  * Base of pre- and post-receive hooks
  */
 class Receive_Runner_Base
 {
-	protected $git_dir;
+	protected $gitDir;
 	protected $repo;
 	protected $hooks;
 	protected $conf;
-	protected $w;
 	/** @var \Logger */
 	protected $logger;
 
-	public function __construct($git_dir, $repo, Witness $w)
+	public function __construct($gitDir, $repo)
 	{
 		// Use the repo as the environment when parsing conf
+		/** @var \Bart\Config_Parser $parser */
 		$parser = Diesel::create('Bart\Config_Parser', array($repo));
 		$conf = $parser->parse_conf_file(BART_DIR . 'etc/php/hooks.conf');
 
-		$this->git_dir = $git_dir;
+		$this->gitDir = $gitDir;
 		$this->repo = $repo;
 		$this->hooks = explode(',', $conf[static::$type]['names']);
 		$this->conf = $conf;
-		$this->w = $w;
+
+		if (array_key_exists('verbose', $conf[static::$type]))
+		{
+			Log4PHP::initForConsole('debug');
+		}
+
 		$this->logger = Log4PHP::getLogger(get_called_class());
 	}
 
@@ -71,9 +74,8 @@ class Receive_Runner_Base
 			throw new GitHookException("Class for hook does not exist! ($class)");
 		}
 
-		$w = ($hookConf['verbose']) ? new Witness() : $this->w;
-		$w->report('...' . static::$type . ' verifying ' . $hookName);
+		$this->logger->info('...' . static::$type . ' verifying ' . $hookName);
 
-		return new $class($this->conf, $this->git_dir, $this->repo, $w);
+		return new $class($this->conf, $this->gitDir, $this->repo);
 	}
 }

@@ -6,13 +6,6 @@ class Gerrit_Approved_Test extends TestBase
 	private static $conf = array('gerrit' =>
 		array('host' => 'gorgoroth.com', 'port' => '42')
 	);
-	private $w;
-
-	public function setUp()
-	{
-		$this->w = new \Bart\Witness\Silent();
-		parent::setUp();
-	}
 
 	public function test_valid_commit()
 	{
@@ -28,7 +21,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w);
+		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder');
 		$hook->run($commit_hash);
 	}
 
@@ -45,7 +38,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w);
+		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder');
 
 		$msg = 'An approved review was not found in Gerrit for commit '
 		. $commit_hash . ' with Change-Id ' . $change_id;
@@ -67,7 +60,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder', $this->w);
+		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder');
 
 		$msg = 'Error getting Gerrit review info';
 		$this->assertThrows('\Exception', $msg, function() use($hook, $commit_hash){

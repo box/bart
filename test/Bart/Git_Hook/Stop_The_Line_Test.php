@@ -2,7 +2,6 @@
 namespace Bart\Git_Hook;
 
 use Bart\Diesel;
-use Bart\Witness;
 
 class Stop_The_Line_Test extends TestBase
 {
@@ -76,7 +75,7 @@ class Stop_The_Line_Test extends TestBase
 		$gitStub = $this->getGitStub();
 
 		$phpu = $this;
-		\Bart\Diesel::registerInstantiator('Bart\Jenkins\Job',
+		Diesel::registerInstantiator('Bart\Jenkins\Job',
 			function($host, $jobNameParam) use($phpu, $conf, $job_name, $mock_job) {
 				$phpu->assertEquals($job_name, $jobNameParam,
 						'Jenkins job name');
@@ -87,9 +86,8 @@ class Stop_The_Line_Test extends TestBase
 				return $mock_job;
 		});
 
-		$w = new Witness\Silent();
 		return array(
-			'stl' => new Stop_The_Line($conf, '', 'Gorg', $w),
+			'stl' => new Stop_The_Line($conf, '', 'Gorg'),
 			'git' => $gitStub,
 		);
 	}

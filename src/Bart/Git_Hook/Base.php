@@ -3,7 +3,6 @@ namespace Bart\Git_Hook;
 
 use Bart\Diesel;
 use Bart\Log4PHP;
-use Bart\Witness;
 use Bart\Git;
 
 /**
@@ -11,25 +10,25 @@ use Bart\Git;
  */
 abstract class Base
 {
-	protected $hook_conf;
+	protected $hookConf;
 	protected $repo;
+	/** @var \Bart\Git git handle to current project */
 	protected $git;
-	protected $w;
 	/** @var \Logger */
 	protected $logger;
 
 	/**
-	 * @param array $hook_conf Configuration for this hook type
+	 * @param array $hookConf Configuration for this hook type
 	 * @param string $repo Name of the repository
 	 */
-	public function __construct(array $hook_conf, $git_dir, $repo, Witness $w)
+	public function __construct(array $hookConf, $gitDir, $repo)
 	{
-		$this->hook_conf = $hook_conf;
+		$this->hookConf = $hookConf;
 		$this->repo = $repo;
-		$this->w = $w;
 		$this->logger = Log4PHP::getLogger(get_called_class());
 
-		$this->git = Diesel::create('Bart\Git', $git_dir);
+		/** @var \Bart\Git git handle to current project */
+		$this->git = Diesel::create('Bart\Git', $gitDir);
 	}
 
 	/**

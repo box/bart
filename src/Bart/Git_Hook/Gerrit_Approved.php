@@ -2,7 +2,6 @@
 namespace Bart\Git_Hook;
 
 use Bart\Diesel;
-use Bart\Witness;
 
 /**
  * Enforces that a commit is approved in gerrit
@@ -12,10 +11,10 @@ class Gerrit_Approved extends Base
 	/** @var \Bart\Gerrit\Api */
 	private $api;
 
-	public function __construct(array $conf, $git_dir, $repo, Witness $w)
+	public function __construct(array $conf, $gitDir, $repo)
 	{
 		$gerrit_conf = $conf['gerrit'];
-		parent::__construct($gerrit_conf, $git_dir, $repo, $w);
+		parent::__construct($gerrit_conf, $gitDir, $repo);
 
 		/** @var \Bart\Gerrit\Api api */
 		$this->api = Diesel::create('Bart\Gerrit\Api');
@@ -29,7 +28,7 @@ class Gerrit_Approved extends Base
 		$data = null;
 		try
 		{
-			$this->w->report('Getting data from gerrit: ' . $change_id);
+			$this->logger->debug('Getting data from gerrit: ' . $change_id);
 			$data = $this->api->getApprovedChange($change_id, $commitHash);
 		}
 		catch(\Exception $e)
@@ -43,6 +42,6 @@ class Gerrit_Approved extends Base
 					. " commit $commitHash with Change-Id $change_id");
 		}
 
-		$this->w->report('Gerrit approved.');
+		$this->logger->info('Gerrit approved.');
 	}
 }

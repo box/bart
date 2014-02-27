@@ -2,7 +2,6 @@
 namespace Bart\Git_Hook;
 
 use Bart\Diesel;
-use Bart\Witness;
 
 class Pre_Receive_Runner_Test extends TestBase
 {
@@ -89,7 +88,6 @@ class Pre_Receive_Runner_Test extends TestBase
 	private function configure_for($hook_conf, $repo)
 	{
 		$git_dir = '.git';
-		$w = new Witness\Silent();
 
 		$mock_conf = $this->getMock('\\Bart\\Config_Parser', array(), array(), '', false);
 		$mock_conf->expects($this->once())
@@ -105,9 +103,9 @@ class Pre_Receive_Runner_Test extends TestBase
 			return $mock_conf;
 		};
 
-		\Bart\Diesel::registerInstantiator('Bart\Config_Parser', $create_conf);
+		Diesel::registerInstantiator('Bart\Config_Parser', $create_conf);
 
-		return new Pre_Receive_Runner($git_dir, $repo, $w);
+		return new Pre_Receive_Runner($git_dir, $repo);
 	}
 }
 
@@ -117,7 +115,7 @@ class For_Testing extends Base
 	protected $dir;
 	protected $repo;
 
-	public function __construct(array $conf, $dir, $repo, Witness $w)
+	public function __construct(array $conf, $dir, $repo)
 	{
 		$this->conf = $conf;
 		$this->dir = $dir;

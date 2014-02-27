@@ -1,9 +1,7 @@
 <?php
 namespace Bart;
 
-use Bart\Witness;
 use Bart\Diesel;
-use Bart\Config_Parser;
 
 /**
  * Ssh wrapper, shells out to command line

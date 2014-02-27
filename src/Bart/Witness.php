@@ -4,6 +4,7 @@ namespace Bart;
 /**
  * Interface to print to stream or keep track of information
  * ...not exactly an Observer pattern
+ * @deprecated Use Log4PHP
  */
 class Witness
 {

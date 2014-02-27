@@ -1,6 +1,8 @@
 <?php
 namespace Bart\Git_Hook;
 
+use Bart\Diesel;
+
 class Build_In_Jenkins_Test extends TestBase
 {
 	private static $repo = 'Gorgoroth';
@@ -75,12 +77,12 @@ class Build_In_Jenkins_Test extends TestBase
 	/**
 	 * Basic, shared setup for the Build_In_Jenkins hook
 	 *
-	 * @param type $conf Configurations for the hook
-	 * @param type $commit_msg The commit message for the hook
-	 * @param type $job_name The name of the job to be built
-	 * @return type The git hook and the git stub
+	 * @param array $conf Configurations for the hook
+	 * @param string $commit_msg The commit message for the hook
+	 * @param string $job_name The name of the job to be built
+	 * @return array The git hook and the git stub
 	 */
-	private function configure_for($conf, $commit_msg, $job_name)
+	private function configure_for(array $conf, $commit_msg, $job_name)
 	{
 		$hash = 'HEAD';
 		$info = array(
@@ -97,8 +99,8 @@ class Build_In_Jenkins_Test extends TestBase
 
 		$phpu = $this;
 		$mock_job = $this->getMock('\Bart\Jenkins\Job', array(), array(), '', false);
-		\Bart\Diesel::registerInstantiator('Bart\Jenkins\Job',
-			function($host, $name, $w) use($phpu, $conf, $job_name, $mock_job) {
+		Diesel::registerInstantiator('Bart\Jenkins\Job',
+			function($host, $name) use($phpu, $conf, $job_name, $mock_job) {
 				$phpu->assertEquals($job_name, $name,
 						'Jenkins job name did not match');
 
@@ -108,9 +110,8 @@ class Build_In_Jenkins_Test extends TestBase
 				return $mock_job;
 		});
 
-		$w = new \Bart\Witness\Silent();
 		return array(
-			'j' => new Build_In_Jenkins($conf, '', self::$repo, $w),
+			'j' => new Build_In_Jenkins($conf, '', self::$repo),
 			'git' => $mock_git,
 			'job' => $mock_job,
 		);

@@ -5,7 +5,6 @@ use Bart\BaseTestCase;
 use Bart\Configuration\GerritConfig;
 use \Bart\Diesel;
 use Bart\Shell\CommandException;
-use \Bart\Witness;
 
 class ApiTest extends BaseTestCase
 {

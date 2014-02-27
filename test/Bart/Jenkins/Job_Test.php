@@ -1,7 +1,6 @@
 <?php
 namespace Bart\Jenkins;
 
-use Bart\Witness;
 use Bart\Diesel;
 use Bart\Curl;
 
@@ -59,14 +58,14 @@ class Job_Test extends \Bart\BaseTestCase
 	public function test_is_healthy()
 	{
 		$this->configure_for_health_tests(123, 123);
-		$job = new Job(self::$domain, self::$job_name, new Witness\Silent());
+		$job = new Job(self::$domain, self::$job_name);
 		$this->assertTrue($job->is_healthy(), 'Expected that job would be healthy');
 	}
 
 	public function test_is_unhealthy()
 	{
 		$this->configure_for_health_tests(123, 122);
-		$job = new Job(self::$domain, self::$job_name, new Witness\Silent());
+		$job = new Job(self::$domain, self::$job_name);
 		$this->assertFalse($job->is_healthy(), 'Expected that job would be unhealthy');
 	}
 
@@ -79,7 +78,7 @@ class Job_Test extends \Bart\BaseTestCase
 
 		try
 		{
-			new Job($domain, $job_name, new Witness\Silent());
+			new Job($domain, $job_name);
 			$this->fail('Expected exception on disabled job');
 		}
 		catch (\Exception $e)
@@ -92,7 +91,7 @@ class Job_Test extends \Bart\BaseTestCase
 	{
 		try
 		{
-			new Job('', '', new Witness\Silent());
+			new Job('', '');
 			$this->fail('Should fail when missing a daomin');
 		}
 		catch(\Exception $e)
@@ -102,7 +101,7 @@ class Job_Test extends \Bart\BaseTestCase
 
 		try
 		{
-			new Job('domain', '', new Witness\Silent());
+			new Job('domain', '');
 			$this->fail('Should fail when missing a job name');
 		}
 		catch(\Exception $e)

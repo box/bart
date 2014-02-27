@@ -2,7 +2,6 @@
 namespace Bart\Git_Hook;
 
 use Bart\Diesel;
-use Bart\Witness;
 
 /**
  * Create a build in jenkins for the latest commit. Following exceptions apply:
@@ -12,7 +11,7 @@ use Bart\Witness;
  */
 class Build_In_Jenkins extends Base
 {
-	public function __construct(array $conf, $git_dir, $repo, Witness $w)
+	public function __construct(array $conf, $gitDir, $repo)
 	{
 		$jenkins_conf = $conf['jenkins'];
 		if (!array_key_exists('job_name', $jenkins_conf))
@@ -21,7 +20,7 @@ class Build_In_Jenkins extends Base
 			$jenkins_conf['job_name'] = $repo;
 		}
 
-		parent::__construct($jenkins_conf, $git_dir, $repo, $w);
+		parent::__construct($jenkins_conf, $gitDir, $repo);
 	}
 
 	public function run($commitHash)
@@ -35,7 +34,7 @@ class Build_In_Jenkins extends Base
 			return;
 		}
 
-		$jobName = $this->hook_conf['job_name'];
+		$jobName = $this->hookConf['job_name'];
 		// Default parameters that all jobs may use, but may otherwise ignore
 		$params = array(
 			'GIT_HASH' => $commitHash,
@@ -46,14 +45,14 @@ class Build_In_Jenkins extends Base
 		if (preg_match('/\{deploy\}/', $msg, $matches) > 0)
 		{
 			// Submit a deploy job for repo
-			$jobName = $this->hook_conf['deploy-job'];
+			$jobName = $this->hookConf['deploy-job'];
 			// For repos whose deploy job is one and the same as the integration job
 			$params['DEPLOY'] = 'true';
 		}
 
 		/** @var \Bart\Jenkins\Job $job */
 		$job = Diesel::create('Bart\Jenkins\Job',
-				$this->hook_conf['host'], $jobName, $this->w);
+				$this->hookConf['host'], $jobName);
 
 		$job->start($params);
 	}
