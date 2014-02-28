@@ -1,0 +1,14 @@
+#! /usr/bin/env php
+<?php
+/**
+ * Expected system configuration of hooks is that there is a directory of git hook
+ * and one of them is a symlink to this bart script. E.g.:
+ *
+ *     /path/to/repos/repo.git/hooks/post-receive.d/hook-name -> /path/to/bart/bin/git-hook-runner.php
+ */
+error_reporting(E_ALL);
+
+$bartRoot = dirname(__DIR__);
+require_once "$bartRoot/src/Bart/bart-common.php";
+
+$hook = \Bart\Git_Hook\GitHookRunner::createFromScriptName($_SERVER['SCRIPT_NAME']);
