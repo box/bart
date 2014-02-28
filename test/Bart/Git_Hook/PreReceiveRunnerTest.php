@@ -16,7 +16,7 @@ class PreReceiveRunnerTest extends TestBase
 
 		$msg = 'No configuration section for hook jenkins';
 		$closure = function() use ($preReceive) {
-			$preReceive->verifyAll('doesnt matter');
+			$preReceive->runAllHooks('doesnt matter');
 		};
 
 		$this->assertThrows('\Exception', $msg, $closure);
@@ -38,7 +38,7 @@ class PreReceiveRunnerTest extends TestBase
 
 		$msg = "Class for hook does not exist! (Bart\\Git_Hook\\$monty)";
 		$closure = function() use ($preReceive) {
-			$preReceive->verifyAll('doesnt matter');
+			$preReceive->runAllHooks('doesnt matter');
 		};
 		$this->assertThrows('\Bart\Git_Hook\GitHookException', $msg, $closure);
 	}
@@ -59,7 +59,7 @@ class PreReceiveRunnerTest extends TestBase
 		// Not necessarily accurate, but it should be true that if pre-receive
 		// ...attempted to instantiate the Git_Hook it would crash when it
 		// ...it couldn't find the dependency for class Git_Hook_Gerrit_Approved
-		$preReceive->verifyAll('doesnt matter');
+		$preReceive->runAllHooks('doesnt matter');
 	}
 
 	public function test_verify_fails()
@@ -82,7 +82,7 @@ class PreReceiveRunnerTest extends TestBase
 			return $phpu;
 		});
 
-		$preReceive->verifyAll('doesnt matter');
+		$preReceive->runAllHooks('doesnt matter');
 	}
 
 	private function configureFor($hookConf, $repo)

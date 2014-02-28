@@ -234,4 +234,21 @@ class Shell
 
 		return getenv('USERNAME');
 	}
+
+	/**
+	 * Single threaded STDIN
+	 * @return array Input
+	 */
+	public function std_in()
+	{
+		// TODO deal with blocking or pipes as described in,
+		// http://www.gregfreeman.org/2013/processing-data-with-php-using-stdin-and-piping/
+		$lines = [];
+
+		while (false !== ($line = fgets(STDIN))) {
+			$lines[] = trim($line);
+		}
+
+		return $lines;
+	}
 }

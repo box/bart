@@ -1,6 +1,8 @@
 <?php
 namespace Bart;
 
+use Bart\Shell\Command;
+
 class GitTest extends \Bart\BaseTestCase
 {
 	public function test_chain_commands()
@@ -122,6 +124,26 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 
 		$this->assertEquals('Some random commit message', $msg,
 			'Git did not return proper commit message');
+	}
+
+	public function testGetRevList()
+	{
+		$command = $this->getMock('\Bart\Shell\Command', array(), array(), '', false);
+		$command->expects($this->once())
+			->method('run')
+			->will($this->returnValue(['abcdef123']));
+
+		$shell = $this->getMock('\Bart\Shell');
+		$shell->expects($this->once())
+			->method('command')
+			->with('git --git-dir= rev-list %s..%s', 'HEAD^', 'HEAD')
+			->will($this->returnValue($command));
+
+		$this->registerMockShell($shell);
+
+		$git = new Git('', 'origin');
+
+		$this->assertEquals(['abcdef123'], $git->getRevList('HEAD^', 'HEAD'), 'rev list');
 	}
 
 	public function testGetRevListCount()

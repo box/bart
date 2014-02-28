@@ -36,7 +36,12 @@ class ReceiveRunnerBase
 		$this->logger = Log4PHP::getLogger(get_called_class());
 	}
 
-	public function verifyAll($commitHash)
+	public function __toString()
+	{
+		return static::$type . '-runner';
+	}
+
+	public function runAllHooks($commitHash)
 	{
 		foreach ($this->hooks as $hookName)
 		{
@@ -74,8 +79,7 @@ class ReceiveRunnerBase
 			throw new GitHookException("Class for hook does not exist! ($class)");
 		}
 
-		$this->logger->info('...' . static::$type . ' verifying ' . $hookName);
-
+		$this->logger->info("Instantiated $hookName hook for " . static::$type . ' action');
 		return new $class($this->conf, $this->gitDir, $this->repo);
 	}
 }

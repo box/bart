@@ -87,6 +87,18 @@ class Git
 		return $matches[1];
 	}
 
+	/**
+	 * @param string $startHash
+	 * @param string $endHash
+	 * @return string[] The commit hashes
+	 */
+	public function getRevList($startHash, $endHash)
+	{
+		$cmd = $this->shell->command($this->git . ' rev-list %s..%s', $startHash, $endHash);
+
+		return $cmd->run();
+	}
+
 	public function getRevListCount($revision = 'HEAD')
 	{
 		$cmd = $this->shell->command($this->git . ' rev-list %s', $revision);

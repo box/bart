@@ -1,14 +1,49 @@
 #! /usr/bin/env php
 <?php
 /**
+ * This is an EXAMPLE script for invoking the git hook controller
+ * Although fully functional for standalone bart installations, if
+ * bart is composed in your project, you may want to configure your
+ * app via your own PHP boot strap code prior to invoking the controller
+ *
  * Expected system configuration of hooks is that there is a directory of git hook
  * and one of them is a symlink to this bart script. E.g.:
  *
  *     /path/to/repos/repo.git/hooks/post-receive.d/hook-name -> /path/to/bart/bin/git-hook-runner.php
+ *
+ * Necessary runtime configuration for Hooks:
+ *    BART/etc/php/hooks.conf
+ * 		- (this is the old school configuration, which is deprecated but not yet replaced; sorry)
+ *    Configuration Root/*.conf
+ * 		- Configuration for any of the Git_Hook classes. Presently, this includes only GerritMerged
  */
+use Bart\Git_Hook\GitHookController;
+use Bart\Log4PHP;
+
 error_reporting(E_ALL);
 
 $bartRoot = dirname(__DIR__);
 require_once "$bartRoot/src/Bart/bart-common.php";
 
-$hook = \Bart\Git_Hook\GitHookRunner::createFromScriptName($_SERVER['SCRIPT_NAME']);
+require_once 'log4php/Logger.php';
+Log4PHP::initForConsole('debug');
+
+// Hook up root of where to find configuration files
+// Your system configuration or deployment tools should be responsible for
+// ...defining the content of the files in this directory
+// NOTE Older git hooks still expect configuration in the hard-coded hooks.conf file
+\Bart\Configuration\Configuration::configure("$bartRoot/etc/php");
+
+$controller = GitHookController::createFromScriptName($_SERVER['SCRIPT_NAME']);
+
+try {
+	$controller->run();
+}
+catch (\Exception $e) {
+	echo \Bart\EscapeColors::red("
+
+		$controller failed: {$e->getMessage()}
+
+");
+	exit(1);
+}

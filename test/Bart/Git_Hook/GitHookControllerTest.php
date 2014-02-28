@@ -3,7 +3,7 @@ namespace Bart\Git_Hook;
 
 use Bart\BaseTestCase;
 
-class GitHookRunnerTest extends BaseTestCase
+class GitHookControllerTest extends BaseTestCase
 {
 	public function testScriptNameParsing()
 	{
@@ -15,10 +15,8 @@ class GitHookRunnerTest extends BaseTestCase
 
 		$this->registerDiesel('\Bart\Shell', $stubShell);
 
-		$runner = GitHookRunner::createFromScriptName('hook/post-recieve.d/bart-runner');
-		$this->assertEquals('monty', $runner->projectName, 'project');
-		$this->assertEquals('post-receive', $runner->hookName, 'hookName');
-
+		$runner = GitHookController::createFromScriptName('hook/post-receive.d/bart-runner');
+		$this->assertEquals('monty.post-receive', "$runner", 'hook runner to string');
 	}
 }
 
