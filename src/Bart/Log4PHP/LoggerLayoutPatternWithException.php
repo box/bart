@@ -18,7 +18,7 @@ class LoggerLayoutPatternWithException extends \LoggerLayoutPattern
 		}
 
 		$renderer = new \LoggerRendererException();
-		return $format . $renderer->render($throwableInfo->getThrowable());
+		return $format . $renderer->render($throwableInfo->getThrowable()) . "\n";
 	}
 }
 
