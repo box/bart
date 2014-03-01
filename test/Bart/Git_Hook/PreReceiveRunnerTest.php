@@ -109,7 +109,7 @@ class PreReceiveRunnerTest extends TestBase
 	}
 }
 
-class ForTesting extends Base
+class ForTesting extends GitHookAction
 {
 	protected $conf;
 	protected $dir;

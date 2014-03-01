@@ -15,7 +15,7 @@ names = gerrit-merge
 class = GerritMerge
 enabled = yes
  */
-class GerritMerge extends Base
+class GerritMerge extends GitHookAction
 {
 	/**
 	 * Run the hook

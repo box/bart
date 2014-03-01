@@ -82,7 +82,7 @@ class GitHookController
 
 	/**
 	 * Instantiate hook runner for hook type
-	 * @return ReceiveRunnerBase
+	 * @return GitHookRunner
 	 * @throws GitHookException
 	 */
 	private function createHookRunner()

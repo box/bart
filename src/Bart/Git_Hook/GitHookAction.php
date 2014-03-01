@@ -8,7 +8,7 @@ use Bart\Git;
 /**
  * All git hooks need to extend this class
  */
-abstract class Base
+abstract class GitHookAction
 {
 	protected $hookConf;
 	protected $repo;

@@ -1,5 +1,6 @@
 <?php
 /**
+ * @deprecated Please see ./bin/git-hook-runner for example of recommended approach
  * Run all post-receive scripts, failing early if problems
  */
 namespace Bart;
@@ -13,6 +14,10 @@ require_once $root . 'src/Bart/bart-common.php';
 function show_usage($exit_status)
 {
 	echo <<<USAGE
+
+!!!
+@deprecated Please see ./bin/git-hook-runner for example of recommended approach
+!!!
 
 php post-receive.php [--verbose] --git-dir \$git_dir --repo \$repo \$commit-hash
 php post-receive.php --help

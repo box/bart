@@ -4,7 +4,7 @@ namespace Bart\Git_Hook;
 use Bart\Diesel;
 use Bart\Git;
 
-class Base_Test extends \Bart\BaseTestCase
+class GitHookActionTest extends \Bart\BaseTestCase
 {
 	public function testConstructor()
 	{
@@ -25,7 +25,7 @@ class Base_Test extends \Bart\BaseTestCase
 				return $mock_git;
 		});
 
-		$hook = new Test_Git_Hook($conf, '.git', 'grinder');
+		$hook = new TestGitHookAction($conf, '.git', 'grinder');
 		$hook->run($this);
 	}
 }
@@ -33,7 +33,7 @@ class Base_Test extends \Bart\BaseTestCase
 /**
  * Silly class to help us test that the base class will do its stuff
  */
-class Test_Git_Hook extends Base
+class TestGitHookAction extends GitHookAction
 {
 	public function run($phpu)
 	{

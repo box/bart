@@ -7,10 +7,8 @@ use Bart\Log4PHP;
 /**
  * Base of pre- and post-receive hooks
  */
-class ReceiveRunnerBase
+class ReceiveRunnerBase extends GitHookRunner
 {
-	protected $gitDir;
-	protected $repo;
 	protected $hooks;
 	protected $conf;
 	/** @var \Logger */
@@ -18,13 +16,13 @@ class ReceiveRunnerBase
 
 	public function __construct($gitDir, $repo)
 	{
+		parent::__construct($gitDir, $repo);
+
 		// Use the repo as the environment when parsing conf
 		/** @var \Bart\Config_Parser $parser */
 		$parser = Diesel::create('Bart\Config_Parser', array($repo));
 		$conf = $parser->parse_conf_file(BART_DIR . 'etc/php/hooks.conf');
 
-		$this->gitDir = $gitDir;
-		$this->repo = $repo;
 		$this->hooks = explode(',', $conf[static::$type]['names']);
 		$this->conf = $conf;
 
@@ -45,7 +43,7 @@ class ReceiveRunnerBase
 	{
 		foreach ($this->hooks as $hookName)
 		{
-			/** @var \Bart\Git_Hook\Base $hook */
+			/** @var \Bart\Git_Hook\GitHookAction $hook */
 			$hook = $this->createHookFor($hookName);
 
 			if ($hook === null) continue;
@@ -58,7 +56,7 @@ class ReceiveRunnerBase
 	/**
 	 * Instantiate a new hook of type $hookName
 	 * @param string $hookName
-	 * @return \Bart\Git_Hook\Base or null if hook is disabled
+	 * @return \Bart\Git_Hook\GitHookAction or null if hook is disabled
 	 * @throws GitHookException If bad conf
 	 */
 	private function createHookFor($hookName)

@@ -9,7 +9,7 @@ use Bart\Diesel;
  * instead of the normal job.
  * - If commit message contains "{nobuild, reason=*}", then no action is taken
  */
-class Build_In_Jenkins extends Base
+class Build_In_Jenkins extends GitHookAction
 {
 	public function __construct(array $conf, $gitDir, $repo)
 	{

@@ -6,7 +6,7 @@ use Bart\Diesel;
 /**
  * Enforces that a commit is approved in gerrit
  */
-class Gerrit_Approved extends Base
+class Gerrit_Approved extends GitHookAction
 {
 	/** @var \Bart\Gerrit\Api */
 	private $api;

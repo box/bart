@@ -2,6 +2,7 @@
 #
 # To be executed by git (symbolically link as .git/hooks/pre-receive)
 # For each commit, verify each hook configured for the repo
+# @deprecated Please see ./bin/git-hook-runner for example of recommended approach
 ##
 
 declare HOOK_SCRIPT='pre-receive.php'
