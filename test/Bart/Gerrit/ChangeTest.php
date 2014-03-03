@@ -23,18 +23,14 @@ class ChangeTest extends BaseTestCase
 		$stubApi = $this->stubApi();
 		$stubApi->expects($this->exactly(2))
 			->method('gsql')
-			->will($this->returnCallback(function ($gsql, array $params)
-			{
+			->will($this->returnCallback(function ($gsql, array $params) {
 				$apiResult = new ApiResult(array('rowCount' => 1), array());
-				if (strstr($gsql, 'UPDATE changes'))
-				{
+				if (strstr($gsql, 'UPDATE changes')) {
 					$this->assertCount(1, $params, 'UPDATE params');
 					$this->assertEquals($this->fakeChangeId, $params[0]);
 
 					return $apiResult;
-				}
-				else if (strstr($gsql, 'INSERT INTO'))
-				{
+				} else if (strstr($gsql, 'INSERT INTO')) {
 					$this->assertCount(4, $params, 'INSERT params');
 
 					$this->assertEquals($this->fakeMergedHash, $params[0]);
@@ -54,21 +50,43 @@ class ChangeTest extends BaseTestCase
 		$change->markMerged($this->fakeMergedHash);
 	}
 
+	public function testNoMatchForChangeId()
+	{
+		$stubApi = $this->stubApi(0);
+		$this->registerDiesel('\Bart\Gerrit\Api', $stubApi);
+
+		$change = new Change($this->fakeChangeId);
+
+		$this->assertFalse($change->exists(), 'Change exists?');
+	}
+
+	public function testValidChangeExists()
+	{
+		$stubApi = $this->stubApi();
+		$this->registerDiesel('\Bart\Gerrit\Api', $stubApi);
+
+		$change = new Change($this->fakeChangeId);
+
+		$this->assertTrue($change->exists(), 'Change exists?');
+	}
+
 	/**
+	 * @param int $rowCount 0 or 1 number of records to return
 	 * @return \PHPUnit_Framework_MockObject_MockObject stub Gerrit\Api
 	 */
-	private function stubApi()
+	private function stubApi($rowCount = 1)
 	{
-		$gerritData = array(
-			'number' => '2583',
-			'currentPatchSet' => array('number' => '1')
-		);
+		$gerritData = $rowCount == 1 ?
+			array(
+				'number' => '2583',
+				'currentPatchSet' => array('number' => '1')
+			) : array();
 
 		$stubApi = $this->getMock('\Bart\Gerrit\Api', array(), array(), '', false);
 		$stubApi->expects($this->once())
 			->method('query')
 			->with('--current-patch-set %s', array($this->fakeChangeId))
-			->will($this->returnValue(new ApiResult(array(), array($gerritData))));
+			->will($this->returnValue(new ApiResult(array('rowCount' => $rowCount), array($gerritData))));
 		return $stubApi;
 	}
 }

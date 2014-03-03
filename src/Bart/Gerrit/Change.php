@@ -1,6 +1,7 @@
 <?php
 namespace Bart\Gerrit;
 use Bart\Diesel;
+use Bart\Log4PHP;
 use Bart\Shell\Command;
 
 /**
@@ -13,7 +14,7 @@ class Change
 	/** @var Api  */
 	private $api;
 	/** @var array Cached response from api */
-	private $_remoteData;
+	private $_remoteData = null;
 	/** @var \Logger */
 	private $logger;
 
@@ -25,12 +26,21 @@ class Change
 		$this->api = Diesel::create('\Bart\Gerrit\Api');
 		$this->changeId = $changeId;
 
-		$this->logger = \Logger::getLogger(__CLASS__);
+		$this->logger = Log4PHP::getLogger(__CLASS__);
 	}
 
 	public function __toString()
 	{
 		return "{$this->changeId}";
+	}
+
+	/**
+	 * @return bool If Gerrit knows about this change review
+	 */
+	public function exists()
+	{
+		// Thanks, PHP loose type checking
+		return $this->remoteData() != false;
 	}
 
 	/**
@@ -102,15 +112,22 @@ class Change
 		}
 	}
 
+	/**
+	 * @return array Details of change from Gerrit
+	 */
 	private function remoteData()
 	{
-		if (!$this->_remoteData)
-		{
-			// TODO What if there is no match?
+		if ($this->_remoteData === null) {
 			$result = $this->api->query('--current-patch-set %s', array($this->changeId));
 
-			// Use first result (should be the only one)
-			$this->_remoteData = $result->rawRecords()[0];
+			if ($result->rowCount() == 0) {
+				$this->logger->debug("No record exists in Gerrit for {$this->changeId}");
+				$this->_remoteData = array();
+			}
+			else {
+				// Use first result (should be the only one)
+				$this->_remoteData = $result->rawRecords()[0];
+			}
 		}
 
 		return $this->_remoteData;

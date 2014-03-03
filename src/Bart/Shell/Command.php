@@ -1,5 +1,6 @@
 <?php
 namespace Bart\Shell;
+use Bart\Log4PHP;
 
 /**
  * Encapsulates a shell command
@@ -19,7 +20,7 @@ class Command
 	 */
 	public function __construct($commandFormat)
 	{
-		$this->logger = \Logger::getLogger(__CLASS__);
+		$this->logger = Log4PHP::getLogger(__CLASS__);
 
 		$safeCommandFormat = escapeshellcmd($commandFormat);
 

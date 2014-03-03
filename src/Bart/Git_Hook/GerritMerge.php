@@ -2,38 +2,40 @@
 namespace Bart\Git_Hook;
 use Bart\Gerrit\Change;
 use Bart\Gerrit\GerritException;
+use Bart\Git_Exception;
 
 /**
  * Merge commit in Gerrit
- * Configuration:
-[post-receive]
-names = gerrit-merge
-
-[gerrit-merge]
-; Configurations for Gerrit are managed by \Bart\Configuration\GerritConfig class
-; ...and do not appear here
-class = GerritMerge
-enabled = yes
  */
 class GerritMerge extends GitHookAction
 {
 	/**
 	 * Run the hook
-	 * @param $commitHash string of commit to verify
+	 * @param string $commitHash commit to verify
 	 * @throws GitHookException if requirement fails
 	 */
 	public function run($commitHash)
 	{
-		$changeId = $this->git->get_change_id($commitHash);
+		try {
+			$changeId = $this->git->get_change_id($commitHash);
+		}
+		catch (Git_Exception $e) {
+			$this->logger->warn("{$e->getMessage()}. Skipping commit.");
+			return;
+		}
 
 		$change = new Change($changeId);
 
-		try
-		{
+		try {
+			if (!$change->exists()) {
+				// This is not a warning, because some repositories do not require code review
+				$this->logger->debug('Skipping change b/c it does not exist in Gerrit');
+				return;
+			}
+
 			$change->markMerged($commitHash);
 		}
-		catch (GerritException $e)
-		{
+		catch (GerritException $e) {
 			$this->logger->error('Problem while marking change merged in gerrit. Ignoring and moving on with hook.', $e);
 		}
 	}

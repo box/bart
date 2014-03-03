@@ -5,6 +5,7 @@ use Bart\Configuration\GerritConfig;
 use Bart\Diesel;
 use Bart\JSON;
 use Bart\JSONParseException;
+use Bart\Log4PHP;
 use Bart\Shell\Command;
 use Bart\Shell\CommandException;
 
@@ -35,7 +36,7 @@ class Api
 		$this->ssh = $ssh;
 		$this->config = $config;
 
-		$this->logger = \Logger::getLogger(__CLASS__);
+		$this->logger = Log4PHP::getLogger(__CLASS__);
 		$this->logger->trace("Configured Gerrit API using ssh {$ssh}");
 	}
 
