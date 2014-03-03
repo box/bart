@@ -7,9 +7,10 @@ use Bart\Log4PHP;
 /**
  * Base of pre- and post-receive hooks
  */
-class ReceiveRunnerBase extends GitHookRunner
+abstract class ReceiveRunnerBase extends GitHookRunner
 {
-	protected $hooks;
+	protected $hookActions;
+	/** @var array Full and resolved hooks.conf configuration */
 	protected $conf;
 	/** @var \Logger */
 	protected $logger;
@@ -23,28 +24,21 @@ class ReceiveRunnerBase extends GitHookRunner
 		$parser = Diesel::create('Bart\Config_Parser', array($repo));
 		$conf = $parser->parse_conf_file(BART_DIR . 'etc/php/hooks.conf');
 
-		$this->hooks = explode(',', $conf[static::$type]['names']);
 		$this->conf = $conf;
-
-		if (array_key_exists('verbose', $conf[static::$type]))
-		{
-			Log4PHP::initForConsole('debug');
-		}
+		$this->hookActions = explode(',', $conf[static::$name]['names']);
 
 		$this->logger = Log4PHP::getLogger(get_called_class());
 	}
 
-	public function __toString()
-	{
-		return static::$type . '-runner';
-	}
-
+	/**
+	 * Run all hook actions configured for this hook against $commitHash
+	 * @param string $commitHash
+	 */
 	public function runAllHooks($commitHash)
 	{
-		foreach ($this->hooks as $hookName)
-		{
+		foreach ($this->hookActions as $hookAction) {
 			/** @var \Bart\Git_Hook\GitHookAction $hook */
-			$hook = $this->createHookFor($hookName);
+			$hook = $this->createHookActionFor($hookAction);
 
 			if ($hook === null) continue;
 
@@ -54,30 +48,34 @@ class ReceiveRunnerBase extends GitHookRunner
 	}
 
 	/**
-	 * Instantiate a new hook of type $hookName
-	 * @param string $hookName
+	 * Instantiate a new hook action
+	 * @param string $hookActionName
 	 * @return \Bart\Git_Hook\GitHookAction or null if hook is disabled
-	 * @throws GitHookException If bad conf
+	 * @throws GitHookException If misconfiguration
 	 */
-	private function createHookFor($hookName)
+	private function createHookActionFor($hookActionName)
 	{
-		if (!array_key_exists($hookName, $this->conf))
-		{
-			throw new GitHookException("No configuration section for hook $hookName");
+		if ($hookActionName === '') {
+			// Potentially typo or nothing configured
+			$this->logger->info('Empty hook action name configured for ' . static::$name);
+			return null;
+		}
+
+		if (!array_key_exists($hookActionName, $this->conf)) {
+			throw new GitHookException("No configuration section for hook $hookActionName");
 		}
 
 		// All configurations for this hook
-		$hookConf = $this->conf[$hookName];
-		$class = 'Bart\\Git_Hook\\' . $hookConf['class'];
+		$hookConf = $this->conf[$hookActionName];
 
 		if (!$hookConf['enabled']) return null;
 
-		if (!class_exists($class))
-		{
-			throw new GitHookException("Class for hook does not exist! ($class)");
+		$class = 'Bart\\Git_Hook\\' . $hookConf['class'];
+		if (!class_exists($class)) {
+			throw new GitHookException("Hook action class ($class) does not exist");
 		}
 
-		$this->logger->info("Instantiated $hookName hook for " . static::$type . ' action');
+		$this->logger->info("Instantiated $hookActionName hook action for " . static::$name . ' hook');
 		return new $class($this->conf, $this->gitDir, $this->repo);
 	}
 }

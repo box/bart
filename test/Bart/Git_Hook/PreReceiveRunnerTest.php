@@ -36,7 +36,7 @@ class PreReceiveRunnerTest extends TestBase
 
 		$preReceive = $this->configureFor($hookConf, $repo);
 
-		$msg = "Class for hook does not exist! (Bart\\Git_Hook\\$monty)";
+		$msg = "Hook action class (Bart\\Git_Hook\\$monty) does not exist";
 		$closure = function() use ($preReceive) {
 			$preReceive->runAllHooks('doesnt matter');
 		};

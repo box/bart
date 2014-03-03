@@ -6,5 +6,5 @@ namespace Bart\Git_Hook;
  */
 class PreReceiveRunner extends ReceiveRunnerBase
 {
-	protected static $type = 'pre-receive';
+	protected static $name = 'pre-receive';
 }

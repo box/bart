@@ -6,6 +6,8 @@ namespace Bart\Git_Hook;
  */
 abstract class GitHookRunner
 {
+	/** @var string The hook name */
+	protected static $name;
 	/** @var string Full path to the git repo */
 	protected $gitDir;
 	/** @var string The simple name of the repository, e.g. puppet */
@@ -19,5 +21,10 @@ abstract class GitHookRunner
 	{
 		$this->gitDir = $gitDir;
 		$this->repo = $repo;
+	}
+
+	public function __toString()
+	{
+		return static::$name . '-hook-runner';
 	}
 }

@@ -6,5 +6,5 @@ namespace Bart\Git_Hook;
  */
 class PostReceiveRunner extends ReceiveRunnerBase
 {
-	protected static $type = 'post-receive';
+	protected static $name = 'post-receive';
 }
