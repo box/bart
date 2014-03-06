@@ -29,11 +29,11 @@ class GerritAbandon extends GitHookAction
 		try {
 			if (!$change->exists()) {
 				// This is not a warning, because some repositories do not require code review
-				$this->logger->debug('Skipping change b/c it does not exist in Gerrit');
+				$this->logger->info('Skipping change b/c it does not exist in Gerrit');
 				return;
 			}
 
-			$change->abandon('Abandoning from git hook.');
+			$change->abandon("Abandoning from git hook for commit {$commitHash}.");
 		}
 		catch (GerritException $e) {
 			$this->logger->error('Problem abandoning change. Ignoring and moving on with hook.', $e);
