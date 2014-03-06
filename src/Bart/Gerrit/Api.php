@@ -64,22 +64,25 @@ class Api
 
 	/**
 	 * Review a patchset
-	 * @param string $commitHash Gerrit uses this to find patch set
+	 * @param string $unique The commit hash or the change_num,patch_set_id
 	 * @param string $score E.g. +2
 	 * @param string $comment Comment to leave with review
+	 * @param string $options Additional options. See
+	 * https://gerrit-review.googlesource.com/Documentation/cmd-review.html
+	 * @return void
 	 */
-	public function review($commitHash, $score, $comment)
+	public function review($unique, $score, $comment, $options = '')
 	{
 		// This gets injected as a command argument, which will itself get escaped
 		// ...so, it needs to be double escaped
 		$escapedComment = escapeshellarg($comment);
 
-		$review = "--code-review $score";
+		$reviewScore = $score != null ? "--code-review $score" : '';
 		$message = "--message $escapedComment";
 
-		$query = "gerrit review $review $message $commitHash";
+		$reviewCmd = "gerrit review $options $reviewScore $message $unique";
 
-		$this->send($query);
+		$this->send($reviewCmd, false);
 	}
 
 	/**
@@ -91,9 +94,7 @@ class Api
 	{
 		$safeQuery = Command::makeSafeString("gerrit query --format=JSON $query" , $args);
 
-		$result = $this->send($safeQuery, true);
-
-		return new ApiResult($result['stats'], $result['records']);
+		return $this->send($safeQuery);
 	}
 
 	/**
@@ -105,9 +106,7 @@ class Api
 	{
 		$safeGsql = Command::makeSafeString($gsql, $args);
 
-		$result = $this->send("gerrit gsql --format=JSON -c \"$safeGsql\"", true);
-
-		return new ApiResult($result['stats'], $result['records']);
+		return $this->send("gerrit gsql --format=JSON -c \"$safeGsql\"");
 	}
 
 	/**
@@ -125,8 +124,8 @@ class Api
 
 		$remoteQuery = 'gerrit query --format=JSON ' . $changeId . $filterStr;
 
-		$result = $this->send($remoteQuery, true);
-		$records = $result['records'];
+		$result = $this->send($remoteQuery);
+		$records = $result->rawRecords();
 
 		// NOTE can probably use :stats here
 		if (count($records) > 1) {
@@ -157,17 +156,17 @@ class Api
 
 	/**
 	 * @param string $remoteQuery Gerrity query
-	 * @param boolean $processResponse If a JSON response is expected
-	 * @return mixed Array of json decoded results, or nil
+	 * @param boolean $expectResponse If a JSON response is expected
+	 * @return null|ApiResult
 	 * @throws GerritException
 	 */
-	private function send($remoteQuery, $processResponse = false)
+	private function send($remoteQuery, $expectResponse = true)
 	{
 		try {
-			$this->logger->debug("Calling gerrit with: $remoteQuery");
+			$this->logger->debug("Sending remote command to gerrit: $remoteQuery");
 			$gerritResponseArray = $this->ssh->exec($remoteQuery);
 
-			if (!$processResponse) {
+			if (!$expectResponse) {
 				return;
 			}
 
@@ -182,12 +181,7 @@ class Api
 				$records[] = JSON::decode($json);
 			}
 
-			// TODO after removing deprecated methods, convert this to
-			// TODO ...return a ApiResult
-			return array(
-				'stats' => $stats,
-				'records' => $records
-			);
+			return new ApiResult($stats, $records);
 		}
 		catch (CommandException $e) {
 			$this->logger->warn('Gerrit query failed', $e);

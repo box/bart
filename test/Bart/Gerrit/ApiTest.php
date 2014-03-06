@@ -98,9 +98,23 @@ class ApiTest extends BaseTestCase
 	public function testReviewWithEscapedSingleQuotes()
 	{
 		$comment = "Reviewin' like a boss";
-		$api = $this->createGerritApiForReview("'Reviewin'\\'' like a boss'");
+		$remoteGerritCmd = "gerrit review  --code-review -1 --message 'Reviewin'\\'' like a boss' $this->commitHash";
+
+		$api = $this->configureApiForCmd($remoteGerritCmd, $this->returnValue(''));
 
 		$api->review($this->commitHash, -1, $comment);
+	}
+
+	public function testReviewNoScore()
+	{
+		$api = $this->configureApiForCmd("gerrit review   --message 'Comment with no score' $this->commitHash", $this->returnValue(''));
+		$api->review($this->commitHash, null, 'Comment with no score');
+	}
+
+	public function testReviewNoScoreWithOptions()
+	{
+		$api = $this->configureApiForCmd("gerrit review --restore  --message 'Comment with no score' $this->commitHash", $this->returnValue(''));
+		$api->review($this->commitHash, null, 'Comment with no score', '--restore');
 	}
 
 	private function createGerritApiForQuery($status, $json)
@@ -121,14 +135,6 @@ class ApiTest extends BaseTestCase
 			$this->returnValue($json);
 
 		return $this->configureApiForCmd($remoteGerritCmd, $will);
-	}
-
-	private function createGerritApiForReview($comment)
-	{
-		$commitHash = $this->commitHash;
-		$remoteGerritCmd = "gerrit review --code-review -1 --message $comment $commitHash";
-
-		return $this->configureApiForCmd($remoteGerritCmd, $this->returnValue(''));
 	}
 
 	/**

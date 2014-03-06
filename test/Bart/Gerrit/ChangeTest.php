@@ -7,6 +7,7 @@ class ChangeTest extends BaseTestCase
 {
 	private $fakeChangeId = 'Iabc123';
 	private $fakeMergedHash = 'a7dd3f9';
+	private $changeNum = '2583';
 
 	public function testCurrentPatchSet()
 	{
@@ -26,8 +27,9 @@ class ChangeTest extends BaseTestCase
 			->will($this->returnCallback(function ($gsql, array $params) {
 				$apiResult = new ApiResult(array('rowCount' => 1), array());
 				if (strstr($gsql, 'UPDATE changes')) {
-					$this->assertCount(1, $params, 'UPDATE params');
-					$this->assertEquals($this->fakeChangeId, $params[0]);
+					$this->assertCount(2, $params, 'UPDATE params');
+					$this->assertEquals(2, $params[0], 'patch set count');
+					$this->assertEquals($this->fakeChangeId, $params[1], 'change id');
 
 					return $apiResult;
 				} else if (strstr($gsql, 'INSERT INTO')) {
@@ -35,7 +37,7 @@ class ChangeTest extends BaseTestCase
 
 					$this->assertEquals($this->fakeMergedHash, $params[0]);
 					$this->assertEquals(9, $params[1]);
-					$this->assertEquals(2583, $params[2]);
+					$this->assertEquals($this->changeNum, $params[2]);
 					$this->assertEquals(2, $params[3]);
 
 					return $apiResult;
@@ -70,6 +72,32 @@ class ChangeTest extends BaseTestCase
 		$this->assertTrue($change->exists(), 'Change exists?');
 	}
 
+	public function testAbandoning()
+	{
+		$stubApi = $this->stubApi();
+		$stubApi->expects($this->exactly(1))
+			->method('review')
+			->with($this->changeNum . ',1', null, 'See ya later', '--abandon')
+			->will($this->returnValue(new ApiResult(array('rowCount' => 1), array())));
+		$this->registerDiesel('\Bart\Gerrit\Api', $stubApi);
+
+		$change = new Change($this->fakeChangeId);
+		$change->abandon('See ya later');
+	}
+
+	public function testCommenting()
+	{
+		$stubApi = $this->stubApi();
+		$stubApi->expects($this->exactly(1))
+			->method('review')
+			->with($this->changeNum . ',1', null, 'See ya later')
+			->will($this->returnValue(new ApiResult(array('rowCount' => 1), array())));
+		$this->registerDiesel('\Bart\Gerrit\Api', $stubApi);
+
+		$change = new Change($this->fakeChangeId);
+		$change->comment('See ya later');
+	}
+
 	/**
 	 * @param int $rowCount 0 or 1 number of records to return
 	 * @return \PHPUnit_Framework_MockObject_MockObject stub Gerrit\Api
@@ -78,7 +106,7 @@ class ChangeTest extends BaseTestCase
 	{
 		$gerritData = $rowCount == 1 ?
 			array(
-				'number' => '2583',
+				'number' => $this->changeNum,
 				'currentPatchSet' => array('number' => '1')
 			) : array();
 

@@ -70,11 +70,12 @@ class Change
 	 */
 	public function markMerged($mergedHash)
 	{
-		// First update changes db table
-		// Query to undo: UPDATE changes SET open = 'Y', status = 'n', mergeable = 'N' WHERE change_id = 76641 LIMIT 1;
-		$markReviewMerged = "UPDATE changes SET open = 'N', status = 'M', mergeable = 'Y' WHERE change_key = %s LIMIT 1;";
+		// Add patch set record first so FK constraint is met on :changes table
+		$this->addMergedPatchsetRecord($mergedHash);
 
-		$result = $this->api->gsql($markReviewMerged, array($this->changeId));
+		$markReviewMerged = "UPDATE changes SET open = 'N', status = 'M', mergeable = 'Y', current_patch_set_id = %s WHERE change_key = %s LIMIT 1;";
+
+		$result = $this->api->gsql($markReviewMerged, array($this->currentPatchSetNumber() + 1, $this->changeId));
 
 		$rowCount = $result->rowCount();
 		if ($rowCount != 1) {
@@ -83,8 +84,36 @@ class Change
 		else {
 			$this->logger->info("Marked review {$this} as merged");
 		}
+	}
 
-		$this->addMergedPatchsetRecord($mergedHash);
+	/**
+	 * Posts comment on the latest patch set
+	 * @param string $comment
+	 */
+	public function comment($comment)
+	{
+		// We don't necessarily know the current commit hash, but we do know
+		// ...the change_num and current patch set
+		$uniqueId = "{$this->pk()},{$this->currentPatchSetNumber()}";
+
+		$this->api->review($uniqueId, null, $comment);
+
+		$this->logger->info("Commented on {$this}");
+	}
+
+	/**
+	 * Abandon the change
+	 * @param string $comment
+	 */
+	public function abandon($comment)
+	{
+		// We don't necessarily know the current commit hash, but we do know
+		// ...the change_num and current patch set
+		$uniqueId = "{$this->pk()},{$this->currentPatchSetNumber()}";
+
+		$this->api->review($uniqueId, null, $comment, '--abandon');
+
+		$this->logger->info("Abandoned {$this}");
 	}
 
 	/**

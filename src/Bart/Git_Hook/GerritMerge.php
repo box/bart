@@ -34,6 +34,7 @@ class GerritMerge extends GitHookAction
 			}
 
 			$change->markMerged($commitHash);
+			$change->comment('Manually merged commit');
 		}
 		catch (GerritException $e) {
 			$this->logger->error('Problem while marking change merged in gerrit. Ignoring and moving on with hook.', $e);
