@@ -5,9 +5,9 @@ use Bart\Gerrit\GerritException;
 use Bart\Git_Exception;
 
 /**
- * Merge commit in Gerrit
+ * Abandon Gerrit review
  */
-class GerritMerge extends GitHookAction
+class GerritAbandon extends GitHookAction
 {
 	/**
 	 * Run the hook
@@ -33,11 +33,10 @@ class GerritMerge extends GitHookAction
 				return;
 			}
 
-			$change->markMerged($commitHash);
-			$change->comment('Git hook marking this review as merged');
+			$change->abandon('Abandoning from git hook.');
 		}
 		catch (GerritException $e) {
-			$this->logger->error('Problem while marking change merged in gerrit. Ignoring and moving on with hook.', $e);
+			$this->logger->error('Problem abandoning change. Ignoring and moving on with hook.', $e);
 		}
 	}
 }
