@@ -2,5 +2,9 @@ language: php
 php:
   - 5.4
 script: ./vendor/bin/phpunit test
-before_script: composer install
+before_script:
+  - pear channel-discover pear.apache.org/log4php
+  - pear install log4php/Apache_log4php
+  - composer self-update
+  - composer install
 
