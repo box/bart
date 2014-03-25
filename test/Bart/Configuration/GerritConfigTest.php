@@ -5,9 +5,10 @@ use Bart\BaseTestCase;
 
 class GerritConfigTest extends BaseTestCase
 {
-	public function testReadme()
+	use ConfigurationBaseTests;
+
+	private function configFileName()
 	{
-		ConfigurationTest::assertREADME($this, '\Bart\Configuration\GerritConfig', 'gerrit.conf');
+		return 'gerrit.conf';
 	}
 }
-
