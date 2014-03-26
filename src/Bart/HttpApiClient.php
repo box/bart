@@ -218,12 +218,12 @@ class HttpApiClient
 	/**
 	 * Perform a HTTP Delete request
 	 * @param string $path
-	 * @param string[] $getVars
+	 * @param string[] $getVars Key-value pairs of query string params
 	 * @param string[] $headers
 	 * @param int $timeout
 	 * @return HttpApiClientResponse
 	 */
-	public function delete($path = "/", $getVars = null, $headers = null, $timeout = null)
+	public function delete($path = "/", array $getVars = [], array $headers = [], $timeout = null)
 	{
 		$curler = $this->initCurl();
 		$this->setTimeout($timeout, $curler);
@@ -244,12 +244,12 @@ class HttpApiClient
 	/**
 	 * Perform a HTTP Get request
 	 * @param string $path
-	 * @param string[] $getVars
+	 * @param string[] $getVars Key-value pairs of query string params
 	 * @param string[] $headers All the header strings, e.g. 'Accept: application/json'
 	 * @param int $timeout
 	 * @return HttpApiClientResponse
 	 */
-	public function get($path = "/", $getVars = null, $headers = null, $timeout = null)
+	public function get($path = "/", array $getVars = [], array $headers = [], $timeout = null)
 	{
 		$curler = $this->initCurl();
 		$this->setTimeout($timeout, $curler);
@@ -270,13 +270,13 @@ class HttpApiClient
 	/**
 	 * Perform a HTTP Post request
 	 * @param string $path
-	 * @param string[] $getVars
+	 * @param string[] $getVars Key-value pairs of query string params
 	 * @param string|string[] $postVars
 	 * @param string[] $headers
 	 * @param int $timeout
 	 * @return HttpApiClientResponse
 	 */
-	public function post($path = "/", $getVars = null, $postVars = null, $headers = null, $timeout = null)
+	public function post($path = "/", array $getVars = [], $postVars = null, array $headers = [], $timeout = null)
 	{
 		$curler = $this->initCurl();
 		$this->setTimeout($timeout, $curler);
@@ -297,13 +297,13 @@ class HttpApiClient
 	/**
 	 * Perform a HTTP Put request
 	 * @param string $path
-	 * @param string[] $getVars
+	 * @param string[] $getVars Key-value pairs of query string params
 	 * @param string|string[] $postVars
 	 * @param string[] $headers
 	 * @param int $timeout
 	 * @return HttpApiClientResponse
 	 */
-	public function put($path = "/", $getVars = null, $postVars = null, $headers = null, $timeout = null)
+	public function put($path = "/", array $getVars = [], $postVars = null, array $headers = [], $timeout = null)
 	{
 		$curler = $this->initCurl();
 		$this->setTimeout($timeout, $curler);
@@ -361,11 +361,10 @@ class HttpApiClient
 	 * @return string[]
 	 * @throws HttpApiClientException
 	 */
-	private function getValidatedHeaders($headers)
+	private function getValidatedHeaders(array $headers)
 	{
 		// no headers sent, return the global ones
-		if($headers === null)
-		{
+		if(count($headers) == 0) {
 			return $this->globalHeaders;
 		}
 
@@ -384,23 +383,20 @@ class HttpApiClient
 	 * return a set of validated get vars
 	 * ensure a single dimensional array of strings
 	 * null is okay too
-	 * @param $getVars
+	 * @param string[] $getVars
 	 * @return array
 	 * @throws HttpApiClientException
 	 */
-	private function getValidatedGetVars($getVars)
+	private function getValidatedGetVars(array $getVars)
 	{
-		if($getVars === null)
-		{
+		if(count($getVars) == 0) {
 			return $this->globalGetVars;
 		}
 
-		if(!$this->validateKeyValueArray($getVars) && $getVars !== null)
-		{
-			throw new HttpApiClientException("Invalid Get Vars: " . print_r($getVars, true));
+		if (!$this->validateKeyValueStrings($getVars)) {
+			throw new HttpApiClientException('GET variables must be pairs of key-value strings');
 		}
 
-		//merge instance getVars with globalGetVars
 		return array_merge($this->globalGetVars, $getVars);
 	}
 
@@ -408,18 +404,42 @@ class HttpApiClient
 	/**
 	 * return validated post vars
 	 * ensure array of strings or simply a string
-	 * @param $postVars
-	 * @return mixed
+	 * @param array|string $postData
+	 * @return array|string
 	 * @throws HttpApiClientException
 	 */
-	private function getValidatedPostVars($postVars)
+	private function getValidatedPostVars($postData)
 	{
-		if(!$this->validateKeyValueArray($postVars) && gettype($postVars) != 'string' && $postVars !== null)
-		{
-			throw new HttpApiClientException("Invalid Post Vars: " . print_r($postVars, true));
+		if (!$postData) {
+			return $postData;
 		}
 
-		return $postVars;
+		if (gettype($postData) == 'string') {
+			return $postData;
+		}
+
+		if (!$this->validateKeyValueStrings($postData)) {
+			throw new HttpApiClientException('GET variables must be pairs of key-value strings');
+		}
+
+		return $postData;
+	}
+
+	/**
+	 * @param array $pairs
+	 * @return bool True if all keys and values of $pairs are strings; False otherwise
+	 */
+	private function validateKeyValueStrings(array $pairs)
+	{
+		foreach ($pairs as $key => $value) {
+			if (is_string($key) && is_string($value)) {
+				continue;
+			}
+
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -435,8 +455,7 @@ class HttpApiClient
 			$invalidTypes = array('array', 'object', 'resource', 'NULL');
 			foreach($array as $key => $value)
 			{
-
-				if(in_array(gettype($key),$invalidTypes) || in_array(gettype($value),$invalidTypes))
+				if(in_array(gettype($key), $invalidTypes) || in_array(gettype($value), $invalidTypes))
 				{
 					return false;
 				}
@@ -468,7 +487,7 @@ class HttpApiClient
 
 
 	/**
-	 * initialized the curl handler
+	 * @return \Bart\Curl Create and configure a new Curl instance
 	 */
 	protected function initCurl()
 	{
@@ -519,14 +538,12 @@ class HttpApiClient
 			throw new HttpApiClientException("Invalid timeout: '$timeout'");
 		}
 	}
-
-
-
-
-
 }
 
 
+/**
+ * Very small wrapper around a response from the HttpApiClient
+ */
 class HttpApiClientResponse
 {
 	/** @var  int the HTTP response code */
