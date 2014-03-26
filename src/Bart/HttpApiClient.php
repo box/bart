@@ -568,15 +568,41 @@ class HttpApiClientResponse
 	}
 
 	/**
-	 * @return string
+	 * @return string Response text
 	 */
-	public function get_body()
+	public function getBody()
 	{
 		return $this->body;
 	}
 
 	/**
-	 * @return \string[]
+	 * @return string[] Response headers
+	 */
+	public function getHeaders()
+	{
+		return $this->headers;
+	}
+
+	/**
+	 * @return int Response HTTP code
+	 */
+	public function getHttpCode()
+	{
+		return $this->http_code;
+	}
+
+	/**
+	 * @deprecated use getBody()
+	 * @return string
+	 */
+	public function get_body()
+	{
+		return $this->getBody();
+	}
+
+	/**
+	 * @deprecated use getHeaders()
+	 * @return string[]
 	 */
 	public function get_headers()
 	{
@@ -584,14 +610,13 @@ class HttpApiClientResponse
 	}
 
 	/**
+	 * @deprecated use getHttpCode()
 	 * @return int
 	 */
 	public function get_http_code()
 	{
 		return $this->http_code;
 	}
-
-
 }
 
 
