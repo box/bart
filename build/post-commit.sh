@@ -15,6 +15,9 @@ if [[ ! -d "test" ]]; then
     exit 1
 fi
 
+# Default phpunit to composer bundled executable
+[[ -z "$PHPUNIT" ]] && PHPUNIT='vendor/bin/phpunit'
+
 echo "
 
 $(git show --name-status)
@@ -25,7 +28,7 @@ set -x
 
 # PHPUnit doesn't have a --no-colors option
 # For jenkins, check out https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
-phpunit \
+"$PHPUNIT" \
   $PHPUNIT_FLAGS \
   test/
 
