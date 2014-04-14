@@ -576,6 +576,14 @@ class HttpApiClientResponse
 	}
 
 	/**
+	 * @return array Body parsed as JSON into PHP array
+	 */
+	public function getJson()
+	{
+		return JSON::decode($this->body);
+	}
+
+	/**
 	 * @return string[] Response headers
 	 */
 	public function getHeaders()
