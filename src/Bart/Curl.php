@@ -168,7 +168,7 @@ class Curl
 
 		curl_close($ch);
 
-		$response_array = array(
+		$responseArray = array(
 			'info' => $info,
 		);
 
@@ -177,18 +177,30 @@ class Curl
 			// Split the headers and the body out of the return
 			// this is the most consistently accepted method I've been able
 			// to find. still feels janky =|
-			list($headers_string,$content) = explode("\r\n\r\n", $returnContent);
+			$pieces = explode("\r\n\r\n", $returnContent);
 
-			$response_array['headers'] = $this->parseHeaders($headers_string);
-			$response_array['content'] = $content;
+			while ($pieces[0] == 'HTTP/1.1 100 Continue') {
+				// Just keep popping these off
+				// If you want to do something more useful with these,
+				// ...please submit a pull request =/
+				array_shift($pieces);
+			}
+
+			$headerCount = count($pieces);
+			if ($headerCount != 2) {
+				throw new \Exception("Curl got more or less headers ($headerCount) than it knows how to deal with");
+			}
+
+			$responseArray['headers'] = $this->parseHeaders($pieces[0]);
+			$responseArray['content'] = $pieces[1];
 		}
 		else
 		{
-			$response_array['content'] = $returnContent;
+			$responseArray['content'] = $returnContent;
 		}
 
 
-		return $response_array;
+		return $responseArray;
 	}
 
 	/**

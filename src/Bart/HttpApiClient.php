@@ -568,6 +568,14 @@ class HttpApiClientResponse
 	}
 
 	/**
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return $this->body;
+	}
+
+	/**
 	 * @return string Response text
 	 */
 	public function getBody()
@@ -597,6 +605,22 @@ class HttpApiClientResponse
 	public function getHttpCode()
 	{
 		return $this->http_code;
+	}
+
+	/**
+	 * If HTTP code is >= 400, log msg and raise exception
+	 * @param string $msg
+	 * @param mixed $logger
+	 */
+	public function throwIfError($msg, $logger = null)
+	{
+		if ($this->getHttpCode() >= 400) {
+			if ($logger) {
+				$logger->warn("$msg. {$this->getBody()}");
+			}
+
+			throw new HttpApiClientException($msg);
+		}
 	}
 
 	/**
