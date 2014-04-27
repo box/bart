@@ -191,8 +191,10 @@ class Curl
 				throw new \Exception("Curl got more or less headers ($headerCount) than it knows how to deal with");
 			}
 
-			$responseArray['headers'] = $this->parseHeaders($pieces[0]);
-			$responseArray['content'] = $pieces[1];
+			// grab the headers section
+			$responseArray['headers'] = $this->parseHeaders(array_shift($pieces));
+			//combine the rest of the pieces, there could be line breaks in the body
+			$responseArray['content'] = implode("\r\n\r\n", $pieces);
 		}
 		else
 		{
