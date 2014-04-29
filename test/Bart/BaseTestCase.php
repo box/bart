@@ -6,6 +6,7 @@ abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
 	public static function setUpBeforeClass()
 	{
 		Diesel::disableDefault();
+		GlobalFunctions::disableDefault();
 	}
 
 	/**
@@ -14,6 +15,7 @@ abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
 	public function setUp()
 	{
 		Diesel::reset();
+		GlobalFunctions::reset();
 	}
 
 	/**

@@ -94,11 +94,10 @@ class Diesel
 			return;
 		}
 
-		if (!class_exists($className))
-		{
+		if (!class_exists($className)) {
 			throw new DieselException("Cannot register instantiator for $className because it does not exist");
-
 		}
+
 		if (!is_callable($instantiator)) {
 			throw new DieselException('Only functions may be registered as instantiators');
 		}
