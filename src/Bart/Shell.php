@@ -251,4 +251,28 @@ class Shell
 
 		return $lines;
 	}
+
+	/**
+	 * Prompt for password; *nix only
+	 *
+	 * @param string $prompt Description of resource for which pwd is being requested
+	 * @return string Secret typed at prompt
+	 */
+	public function std_in_secret($prompt)
+	{
+		$former = shell_exec('stty -g');
+
+		echo $prompt;
+
+		// Suppress typed characters
+		shell_exec('stty -echo');
+
+		$secret = rtrim(fgets(STDIN), "\n");
+
+		// Reset old style and write blank line for look & feel
+		shell_exec("stty $former");
+		echo "\n";
+
+		return $secret;
+	}
 }

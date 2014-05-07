@@ -76,7 +76,7 @@ class LdapTest extends BaseTestCase
 
 		$ldap = new Ldap($this->config);
 		$ldap->connect();
-		$this->assertThrows('Exception',
+		$this->assertThrows('\Bart\LdapException',
 			"LDAP Auth: failure, username/password did not match for $this->brayDN",
 			function() use ($mock, $ldap)
 			{

@@ -1,6 +1,9 @@
 <?php
 namespace Bart;
 
+/**
+ * Authenticate ldap users
+ */
 class Ldap
 {
 	private $connection = null;
@@ -28,7 +31,7 @@ class Ldap
 		$conn = $this->phpldap->ldap_connect($this->host, $this->port);
 
 		if (!$conn) {
-			throw new \Exception('Could not connect to LDAP host(s) at ' . $this->host);
+			throw new LdapException('Could not connect to LDAP host(s) at ' . $this->host);
 		}
 
 		$this->logger->trace('Setting timeout to ' . $this->timeout . ' second(s)');
@@ -36,7 +39,7 @@ class Ldap
 
 		$this->logger->trace('LDAP Auth: Binding to ' . $this->host . ' with dn ' . $this->auth_dn);
 		if (!$this->phpldap->ldap_bind($conn, $this->auth_dn, $this->auth_pwd)) {
-			throw new \Exception('LDAP Auth: bind unsuccessful');
+			throw new LdapException('LDAP Auth: bind unsuccessful');
 		}
 
 		$this->logger->trace('LDAP Auth: bind successful');
@@ -46,24 +49,24 @@ class Ldap
 	public function auth_user($username, $password)
 	{
 		if (($res_id = $this->phpldap->ldap_search($this->connection, $this->basedn, "uid=$username")) == false) {
-			throw new \Exception('LDAP Auth: User ' . $username . ' not found in search');
+			throw new LdapException('LDAP Auth: User ' . $username . ' not found in search');
 		}
 
 		if ($this->phpldap->ldap_count_entries($this->connection, $res_id) != 1) {
-			throw new \Exception('LDAP Auth: failure, username ' . $username . 'found more than once');
+			throw new LdapException('LDAP Auth: failure, username ' . $username . 'found more than once');
 		}
 
 		if (($entry_id = $this->phpldap->ldap_first_entry($this->connection, $res_id)) == false) {
-			throw new \Exception('LDAP Auth: failure, entry of search result could not be fetched');
+			throw new LdapException('LDAP Auth: failure, entry of search result could not be fetched');
 		}
 
 		if (($user_dn = $this->phpldap->ldap_get_dn($this->connection, $entry_id)) == false) {
-			throw new \Exception('LDAP Auth: failure, user-dn could not be fetched');
+			throw new LdapException('LDAP Auth: failure, user-dn could not be fetched');
 		}
 
 		// Finally, attempt to auth as user
 		if (!$this->phpldap->ldap_bind($this->connection, $user_dn, $password)) {
-			throw new \Exception('LDAP Auth: failure, username/password did not match for ' . $user_dn);
+			throw new LdapException('LDAP Auth: failure, username/password did not match for ' . $user_dn);
 		}
 
 		$this->logger->trace('LDAP Auth: Success ' . $user_dn . ' authenticated successfully');
@@ -143,6 +146,10 @@ class PHPLDAP
 
 	public function ldap_close($link_identifier)
 	{
-		return ldap_close($link_identifier);
+		ldap_close($link_identifier);
 	}
+}
+
+class LdapException extends \Exception
+{
 }
