@@ -1,6 +1,7 @@
 <?php
 namespace Bart\Configuration;
 use Bart\Diesel;
+use Bart\Primitives\Arrays;
 
 /**
  * Configuration base. All configuration classes must extend this.
@@ -40,8 +41,8 @@ abstract class Configuration
 	}
 
 	/**
-	 * @param string $section
-	 * @param string $key
+	 * @param string $section Configuration section in file
+	 * @param string $key Configuration key in section
 	 * @param mixed $default If not required, the default to use
 	 * @param bool $required If an exception should be raised when value is missing
 	 * @return mixed Configured value or default
@@ -107,6 +108,51 @@ abstract class Configuration
 		// will equal 'true' when conf is quoted, will equal '1' when literal boolean used!
 		// See the unit tests for more fun realities of parse_ini_*()
 		return ($value === 'true' || $value === '1');
+	}
+
+	/**
+	 * @return string User name of effective user
+	 */
+	protected function getCurrentUsername()
+	{
+		// Assuming its safe to statically cache since only one user should be running the program
+		if (!Arrays::vod(self::$configCache, '__USERNAME__')) {
+			/** @var \Bart\Shell $shell */
+			$shell = Diesel::create('\Bart\Shell');
+			self::$configCache['__USERNAME__'] = $shell->get_effective_user_name();
+		}
+
+		return self::$configCache['__USERNAME__'];
+	}
+
+	/**
+	 * Prompt the user for secret input. Secret is cached in $section.$key for later retrieval.
+	 * @param string $section Section in which to use key to save secret in cache only
+	 * @param string $key Key name to associate with secret in cache only
+	 * @param string @prompt Text to prompt user input
+	 * @return string Secret input from user
+	 */
+	protected function getSecret($section, $key, $prompt)
+	{
+		$cached = $this->getValue($section, $key, null, false);
+
+		// If we already prompted for the value
+		if ($cached) {
+			return $cached;
+		}
+
+		/** @var \Bart\Shell $shell */
+		$shell = Diesel::create('\Bart\Shell');
+		$secret = $shell->std_in_secret($prompt);
+
+		if (!Arrays::vod(self::$configCache, $section)) {
+			self::$configCache[$secret] = [];
+		}
+
+		// Cache value for later
+		$this->configurations[$section][$key] = $secret;
+
+		return $secret;
 	}
 
 	/**

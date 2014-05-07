@@ -218,6 +218,37 @@ class ConfigurationTest extends BaseTestCase
 		$this->assertEquals(array('bubba', 'hingle mccringle'), $nicknames);
 	}
 
+	public function testGetUsername()
+	{
+		$this->shmockAndDieselify('\Bart\Shell', function ($shell) {
+			$shell->get_effective_user_name()->once()->return_value('jbraynard');
+		});
+
+		$configs = new TestConfig();
+		$username = $configs->username();
+		$this->assertEquals('jbraynard', $username, 'username');
+
+		// Should use cache and not call get_effective_user_name a second time
+		$username = $configs->username();
+		$this->assertEquals('jbraynard', $username, 'username');
+	}
+
+	public function testGetSecret()
+	{
+		$this->shmockAndDieselify('\Bart\Shell', function ($shell) {
+			$shell->std_in_secret()->once()->return_value('078-05-1120');
+		});
+
+		$configs = new TestConfig();
+		$configs->configureForTesting([]);
+		$social = $configs->getSocialSecurityNumber();
+		$this->assertEquals('078-05-1120', $social, 'social');
+
+		// Should use cache and not call std_in_secret a second time
+		$social = $configs->getSocialSecurityNumber();
+		$this->assertEquals('078-05-1120', $social, 'social');
+	}
+
 	/**
 	 * Asserts that the sample conf returned by README() on $configurationClassName
 	 * can be parsed successfully by the class.
@@ -328,6 +359,16 @@ class TestConfig extends Configuration
 	public function hasFavorites()
 	{
 		return $this->getBool('favorites', 'has_favorites');
+	}
+
+	public function username()
+	{
+		return $this->getCurrentUsername();
+	}
+
+	public function getSocialSecurityNumber()
+	{
+		return $this->getSecret('pii', 'sn', 'What is your social?');
 	}
 
 	/**

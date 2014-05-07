@@ -32,6 +32,35 @@ abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
 		});
 	}
 
+	/**
+	 * @param string $className Class to shmock (Tip use IntelliJ "copy reference" for FQCN)
+	 * @param callable $configureShmock Cofiguration closure with which to configure shmock
+	 * @return mixed The shmocked class
+	 */
+	public function shmock($className, $configureShmock)
+	{
+		return \Shmock\Shmock::create($this, $className, $configureShmock);
+	}
+
+	/**
+	 * Shmock the class {@see self::shmock()} and then register that shmock
+	 * to be returned by @see \Bart\Diesel
+	 *
+	 * @param string $className FQCN to shmock and reigster with Diesel
+	 * @param callable $configureShmock Closure that will configure all expectations on \Shmock\PHPUnitSpec
+	 * @return mixed The shmocked class
+	 */
+	public function shmockAndDieselify($className, $configureShmock)
+	{
+		$shmock = $this->shmock($className, $configureShmock);
+
+		Diesel::registerInstantiator($className, function() use ($shmock) {
+			return $shmock;
+		});
+
+		return $shmock;
+	}
+
 	protected function assertArrayKeyNotExists($key, array $array, $message = '')
 	{
 		$this->assertFalse(array_key_exists($key, $array), $message);
