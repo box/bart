@@ -14,6 +14,8 @@ abstract class Configuration
 	private static $configCache = array();
 	/** @var array */
 	protected $configurations;
+	/** @var string File path on disk whence configuration file was loaded */
+	private $filePath;
 
 	/**
 	 * @return string Sample of how configuration is intended to be defined
@@ -126,10 +128,30 @@ abstract class Configuration
 	}
 
 	/**
+	 * Prompt user for their user account's password
+	 * @seealso self::getSecret() for context specific secrets
+	 * @param string $prompt Text to prompt the user
+	 * @return string Current user's password
+	 */
+	protected function getCurrentPassword($prompt)
+	{
+		// Assuming its safe to statically cache since only one user should be running the program
+		// ...and user should have only one local account & password
+		if (!Arrays::vod(self::$configCache, '__PASSWD__')) {
+			/** @var \Bart\Shell $shell */
+			$shell = Diesel::create('\Bart\Shell');
+			self::$configCache['__PASSWD__'] = $shell->std_in_secret($prompt);
+		}
+
+		return self::$configCache['__PASSWD__'];
+	}
+
+	/**
 	 * Prompt the user for secret input. Secret is cached in $section.$key for later retrieval.
+	 * @seealso self::getCurrentPassword() for globally shared password
 	 * @param string $section Section in which to use key to save secret in cache only
 	 * @param string $key Key name to associate with secret in cache only
-	 * @param string @prompt Text to prompt user input
+	 * @param string $prompt Text to prompt user input
 	 * @return string Secret input from user
 	 */
 	protected function getSecret($section, $key, $prompt)
@@ -145,12 +167,7 @@ abstract class Configuration
 		$shell = Diesel::create('\Bart\Shell');
 		$secret = $shell->std_in_secret($prompt);
 
-		if (!Arrays::vod(self::$configCache, $section)) {
-			self::$configCache[$secret] = [];
-		}
-
-		// Cache value for later
-		$this->configurations[$section][$key] = $secret;
+		$this->updateRuntimeConfiguration($section, $key, $secret);
 
 		return $secret;
 	}
@@ -184,7 +201,23 @@ abstract class Configuration
 			self::$configCache[$filePath] = $this->loadConfigurationsFromDisk($filePath, $name);
 		}
 
+		$this->filePath = $filePath;
 		$this->configurations = self::$configCache[$filePath];
+	}
+
+	private function updateRuntimeConfiguration($section, $key, $value)
+	{
+		$cache = self::$configCache[$this->filePath];
+
+		if (!Arrays::vod($cache, $section)) {
+			$cache[$section] = [];
+		}
+
+		// Update with the new value
+		$cache[$section][$key] = $value;
+
+		self::$configCache[$this->filePath] = $cache;
+		$this->configurations = $cache;
 	}
 
 	/**

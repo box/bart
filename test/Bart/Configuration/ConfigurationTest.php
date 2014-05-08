@@ -233,6 +233,38 @@ class ConfigurationTest extends BaseTestCase
 		$this->assertEquals('jbraynard', $username, 'username');
 	}
 
+	public function testGetPassword()
+	{
+		$this->shmockAndDieselify('\Bart\Shell', function ($shell) {
+			$shell->std_in_secret('Give us your password: ')->once()->return_value('iamgod');
+		});
+
+		$configs = new TestConfig();
+		$password = $configs->password();
+		$this->assertEquals('iamgod', $password, 'pwd');
+
+		// Should use cache and not call std_in_secret again
+		$password = $configs->password();
+		$this->assertEquals('iamgod', $password, 'pwd');
+	}
+
+	public function testGetPasswodBetweenDifferentConfigClasses()
+	{
+		$this->shmockAndDieselify('\Bart\Shell', function ($shell) {
+			$shell->std_in_secret('Give us your password: ')->once()->return_value('iamgod');
+		});
+
+		$configs = new TestConfig();
+		$password = $configs->password();
+		$this->assertEquals('iamgod', $password, 'pwd');
+
+		// Completely separate configuration class; shares only static cache
+		$pwConfigs = new TestPasswdConfig();
+		// Should use cache from above and not call std_in_secret again
+		$pwdPwd = $pwConfigs->password();
+		$this->assertEquals('iamgod', $pwdPwd, 'pwd');
+	}
+
 	public function testGetSecret()
 	{
 		$this->shmockAndDieselify('\Bart\Shell', function ($shell) {
@@ -247,6 +279,36 @@ class ConfigurationTest extends BaseTestCase
 		// Should use cache and not call std_in_secret a second time
 		$social = $configs->getSocialSecurityNumber();
 		$this->assertEquals('078-05-1120', $social, 'social');
+	}
+
+	public function testSecretsAreSharedBetweenInstances()
+	{
+		$this->shmockAndDieselify('\Bart\Shell', function ($shell)
+		{
+			// Only called *once*
+			// The next time it should use static cache
+			$shell->std_in_secret('What is your social?')->once()->return_value('078-05-1120');
+			// Let all other methods flow through actual class
+		});
+
+		// do this with a real instance so that we can get confidence
+		// ...that the $filePath and cache are being used
+		$this->doStuffWithTempDir(function (BaseTestCase $phpu, $dirName) {
+			Configuration::configure($dirName);
+
+			// Copy sample INI file to path Configuration will look for TestConfig INI
+			copy(BART_DIR . '/test/etc/conf-parser.conf', $dirName . '/test.conf');
+
+			$configs = new TestConfig(false);
+			$social = $configs->getSocialSecurityNumber();
+			$this->assertEquals('078-05-1120', $social, 'social');
+
+			// Create a new instance
+			// The secret should be statically cached
+			$configs2 = new TestConfig(false);
+			$social2 = $configs2->getSocialSecurityNumber();
+			$this->assertEquals('078-05-1120', $social2, 'social2');
+		});
 	}
 
 	/**
@@ -366,6 +428,11 @@ class TestConfig extends Configuration
 		return $this->getCurrentUsername();
 	}
 
+	public function password()
+	{
+		return $this->getCurrentPassword('Give us your password: ');
+	}
+
 	public function getSocialSecurityNumber()
 	{
 		return $this->getSecret('pii', 'sn', 'What is your social?');
@@ -377,6 +444,11 @@ class TestConfig extends Configuration
 	public function configureForTesting(array $configsArray)
 	{
 		$this->configurations = $configsArray;
+
+		// Some rigmarole for any methods using updateRuntimeConfiguration
+		$pathField = Reflection_Helper::get_property('Bart\Configuration\Configuration', 'filePath');
+		$pathField->setValue($this, '');
+		self::$configCacheField->setValue(null, ['' => $configsArray]);
 	}
 
 	public static function resetConfigurations($path = null, $confName = null, $value = null)
@@ -401,4 +473,22 @@ class TestConfig extends Configuration
  */
 class Test_Underscore_Config extends TestConfig
 {
+}
+
+class TestPasswdConfig extends Configuration
+{
+	public function README()
+	{
+		return 'Test configuration class';
+	}
+
+	public function __construct()
+	{
+		// Do not call parent constructor
+	}
+
+	public function password()
+	{
+		return $this->getCurrentPassword('Anything');
+	}
 }
