@@ -328,8 +328,9 @@ class ConfigurationTest extends BaseTestCase
 	 */
 	public static function assertREADME(BaseTestCase $phpu, $configurationClassName, $configFileName)
 	{
-		Diesel::registerInstantiator('\Bart\Shell', function () {
-			return new Shell();
+		$phpu->shmockAndDieselify('\Bart\Shell', function($shell) {
+			$shell->std_in_secret()->any()->return_value('secret');
+			$shell->std_in()->any()->return_value('secret');
 		});
 
 		$phpu->doStuffWithTempDir(function (BaseTestCase $phpu, $dirName)
