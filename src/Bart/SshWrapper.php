@@ -44,9 +44,10 @@ class SshWrapper
 	/**
 	 * Will establish new ssh connection and execute $command
 	 * @param string $remoteCommand Command to run on remote host
+	 * @param bool $returnOutputAsString [Optional] By default, command output is returned as an array
 	 * @return array Output of ssh command
 	 */
-	public function exec($remoteCommand)
+	public function exec($remoteCommand, $returnOutputAsString = false)
 	{
 		$sshCommandStem = 'ssh %s -q -p %s';
 		$args = array($this->host, $this->port);
@@ -77,6 +78,6 @@ class SshWrapper
 
 		/** @var \Bart\Shell\Command $cmd */
 		$cmd = call_user_func_array(array($shell, 'command'), $args);
-		return $cmd->run();
+		return $cmd->run($returnOutputAsString);
 	}
 }
