@@ -16,7 +16,7 @@ namespace Bart;
 final class GlobalFunctions
 {
 	/** @var array {name => callable} All stubbed methods */
-	private static $registry;
+	private static $registry = [];
 	/** @var boolean Permit instantiation if no record of requested class exists */
 	private static $allowDefaults = true;
 
