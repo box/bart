@@ -54,6 +54,24 @@ class CommandTest extends BaseTestCase
 		});
 	}
 
+	public function testExecuteHelloWorld()
+	{
+		$c = new Command('echo hello world');
+		$hello = $c->getResult();
+
+		$this->assertTrue($hello->wasOk(), 'passed');
+		$this->assertEquals('hello world', $hello->getOutput(true), 'output');
+		$this->assertEquals(['hello world'], $hello->getOutput(), 'output');
+	}
+
+	public function testExecuteDoesNotRaiseExceptionWhenBadStatus()
+	{
+		$fails = new Command('exit 1');
+		$failed = $fails->getResult();
+
+		$this->assertFalse($failed->wasOk(), 'Fails failed?');
+	}
+
 	public function testWithMoreThanOneArgument()
 	{
 		// @note digits treated as strings

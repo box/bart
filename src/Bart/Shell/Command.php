@@ -56,6 +56,22 @@ class Command
 	}
 
 	/**
+	 * Execute command and wrap in @see CommandResult
+	 * This is preferable if you don't want exceptions raised when commands fail
+	 * @return CommandResult
+	 */
+	public function getResult()
+	{
+		$output = array();
+		$returnVar = 0;
+
+		$this->logger->trace('Executing ' . $this->safeCommandStr);
+		exec($this->safeCommandStr, $output, $returnVar);
+
+		return new CommandResult($this, $output, $returnVar);
+	}
+
+	/**
 	 * @param bool $returnOutputAsString [Optional] By default, command output is returned as an array
 	 * @return array|string Output of command
 	 * @throws CommandException if command fails
