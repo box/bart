@@ -23,12 +23,20 @@ class Numbers
 	}
 
 	/**
+	 * @deprecated @see self::castToNumeric()
+	 */
+	public static function cast_to_numeric($str)
+	{
+		return self::castToNumeric($str);
+	}
+
+	/**
 	 * Attempt to convert a string to a number
 	 * @param mixed $str
 	 * @return int|string
 	 * @throws PrimitivesException
 	 */
-	public static function cast_to_numeric($str)
+	public static function castToNumeric($str)
 	{
 		$str = trim($str);
 

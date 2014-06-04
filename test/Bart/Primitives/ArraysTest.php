@@ -40,13 +40,13 @@ class ArraysTest extends BaseTestCase
 			'height' => '5.8',
 		);
 
-		$this->assertEquals('{name}=>{john}, {height}=>{5.8}', Arrays::hash_to_s($hash));
+		$this->assertEquals('{name}=>{john}, {height}=>{5.8}', Arrays::hashToS($hash));
 	}
 
 	public function test_hash_to_s_with_array()
 	{
 		$hash = array('john', 'braynard');
 
-		$this->assertEquals('{0}=>{john}, {1}=>{braynard}', Arrays::hash_to_s($hash));
+		$this->assertEquals('{0}=>{john}, {1}=>{braynard}', Arrays::hashToS($hash));
 	}
 }

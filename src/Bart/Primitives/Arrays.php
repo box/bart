@@ -41,10 +41,18 @@ class Arrays
 	}
 
 	/**
+	 * @deprecated @see Arrays::hashToS()
+	 */
+	public static function hash_to_s(array $hash)
+	{
+		return self::hashToS($hash);
+	}
+
+	/**
 	 * @param array $hash Key value pairs
 	 * @return string The hash as one long string
 	 */
-	public static function hash_to_s(array $hash)
+	public static function hashToS(array $hash)
 	{
 		$array = array();
 		foreach ($hash as $k => $v)
