@@ -42,12 +42,26 @@ class SshWrapper
 	}
 
 	/**
-	 * Will establish new ssh connection and execute $command
+	 * Shortcut to @see self::createShellCommand. Execute the command remotely and return the result
+	 * ...or raise an exception on a non-zero return code
 	 * @param string $remoteCommand Command to run on remote host
 	 * @param bool $returnOutputAsString [Optional] By default, command output is returned as an array
 	 * @return array Output of ssh command
 	 */
 	public function exec($remoteCommand, $returnOutputAsString = false)
+	{
+		$cmd = $this->createShellCommand($remoteCommand);
+
+		return $cmd->run($returnOutputAsString);
+	}
+
+	/**
+	 * Create a Command object that will execute the SSH command
+	 * @param string $remoteCommand Command to run on remote server
+	 * @return Shell\Command Command instance configured to establish SSH
+	 * connection and execute the remote command
+	 */
+	public function createShellCommand($remoteCommand)
 	{
 		$sshCommandStem = 'ssh %s -q -p %s';
 		$args = array($this->host, $this->port);
@@ -77,7 +91,6 @@ class SshWrapper
 		$shell = Diesel::create('Bart\Shell');
 
 		/** @var \Bart\Shell\Command $cmd */
-		$cmd = call_user_func_array(array($shell, 'command'), $args);
-		return $cmd->run($returnOutputAsString);
+		return call_user_func_array(array($shell, 'command'), $args);
 	}
 }

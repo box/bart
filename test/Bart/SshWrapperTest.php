@@ -41,4 +41,19 @@ class SshWrapperTest extends BaseTestCase
 		$this->assertCount(1, $output);
 		$this->assertEquals('Some string', $output[0]);
 	}
+
+	public function testGetNewCommand()
+	{
+		Diesel::registerInstantiator('Bart\Shell', function() {
+			// Just let Shell do its magic
+			return new Shell();
+		});
+
+		$host = 'www.example.com';
+		$ssh = new SshWrapper($host);
+		$command = $ssh->createShellCommand('who -r');
+
+		$expectedSshCommand = "ssh 'www.example.com' -q -p '22' -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' 'who -r'";
+		$this->assertEquals($expectedSshCommand, "{$command}", 'the command string');
+	}
 }
