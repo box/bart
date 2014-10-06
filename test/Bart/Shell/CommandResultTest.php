@@ -44,7 +44,7 @@ class StubbedCommandResult extends CommandResult
 	}
 
 	/**
-	 * @return Command
+	 * @return Command Just re-use this dummy command each time
 	 */
 	private static function echoCmd()
 	{
