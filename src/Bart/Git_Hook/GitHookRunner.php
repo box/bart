@@ -27,4 +27,9 @@ abstract class GitHookRunner
 	{
 		return static::$name . '-hook-runner';
 	}
+	/**
+	 * Run all hook actions configured for this hook against $commitHash
+	 * @param string $commitHash
+	 */
+	abstract public function runAllHooks($commitHash);
 }

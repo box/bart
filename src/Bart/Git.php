@@ -2,6 +2,8 @@
 namespace Bart;
 
 use Bart\Diesel;
+use Bart\Git\Commit;
+use Bart\Git\GitRoot;
 use Bart\Shell;
 use Bart\Shell\CommandException;
 
@@ -11,6 +13,7 @@ use Bart\Shell\CommandException;
 class Git
 {
 	private static $blame_pattern = '/^(\S*)\s.*?\((.*?)\s(\d{4}-\d{2}-\d{2}).*?\s\d+\)\s(.*)$/';
+	private $dir;
 	private $git;
 	private $origin;
 	/** @var Shell */
@@ -19,13 +22,24 @@ class Git
 	/**
 	 * @param string $dir The git directory of interest
 	 * @param string $origin Upstream origin name
+	 * @maintenance Migrate over to GitCommit and Bart\Git namespace
 	 */
 	public function __construct($dir = '.git', $origin = 'origin')
 	{
+		$this->dir = $dir;
 		$this->git = "git --git-dir=$dir";
 		$this->origin = $origin;
 
 		$this->shell = Diesel::singleton('Bart\Shell');
+	}
+
+	/**
+	 * @param string $hash
+	 * @return Commit for given $hash
+	 */
+	public function toCommit($hash)
+	{
+		return new Commit(new GitRoot($this->dir), $hash);
 	}
 
 	/**

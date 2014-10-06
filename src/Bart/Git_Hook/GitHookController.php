@@ -101,9 +101,9 @@ class GitHookController
 
 	/**
 	 * Run the hook against all revisions on master branch
-	 * @param ReceiveRunnerBase $hookRunner
+	 * @param GitHookRunner $hookRunner
 	 */
-	private function processRevisions(ReceiveRunnerBase $hookRunner)
+	private function processRevisions(GitHookRunner $hookRunner)
 	{
 		/** @var \Bart\Git $git */
 		$git = Diesel::create('\Bart\Git', $this->gitDir);
@@ -115,6 +115,7 @@ class GitHookController
 		foreach ($stdin as $rangeAndRef) {
 			list($start, $end, $ref) = explode(" ", $rangeAndRef);
 
+			// TODO make this configurable per project/hook
 			if ($ref != 'refs/heads/master') {
 				$this->logger->info('Skipping hooks on non-master ref ' . $ref);
 				continue;

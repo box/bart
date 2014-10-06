@@ -25,6 +25,7 @@ abstract class ReceiveRunnerBase extends GitHookRunner
 		$conf = $parser->parse_conf_file(BART_DIR . 'etc/php/hooks.conf');
 
 		$this->conf = $conf;
+		// TODO this should check if ($conf->getValue('jenkins', 'enabled')), etc. for each hook action
 		$this->hookActions = explode(',', $conf[static::$name]['names']);
 
 		$this->logger = Log4PHP::getLogger(get_called_class());
