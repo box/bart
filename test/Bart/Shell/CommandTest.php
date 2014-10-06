@@ -6,6 +6,21 @@ use Bart\Shell;
 
 class CommandTest extends BaseTestCase
 {
+	/**
+	 * @param BaseTestCase $testCase
+	 * @param array $output
+	 * @param int $statusCode
+	 * @return Command A stub configured with $output and $statuCode
+	 */
+	public static function withStubbedResult(BaseTestCase $testCase, $output, $statusCode)
+	{
+		$resultStub = new StubbedCommandResult($output, $statusCode);
+		return $testCase->shmock('Bart\Shell\Command', function($cmd) use ($resultStub) {
+			$cmd->disable_original_constructor();
+			$cmd->getResult()->once()->return_value($resultStub);
+		});
+	}
+
 	public function testItCanRun()
 	{
 		$c = new Command('hostname');
