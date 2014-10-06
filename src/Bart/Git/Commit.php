@@ -1,5 +1,6 @@
 <?php
 namespace Bart\Git;
+use Bart\Jira\JiraIssue;
 use Bart\Primitives\Arrays;
 use Bart\Shell;
 
@@ -14,12 +15,15 @@ class Commit
 	private $hash;
 	/** @var array[string] = string of properties of commit */
 	private $props = [];
+	/** @var JiraIssue[] Any Jira Issues mentioned in commit message */
+	private $_jiras;
 
 	/**
 	 * @param string $hash
 	 */
 	public function __construct(GitRoot $root, $hash)
 	{
+		// Consider switching from composition of gitRoot to inheritance
 		$this->gitRoot = $root;
 		$this->hash = $hash;
 	}
@@ -29,22 +33,41 @@ class Commit
 	 */
 	public function message()
 	{
-		return $this->properties('message', 'show -s --no-color %s');
+		return $this->properties('show -s --no-color %s');
 	}
 
 	/**
-	 * @param string $name
+	 * @return JiraIssue[] Any matched Jira Issue from commit message
+	 */
+	public function jiras()
+	{
+		if ($this->_jiras === null) {
+			$message = $this->message();
+
+			$matches = [];
+			if (preg_match_all('/([A-Z]{1,8}-[1-9]?[0-9]*)/', $message, $matches) > 0) {
+				foreach ($matches[1] as $match) {
+					$this->_jiras[] = new JiraIssue($match);
+				}
+			}
+		}
+
+		return $this->_jiras;
+	}
+
+	/**
 	 * @param string $commandFmt
 	 * @return mixed
 	 */
-	private function properties($name, $commandFmt)
+	private function properties($commandFmt)
 	{
-		if (!Arrays::vod($this->props, $name)) {
+		// Memoize the output of the commands
+		if (!Arrays::vod($this->props, $commandFmt)) {
 			$result = $this->gitRoot->exec($commandFmt, $this->hash);
 
-			$this->props[$name] = $result->getOutput(true);
+			$this->props[$commandFmt] = $result->getOutput(true);
 		}
 
-		return $this->props[$name];
+		return $this->props[$commandFmt];
 	}
 }
