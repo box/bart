@@ -1,5 +1,5 @@
 <?php
-namespace Bart\Git_Hook;
+namespace Bart\GitHook;
 
 use Bart\Diesel;
 
@@ -36,11 +36,11 @@ class PreReceiveRunnerTest extends TestBase
 
 		$preReceive = $this->configureFor($hookConf, $repo);
 
-		$msg = "Hook action class (Bart\\Git_Hook\\$monty) does not exist";
+		$msg = "Hook action class (Bart\\GitHook\\$monty) does not exist";
 		$closure = function() use ($preReceive) {
 			$preReceive->runAllHooks('doesnt matter');
 		};
-		$this->assertThrows('\Bart\Git_Hook\GitHookException', $msg, $closure);
+		$this->assertThrows('\Bart\GitHook\GitHookException', $msg, $closure);
 	}
 
 	public function test_disabled_class()
@@ -57,8 +57,8 @@ class PreReceiveRunnerTest extends TestBase
 		$preReceive = $this->configureFor($hookConf, $repo);
 
 		// Not necessarily accurate, but it should be true that if pre-receive
-		// ...attempted to instantiate the Git_Hook it would crash when it
-		// ...it couldn't find the dependency for class Git_Hook_Gerrit_Approved
+		// ...attempted to instantiate the GitHook it would crash when it
+		// ...it couldn't find the dependency for class GitHook_Gerrit_Approved
 		$preReceive->runAllHooks('doesnt matter');
 	}
 
@@ -78,7 +78,7 @@ class PreReceiveRunnerTest extends TestBase
 		$preReceive = $this->configureFor($hookConf, $repo);
 
 		$phpu = $this;
-		Diesel::registerInstantiator('Bart\Git_Hook\ForTesting', function() use ($phpu){
+		Diesel::registerInstantiator('Bart\GitHook\ForTesting', function() use ($phpu){
 			return $phpu;
 		});
 
@@ -125,7 +125,7 @@ class ForTesting extends GitHookAction
 	public function run($commit_hash)
 	{
 		// Make sure everything got passed through as expected
-		$phpu = Diesel::create('Bart\Git_Hook\ForTesting');
+		$phpu = Diesel::create('Bart\GitHook\ForTesting');
 		$phpu->assertEquals('Isengard', $this->repo, 'Wrong repo passed');
 		$phpu->assertEquals('.git', $this->dir, 'Wrong git dir passed');
 		$phpu->assertEquals('duper', $this->conf['jenkins']['super'], 'Wrong conf passed');
