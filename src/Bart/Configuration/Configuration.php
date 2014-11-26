@@ -1,6 +1,9 @@
 <?php
 namespace Bart\Configuration;
+
 use Bart\Diesel;
+use Bart\Git\Commit;
+use Bart\GitException;
 use Bart\Primitives\Arrays;
 
 /**
@@ -10,10 +13,15 @@ use Bart\Primitives\Arrays;
  */
 abstract class Configuration
 {
+	/** string The base directory containing all project managed configurations */
+	const PROJECT_CONF_DIR = 'etc';
+	/** @var string The base directory containing all static configurations */
 	private static $path = null;
 	private static $configCache = array();
 	/** @var array */
 	protected $configurations;
+	/** @var Commit non-null for configurations extending {@see ProjectConfiguration} */
+	protected $commit;
 	/** @var string File path on disk whence configuration file was loaded */
 	private $filePath;
 
@@ -178,16 +186,16 @@ abstract class Configuration
 	 */
 	private function load()
 	{
-		if (!self::$path) {
+		if (!self::$path && !$this->commit) {
 			throw new ConfigurationException('Configuration root path not set! Please call configure()');
 		}
 
 		$subclass = get_called_class();
 
-		$ind_slash = strrpos($subclass, '\\');
-		if ($ind_slash !== false) {
+		$indSlash = strrpos($subclass, '\\');
+		if ($indSlash !== false) {
 			// Strip off namespace
-			$subclass = substr($subclass, $ind_slash + 1);
+			$subclass = substr($subclass, $indSlash + 1);
 		}
 
 		// Strip off "Config"
@@ -195,10 +203,13 @@ abstract class Configuration
 		// Chop any trailing underscore for non-camel cased names
 		$name = strtolower(chop($subclass, '_'));
 
-		$filePath = self::$path . "/$name.conf";
+		$basePath = $this->commit ? self::PROJECT_CONF_DIR : self::$path;
+		$filePath = $basePath . "/$name.conf";
 
 		if (!array_key_exists($filePath, self::$configCache)) {
-			self::$configCache[$filePath] = $this->loadConfigurationsFromDisk($filePath, $name);
+			self::$configCache[$filePath] = $this->commit ?
+				$this->loadConfigurationsFromCommit($filePath, $name) :
+				$this->loadConfigurationsFromDisk($filePath, $name);
 		}
 
 		$this->filePath = $filePath;
@@ -221,7 +232,27 @@ abstract class Configuration
 	}
 
 	/**
-	 * @return array
+	 * @param string $filePath Relative path to file in project containing configs
+	 * @param string $subclass Name of the configuration class
+	 * @return array Contents of configuration parsed as INI with sections
+	 * @throws ConfigurationException
+	 */
+	protected function loadConfigurationsFromCommit($filePath, $subclass)
+	{
+		try {
+			$contents = $this->commit->rawFileContents($filePath);
+		} catch (GitException $e) {
+			$this->logger->warn("No configuration file found for $subclass at $filePath");
+			throw new ConfigurationException("No configuration file found for $subclass at $filePath");
+		}
+
+		return parse_ini_string($contents, true);
+	}
+
+	/**
+	 * @param string $filePath Absolute path to file containing configurations
+	 * @param string $subclass Name of the configuration class
+	 * @return array Contents of configuration parsed as INI with sections
 	 * @throws ConfigurationException
 	 */
 	private function loadConfigurationsFromDisk($filePath, $subclass)
