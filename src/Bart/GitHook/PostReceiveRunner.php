@@ -1,5 +1,5 @@
 <?php
-namespace Bart\Git_Hook;
+namespace Bart\GitHook;
 
 /**
  * Runs all git hooks configured for post-receive

@@ -1,5 +1,5 @@
 <?php
-namespace Bart\Git_Hook;
+namespace Bart\GitHook;
 
 use Bart\Diesel;
 use Bart\Log4PHP;
@@ -37,8 +37,11 @@ abstract class ReceiveRunnerBase extends GitHookRunner
 	 */
 	public function runAllHooks($commitHash)
 	{
+		// TODO I need to figure out how to configure which hooks will run for which projects
+		// I'm thinking something like [<project_name>_section]
+		// ...and then $hookConfig->hookActions('<project_name>');
 		foreach ($this->hookActions as $hookAction) {
-			/** @var \Bart\Git_Hook\GitHookAction $hook */
+			/** @var \Bart\GitHook\GitHookAction $hook */
 			$hook = $this->createHookActionFor($hookAction);
 
 			if ($hook === null) continue;
@@ -51,7 +54,7 @@ abstract class ReceiveRunnerBase extends GitHookRunner
 	/**
 	 * Instantiate a new hook action
 	 * @param string $hookActionName
-	 * @return \Bart\Git_Hook\GitHookAction or null if hook is disabled
+	 * @return \Bart\GitHook\GitHookAction or null if hook is disabled
 	 * @throws GitHookException If misconfiguration
 	 */
 	private function createHookActionFor($hookActionName)
@@ -71,7 +74,7 @@ abstract class ReceiveRunnerBase extends GitHookRunner
 
 		if (!$hookConf['enabled']) return null;
 
-		$class = 'Bart\\Git_Hook\\' . $hookConf['class'];
+		$class = 'Bart\\GitHook\\' . $hookConf['class'];
 		if (!class_exists($class)) {
 			throw new GitHookException("Hook action class ($class) does not exist");
 		}

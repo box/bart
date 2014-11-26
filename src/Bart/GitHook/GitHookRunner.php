@@ -1,5 +1,5 @@
 <?php
-namespace Bart\Git_Hook;
+namespace Bart\GitHook;
 
 /**
  * Abstract class representing any class capable of running a git hook

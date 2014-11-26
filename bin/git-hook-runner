@@ -15,9 +15,9 @@
  *    BART/etc/php/hooks.conf
  * 		- (this is the old school configuration, which is deprecated but not yet replaced; sorry)
  *    Configuration Root/*.conf
- * 		- Configuration for any of the Git_Hook classes. Presently, this includes only GerritMerged
+ * 		- Configuration for any of the GitHook classes. Presently, this includes only GerritMerged
  */
-use Bart\Git_Hook\GitHookController;
+use Bart\GitHook\GitHookController;
 use Bart\Log4PHP;
 
 error_reporting(E_ALL);

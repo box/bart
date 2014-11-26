@@ -1,5 +1,5 @@
 <?php
-namespace Bart\Git_Hook;
+namespace Bart\GitHook;
 use Bart\Gerrit\Change;
 use Bart\Gerrit\GerritException;
 use Bart\Git_Exception;

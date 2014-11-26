@@ -1,5 +1,5 @@
 <?php
-namespace Bart\Git_Hook;
+namespace Bart\GitHook;
 use Bart\Diesel;
 use Bart\Git\Commit;
 use \chobie\Jira\Api\Authentication\Basic;
@@ -30,8 +30,8 @@ class JiraComment extends GitHookAction
 	 */
 	public function run(Commit $commit)
 	{
-		// TODO We probably need to create a whole framework for working with Git
-		// TODO ...and send GitCommit objects to run()
-		$this->jiraClient->addComment($commit->jira()->id(), "I have no idea what to say! $commit");
+		foreach ($commit->jiras() as $jira) {
+			$this->jiraClient->addComment($jira->id(), "I have no idea what to say! $commit");
+		}
 	}
 }

@@ -1,5 +1,5 @@
 <?php
-namespace Bart\Git_Hook;
+namespace Bart\GitHook;
 
 use Bart\BaseTestCase;
 use Bart\Diesel;
