@@ -23,7 +23,7 @@ class GitRoot
 	 * @param string $args, ... [Optional] All arguments to git command
 	 * @return Shell\CommandResult
 	 */
-	public function exec($commandFmt)
+	public function getCommandResult($commandFmt)
 	{
 		$args = func_get_args();
 		// Swap arg param 0 (i.e. $commandFmt) for the "--git-dir" arg

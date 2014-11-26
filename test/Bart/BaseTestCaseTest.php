@@ -32,9 +32,9 @@ class BaseTestCaseTest extends \Bart\BaseTestCase
 	public function testAssertThrowsAssertsTypeAndMessage()
 	{
 		Autoloader::autoload('Git');
-		$this->assertThrows('\Bart\Git_Exception', 'Contrived message', function()
+		$this->assertThrows('\Bart\GitException', 'Contrived message', function()
 		{
-			throw new Git_Exception('This is a Contrived message');
+			throw new GitException('This is a Contrived message');
 		});
 	}
 }

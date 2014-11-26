@@ -25,7 +25,7 @@ class GitRootTest extends BaseTestCase
 			});
 
 		// Throw something together with a few args interspersed
-		$result = $root->exec('log %s --author=%s --format:%s', '-1', 'jbraynard', '%h');
+		$result = $root->getCommandResult('log %s --author=%s --format:%s', '-1', 'jbraynard', '%h');
 
 		$this->assertEquals('a57a266', $result->getOutput(true), 'git log');
 	}

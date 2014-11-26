@@ -57,7 +57,7 @@ class GitTest extends \Bart\BaseTestCase
 		$this->registerMockShell($mockShell);
 
 		$git = new Git('.git', 'origin');
-		$this->assertThrows('Bart\\Git_Exception', 'Error in fetch: ' . print_r(array($failMsg), true),
+		$this->assertThrows('Bart\\GitException', 'Error in fetch: ' . print_r(array($failMsg), true),
 			function() use($git)
 			{
 				$git->fetch();
@@ -76,7 +76,7 @@ class GitTest extends \Bart\BaseTestCase
 
 		$git = new Git('', 'origin');
 
-		$this->assertThrows('Bart\\Git_Exception', 'No Change-Id in commit message for hash',
+		$this->assertThrows('Bart\\GitException', 'No Change-Id in commit message for hash',
 			function() use($git)
 			{
 				$git->get_change_id('hash');

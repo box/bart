@@ -1,7 +1,7 @@
 <?php
 namespace Bart\Git;
+use Bart\GitException;
 use Bart\Jira\JiraIssue;
-use Bart\Primitives\Arrays;
 use Bart\Shell;
 
 /**
@@ -13,8 +13,6 @@ class Commit
 	private $gitRoot;
 	/** @var string The commit hash for this commit */
 	private $hash;
-	/** @var array[string] = string of properties of commit */
-	private $props = [];
 	/** @var JiraIssue[] Any Jira Issues mentioned in commit message */
 	private $_jiras;
 
@@ -31,9 +29,38 @@ class Commit
 	/**
 	 * @return string
 	 */
+	public function __toString()
+	{
+		return $this->hash;
+	}
+
+	/**
+	 * @return string The basic commit log message
+	 */
 	public function message()
 	{
-		return $this->properties('show -s --no-color %s');
+		$result = $this->gitRoot->getCommandResult('show -s --no-color %s', $this->hash);
+
+		if (!$result->wasOk()) {
+			throw new GitException("Could not get contents of commit {$this}");
+		}
+
+		return $result->getOutput(true);
+	}
+
+	/**
+	 * @param string $filePath the path to the file from the project root
+	 * @return string The raw contents of the file
+	 */
+	public function rawFileContents($filePath)
+	{
+		$result = $this->gitRoot->getCommandResult('show %s:%s', $this->hash, $filePath);
+
+		if (!$result->wasOk()) {
+			throw new GitException("Could not get contents of {$filePath} at revision {$this}");
+		}
+
+		return $result->getOutput(true);
 	}
 
 	/**
@@ -53,21 +80,5 @@ class Commit
 		}
 
 		return $this->_jiras;
-	}
-
-	/**
-	 * @param string $commandFmt
-	 * @return mixed
-	 */
-	private function properties($commandFmt)
-	{
-		// Memoize the output of the commands
-		if (!Arrays::vod($this->props, $commandFmt)) {
-			$result = $this->gitRoot->exec($commandFmt, $this->hash);
-
-			$this->props[$commandFmt] = $result->getOutput(true);
-		}
-
-		return $this->props[$commandFmt];
 	}
 }
