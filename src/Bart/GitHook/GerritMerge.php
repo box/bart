@@ -2,7 +2,7 @@
 namespace Bart\GitHook;
 use Bart\Gerrit\Change;
 use Bart\Gerrit\GerritException;
-use Bart\Git_Exception;
+use Bart\GitException;
 
 /**
  * Merge commit in Gerrit
@@ -19,7 +19,7 @@ class GerritMerge extends GitHookAction
 		try {
 			$changeId = $this->git->get_change_id($commitHash);
 		}
-		catch (Git_Exception $e) {
+		catch (GitException $e) {
 			$this->logger->warn("{$e->getMessage()}. Skipping commit.");
 			return;
 		}

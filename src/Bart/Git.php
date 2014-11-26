@@ -95,7 +95,7 @@ class Git
 
 		if (count($matches) === 0)
 		{
-			throw new Git_Exception("No Change-Id in commit message for $commit_hash");
+			throw new GitException("No Change-Id in commit message for $commit_hash");
 		}
 
 		return $matches[1];
@@ -165,7 +165,7 @@ class Git
 
 		if ($exit_status !== 0)
 		{
-			throw new Git_Exception('Error in fetch: ' . print_r($output, true));
+			throw new GitException('Error in fetch: ' . print_r($output, true));
 		}
 	}
 
@@ -189,7 +189,7 @@ class Git
 
 		if ($exit_status !== 0)
 		{
-			throw new Git_Exception('Error in checkout: ' . print_r($output, true));
+			throw new GitException('Error in checkout: ' . print_r($output, true));
 		}
 	}
 
@@ -200,7 +200,7 @@ class Git
 	{
 		if (!$branch)
 		{
-			throw new Git_Exception(
+			throw new GitException(
 					"Error in Git reset: Must specify branch name for origin: $this->origin");
 		}
 
@@ -217,7 +217,7 @@ class Git
 
 		if ($exit_status !== 0)
 		{
-			throw new Git_Exception("Error in reset $hard: " . print_r($output, true));
+			throw new GitException("Error in reset $hard: " . print_r($output, true));
 		}
 	}
 
@@ -234,7 +234,7 @@ class Git
 		}
 		catch (CommandException $e)
 		{
-			throw new Git_Exception('Unable to update server info. ' . $e->getMessage());
+			throw new GitException('Unable to update server info. ' . $e->getMessage());
 		}
 	}
 
@@ -248,6 +248,6 @@ class Git
 	}
 }
 
-class Git_Exception extends \Exception
+class GitException extends \Exception
 {
 }

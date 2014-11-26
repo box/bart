@@ -1,6 +1,7 @@
 <?php
 namespace Bart\GitHook;
 use Bart\Diesel;
+use Bart\Git\Commit;
 use Bart\Log4PHP;
 
 /**
@@ -8,6 +9,9 @@ use Bart\Log4PHP;
  */
 class GitHookController
 {
+	const HOOKS_CONF = 'etc/hooks/generic.conf';
+	/** @var \Bart\Git\GitRoot */
+	private $gitRoot;
 	/** @var string Path to the git project */
 	private $gitDir;
 	/** @var string Name of the git project */
@@ -24,6 +28,7 @@ class GitHookController
 	 */
 	private function __construct($gitDir, $projectName, $hookName)
 	{
+		// $this->gitRoot = Diesel::create('\Bart\Git\GitRoot', $gitDir);
 		$this->gitDir = $gitDir;
 		$this->projectName = $projectName;
 		$this->hookName = $hookName;
@@ -78,6 +83,17 @@ class GitHookController
 		$hookName = substr($hookName, 0, strpos($hookName, '.'));
 
 		return new self("$pathToRepo.git", $projectName, $hookName);
+	}
+
+	/**
+	 * @param string $revision
+	 */
+	private function extractConfigurations($revision)
+	{
+		$commit = new Commit($this->gitRoot, $revision);
+		// Get raw configs at time of commit
+		$rawConfigs = $commit->rawFileContents(self::HOOKS_CONF);
+		// TODO Return a new Configuration parsed from $rawConfigs
 	}
 
 	/**
