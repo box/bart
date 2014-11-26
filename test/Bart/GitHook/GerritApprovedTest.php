@@ -1,7 +1,7 @@
 <?php
 namespace Bart\GitHook;
 
-class Gerrit_Approved_Test extends TestBase
+class GerritApprovedTest extends TestBase
 {
 	private static $conf = array('gerrit' =>
 		array('host' => 'gorgoroth.com', 'port' => '42')
@@ -21,7 +21,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder');
+		$hook = new GerritApproved(self::$conf, '.git', 'grinder');
 		$hook->run($commit_hash);
 	}
 
@@ -38,7 +38,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder');
+		$hook = new GerritApproved(self::$conf, '.git', 'grinder');
 
 		$msg = 'An approved review was not found in Gerrit for commit '
 		. $commit_hash . ' with Change-Id ' . $change_id;
@@ -60,7 +60,7 @@ class Gerrit_Approved_Test extends TestBase
 
 		$this->configure_for($change_id, $commit_hash, $mockApi);
 
-		$hook = new Gerrit_Approved(self::$conf, '.git', 'grinder');
+		$hook = new GerritApproved(self::$conf, '.git', 'grinder');
 
 		$msg = 'Error getting Gerrit review info';
 		$this->assertThrows('\Exception', $msg, function() use($hook, $commit_hash){

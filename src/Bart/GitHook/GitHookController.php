@@ -110,6 +110,7 @@ class GitHookController
 
 		/** @var \Bart\Shell $shell */
 		$shell = Diesel::create('\Bart\Shell');
+		// TODO This will need to change to support the 'update' hook
 		$stdin = $shell->std_in();
 
 		foreach ($stdin as $rangeAndRef) {

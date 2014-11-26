@@ -6,8 +6,9 @@ use Bart\Jenkins;
 
 /**
  * Reject commits against broken line unless the commit is fixing the build
+ * @deprecated Using Travis
  */
-class Stop_The_Line extends GitHookAction
+class StopTheLineJenkins extends GitHookAction
 {
 	private $job;
 

@@ -3,7 +3,7 @@ namespace Bart\GitHook;
 
 use Bart\Diesel;
 
-class Build_In_Jenkins_Test extends TestBase
+class BuildInJenkinsTest extends TestBase
 {
 	private static $repo = 'Gorgoroth';
 	private static $author = 'Gollum';
@@ -111,7 +111,7 @@ class Build_In_Jenkins_Test extends TestBase
 		});
 
 		return array(
-			'j' => new Build_In_Jenkins($conf, '', self::$repo),
+			'j' => new BuildInJenkins($conf, '', self::$repo),
 			'git' => $mock_git,
 			'job' => $mock_job,
 		);

@@ -3,7 +3,7 @@ namespace Bart\GitHook;
 
 use Bart\Diesel;
 
-class Stop_The_Line_Test extends TestBase
+class StopTheLineJenkinsTest extends TestBase
 {
 	private static $conf = array(
 		'jenkins' => array(
@@ -87,7 +87,7 @@ class Stop_The_Line_Test extends TestBase
 		});
 
 		return array(
-			'stl' => new Stop_The_Line($conf, '', 'Gorg'),
+			'stl' => new StopTheLineJenkins($conf, '', 'Gorg'),
 			'git' => $gitStub,
 		);
 	}
