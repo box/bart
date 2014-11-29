@@ -2,6 +2,7 @@
 namespace Bart\GitHook;
 use Bart\Gerrit\Change;
 use Bart\Gerrit\GerritException;
+use Bart\Git\Commit;
 use Bart\GitException;
 
 /**
@@ -11,17 +12,17 @@ class GerritAbandon extends GitHookAction
 {
 	/**
 	 * Run the hook
-	 * @param string $commitHash Commit with Gerrit Change-Id
+	 * @param Commit $commit Commit with Gerrit Change-Id
 	 * @throws GitHookException if requirement fails
 	 */
-	public function run($commitHash)
+	public function run(Commit $commit)
 	{
 		try {
-			$changeId = $this->git->get_change_id($commitHash);
+			$changeId = $commit->gerritChangeId();
 		}
 		catch (GitException $e) {
 			$this->logger->warn("{$e->getMessage()}. Skipping commit.");
-			return;
+			throw new GitHookException("Couldn't get Change-Id for {$commit}", $e->getCode(), $e);
 		}
 
 		$change = new Change($changeId);
@@ -33,10 +34,11 @@ class GerritAbandon extends GitHookAction
 				return;
 			}
 
-			$change->abandon("Abandoning from git hook for commit {$commitHash}.");
+			$change->abandon("Abandoning from git hook for commit {$commit}.");
 		}
 		catch (GerritException $e) {
-			$this->logger->error('Problem abandoning change. Ignoring and moving on with hook.', $e);
+			$this->logger->error("Problem abandoning Gerrit review {$changeId}", $e);
+			throw new GitHookException("Problem abandoning Gerrit review {$changeId}", $e->getCode(), $e);
 		}
 	}
 }

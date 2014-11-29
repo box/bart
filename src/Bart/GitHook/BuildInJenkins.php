@@ -2,25 +2,27 @@
 namespace Bart\GitHook;
 
 use Bart\Diesel;
+use Bart\Log4PHP;
 
 /**
+ * @deprecated as of 2.0.0
  * Create a build in jenkins for the latest commit. Following exceptions apply:
  * - If commit message contains "{deploy}" then enqueue the :deploy-job
  * instead of the normal job.
  * - If commit message contains "{nobuild, reason=*}", then no action is taken
  */
-class BuildInJenkins extends GitHookAction
+class BuildInJenkins extends DeprecatedHookAction
 {
 	public function __construct(array $conf, $gitDir, $repo)
 	{
-		$jenkins_conf = $conf['jenkins'];
-		if (!array_key_exists('job_name', $jenkins_conf))
+		$jenkinsConf = $conf['jenkins'];
+		if (!array_key_exists('job_name', $jenkinsConf))
 		{
 			// Default to the repo for convenience
-			$jenkins_conf['job_name'] = $repo;
+			$jenkinsConf['job_name'] = $repo;
 		}
 
-		parent::__construct($jenkins_conf, $gitDir, $repo);
+		parent::__construct($jenkinsConf, $gitDir, $repo);
 	}
 
 	public function run($commitHash)

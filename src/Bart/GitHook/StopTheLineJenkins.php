@@ -5,10 +5,10 @@ use Bart\Diesel;
 use Bart\Jenkins;
 
 /**
+ * @deprecated as of 2.0.0 Using Travis now
  * Reject commits against broken line unless the commit is fixing the build
- * @deprecated Using Travis
  */
-class StopTheLineJenkins extends GitHookAction
+class StopTheLineJenkins extends DeprecatedHookAction
 {
 	private $job;
 

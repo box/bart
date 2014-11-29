@@ -1,35 +1,101 @@
 <?php
 namespace Bart\GitHook;
+use Bart\Diesel;
+use Bart\Git\Commit;
+use Bart\Log4PHP;
 
 /**
  * Abstract class representing any class capable of running a git hook
  */
 abstract class GitHookRunner
 {
-	/** @var string The hook name */
-	protected static $name;
-	/** @var string Full path to the git repo */
-	protected $gitDir;
-	/** @var string The simple name of the repository, e.g. puppet */
-	protected $repo;
+	/** @var \Logger */
+	protected $logger;
+	/** @var \Bart\Git\Commit current commit against which hook is being run */
+	protected $commit;
+	/** @var \Bart\GitHook\GitHookConfigs Hook configurations defined at time of $this->commit */
+	protected $configs;
 
 	/**
-	 * @param string $gitDir
-	 * @param string $repo
+	 * @param Commit $commit current commit against which hook is being run
 	 */
-	public function __construct($gitDir, $repo)
+	public function __construct($gitDir, $repo, Commit $commit)
 	{
-		$this->gitDir = $gitDir;
-		$this->repo = $repo;
+		$this->logger = Log4PHP::getLogger(get_called_class());
+		$this->commit = $commit;
+
+		$this->configs = new GitHookConfigs($this->commit);
 	}
 
+	/**
+	 * @return string
+	 */
 	public function __toString()
 	{
-		return static::$name . '-hook-runner';
+		return $this->hookName() . "-hook-runner-{$this->commit}";
 	}
+
 	/**
-	 * Run all hook actions configured for this hook against $commitHash
-	 * @param string $commitHash
+	 * @return string Name of hook
 	 */
-	abstract public function runAllHooks($commitHash);
+	abstract protected function hookName();
+
+	/**
+	 * @return bool If execution of all hook actions should halt if one fails
+	 */
+	abstract protected function haltOnFailure();
+
+	/**
+	 * @return \string[] FQCN's of each hook action for class hook
+	 */
+	abstract protected function getHookActionNames();
+
+	/**
+	 * Run all hook actions configured for this hook
+	 */
+	public function runAllActions()
+	{
+		$actionsNames = $this->getHookActionNames();
+		$this->logger->debug(count($actionsNames) . " hook action name(s) configured for $this");
+
+		foreach ($actionsNames as $actionName) {
+			$this->logger->debug("Creating and running hook action '{$actionName}'");
+			try {
+				$hookAction = $this->createHookActionFor($actionName);
+			}
+			catch (GitHookException $e) {
+				$this->logger->error("Error creating hook action '{$actionName}' for {$this}", $e);
+				continue;
+			}
+
+			try {
+				$hookAction->run($this->commit);
+			}
+			catch (\Exception $e) {
+				// Logging performed by surrounding levels
+				if ($this->haltOnFailure()) {
+					throw $e;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Instantiate a new hook action
+	 * @param string $fqcn Name of GitHookAction class
+	 * @return \Bart\GitHook\GitHookAction
+	 * @throws GitHookException If class DNE
+	 */
+	private function createHookActionFor($fqcn)
+	{
+		if ($fqcn === '') {
+			throw new GitHookException('Got empty string for GitHookAction FQCN');
+		}
+
+		if (!class_exists($fqcn)) {
+			throw new GitHookException("No such hook action ($fqcn)");
+		}
+
+		return Diesel::create($fqcn);
+	}
 }
