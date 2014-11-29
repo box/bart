@@ -13,15 +13,11 @@ use Bart\Primitives\Arrays;
  */
 abstract class Configuration
 {
-	/** string The base directory containing all project managed configurations */
-	const PROJECT_CONF_DIR = 'etc';
 	/** @var string The base directory containing all static configurations */
 	private static $path = null;
 	private static $configCache = array();
 	/** @var array */
 	protected $configurations;
-	/** @var Commit non-null for configurations extending {@see ProjectConfiguration} */
-	protected $commit;
 	/** @var string File path on disk whence configuration file was loaded */
 	private $filePath;
 
@@ -45,6 +41,9 @@ abstract class Configuration
 		self::$path = $path;
 	}
 
+	/**
+	 * Instantiate instance configured to load configurations based on called class name
+	 */
 	public function __construct()
 	{
 		$this->load();
@@ -186,7 +185,8 @@ abstract class Configuration
 	 */
 	private function load()
 	{
-		if (!self::$path && !$this->commit) {
+		$basePath = $this->configsPath();
+		if (!$basePath) {
 			throw new ConfigurationException('Configuration root path not set! Please call configure()');
 		}
 
@@ -203,19 +203,23 @@ abstract class Configuration
 		// Chop any trailing underscore for non-camel cased names
 		$name = strtolower(chop($subclass, '_'));
 
-		$basePath = $this->commit ? self::PROJECT_CONF_DIR : self::$path;
 		$filePath = $basePath . "/$name.conf";
 
 		if (!array_key_exists($filePath, self::$configCache)) {
-			self::$configCache[$filePath] = $this->commit ?
-				$this->loadConfigurationsFromCommit($filePath, $name) :
-				$this->loadConfigurationsFromDisk($filePath, $name);
+			self::$configCache[$filePath] = $this->loadParsedIni($filePath, $name);
 		}
 
 		$this->filePath = $filePath;
 		$this->configurations = self::$configCache[$filePath];
 	}
 
+	/**
+	 * Set in memory configs for $section[$key] = $value; this is used exclusively
+	 * for caching secrets
+	 * @param string $section
+	 * @param string $key
+	 * @param string $value
+	 */
 	private function updateRuntimeConfiguration($section, $key, $value)
 	{
 		$cache = self::$configCache[$this->filePath];
@@ -232,30 +236,22 @@ abstract class Configuration
 	}
 
 	/**
-	 * @param string $filePath Relative path to file in project containing configs
-	 * @param string $subclass Name of the configuration class
-	 * @return array Contents of configuration parsed as INI with sections
-	 * @throws ConfigurationException
+	 * @abstract
+	 * @return string Path to configurations
 	 */
-	protected function loadConfigurationsFromCommit($filePath, $subclass)
+	protected function configsPath()
 	{
-		try {
-			$contents = $this->commit->rawFileContents($filePath);
-		} catch (GitException $e) {
-			$this->logger->warn("No configuration file found for $subclass at $filePath");
-			throw new ConfigurationException("No configuration file found for $subclass at $filePath");
-		}
-
-		return parse_ini_string($contents, true);
+		return self::$path;
 	}
 
 	/**
+	 * @abstract
 	 * @param string $filePath Absolute path to file containing configurations
 	 * @param string $subclass Name of the configuration class
 	 * @return array Contents of configuration parsed as INI with sections
 	 * @throws ConfigurationException
 	 */
-	private function loadConfigurationsFromDisk($filePath, $subclass)
+	protected function loadParsedIni($filePath, $subclass)
 	{
 		/** @var \Bart\Shell $shell */
 		$shell = Diesel::create('\Bart\Shell');
@@ -270,10 +266,19 @@ abstract class Configuration
 	}
 }
 
+/**
+ * Class ConfigurationException Generic exception in Configuration package
+ * @package Bart\Configuration
+ */
 class ConfigurationException extends \Exception
 {
 }
 
+/**
+ * Class ConfigurationTypeConversionException Exception when loading config value
+ * and attempting coercion to expected type
+ * @package Bart\Configuration
+ */
 class ConfigurationTypeConversionException extends \Exception
 {
 }
