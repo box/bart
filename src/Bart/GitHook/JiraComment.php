@@ -12,10 +12,11 @@ class JiraComment extends GitHookAction
 	/** @var \chobie\Jira\Api */
 	private $jiraClient;
 
-	public function __construct($hookConf, $gitDir, $repo)
+	/**
+	 * Jira Comment Hook Action
+	 */
+	public function __construct()
 	{
-		parent::__construct($hookConf, $gitDir, $repo);
-
 		/** @var \Bart\Jira\JiraClientConfig $configs */
 		$configs = Diesel::create('\Bart\Jira\JiraClientConfig');
 
@@ -30,8 +31,11 @@ class JiraComment extends GitHookAction
 	 */
 	public function run(Commit $commit)
 	{
+		$configs = new GitHookConfigs($this->commit);
+
 		foreach ($commit->jiras() as $jira) {
-			$this->jiraClient->addComment($jira->id(), "I have no idea what to say! $commit");
+			$this->logger->debug("Adding comment to jira {$jira}");
+			$this->jiraClient->addComment($jira->id(), "{$configs->jiraCommentStem()} {$commit}");
 		}
 	}
 }

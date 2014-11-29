@@ -2,6 +2,7 @@
 namespace Bart\GitHook;
 use Bart\Gerrit\Change;
 use Bart\Gerrit\GerritException;
+use Bart\Git\Commit;
 use Bart\GitException;
 
 /**
@@ -11,17 +12,17 @@ class GerritMerge extends GitHookAction
 {
 	/**
 	 * Run the hook
-	 * @param string $commitHash Commit with Gerrit Change-Id
+	 * @param Commit $commit Commit with Gerrit Change-Id
 	 * @throws GitHookException if requirement fails
 	 */
-	public function run($commitHash)
+	public function run(Commit $commit)
 	{
 		try {
-			$changeId = $this->git->get_change_id($commitHash);
+			$changeId = $commit->gerritChangeId();
 		}
 		catch (GitException $e) {
 			$this->logger->warn("{$e->getMessage()}. Skipping commit.");
-			return;
+			throw new GitHookException("Couldn't get Change-Id for {$commit}", $e->getCode(), $e);
 		}
 
 		$change = new Change($changeId);
@@ -33,11 +34,12 @@ class GerritMerge extends GitHookAction
 				return;
 			}
 
-			$change->markMerged($commitHash);
-			$change->comment('Git hook marking this review as merged');
+			$change->markMerged($commit->revision());
+			$change->comment("Git hook marking {$changeId} as merged by {$commit}");
 		}
 		catch (GerritException $e) {
-			$this->logger->error('Problem while marking change merged in gerrit. Ignoring and moving on with hook.', $e);
+			$this->logger->error("Failed to mark Gerrit reivew {$changeId} as merged", $e);
+			throw new GitHookException("Failed to mark Gerrit reivew {$changeId} as merged", $e->getCode(), $e);
 		}
 	}
 }

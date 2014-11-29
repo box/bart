@@ -23,12 +23,12 @@ class GitHookController
 
 	/**
 	 * @param string $gitDir Full path to the git dir
-	 * @param string $projectName
-	 * @param string $hookName
+	 * @param string $projectName Name of repository
+	 * @param string $hookName Current hook
 	 */
 	private function __construct($gitDir, $projectName, $hookName)
 	{
-		// $this->gitRoot = Diesel::create('\Bart\Git\GitRoot', $gitDir);
+		$this->gitRoot = Diesel::create('\Bart\Git\GitRoot', $gitDir);
 		$this->gitDir = $gitDir;
 		$this->projectName = $projectName;
 		$this->hookName = $hookName;
@@ -45,9 +45,6 @@ class GitHookController
 	 */
 	public function run()
 	{
-		$hookRunner = $this->createHookRunner();
-
-		$this->logger->debug("Created $hookRunner to process each posted revision");
 		$this->processRevisions($hookRunner);
 	}
 
@@ -86,17 +83,6 @@ class GitHookController
 	}
 
 	/**
-	 * @param string $revision
-	 */
-	private function extractConfigurations($revision)
-	{
-		$commit = new Commit($this->gitRoot, $revision);
-		// Get raw configs at time of commit
-		$rawConfigs = $commit->rawFileContents(self::HOOKS_CONF);
-		// TODO Return a new Configuration parsed from $rawConfigs
-	}
-
-	/**
 	 * Instantiate hook runner for hook type
 	 * @return GitHookRunner
 	 * @throws GitHookException
@@ -116,10 +102,9 @@ class GitHookController
 	}
 
 	/**
-	 * Run the hook against all revisions on master branch
-	 * @param GitHookRunner $hookRunner
+	 * Run each revision against current hook
 	 */
-	private function processRevisions(GitHookRunner $hookRunner)
+	private function processRevisions()
 	{
 		/** @var \Bart\Git $git */
 		$git = Diesel::create('\Bart\Git', $this->gitDir);
@@ -141,6 +126,9 @@ class GitHookController
 			$revisions = $git->getRevList($start, $end);
 
 			foreach ($revisions as $revision) {
+				$hookRunner = $this->createHookRunner($revision);
+				$this->logger->debug("Created $hookRunner");
+
 				$this->logger->debug("Verifying all configured hooks against $revision");
 
 				// Let any failures bubble up to caller
