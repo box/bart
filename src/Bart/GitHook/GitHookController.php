@@ -2,6 +2,7 @@
 namespace Bart\GitHook;
 use Bart\Diesel;
 use Bart\Git\Commit;
+use Bart\Git\GitRoot;
 use Bart\Log4PHP;
 
 /**
@@ -45,7 +46,7 @@ class GitHookController
 	 */
 	public function run()
 	{
-		$this->processRevisions($hookRunner);
+		$this->processRevisions();
 	}
 
 	/**
@@ -87,14 +88,16 @@ class GitHookController
 	 * @return GitHookRunner
 	 * @throws GitHookException
 	 */
-	private function createHookRunner()
+	private function createHookRunner($revision)
 	{
+		$commit = new Commit($this->gitRoot, $revision);
+
 		switch ($this->hookName) {
 			case 'pre-receive':
-				return new PreReceiveRunner($this->gitDir, $this->projectName);
+				return new PreReceiveRunner($commit);
 				break;
 			case 'post-receive':
-				return new PostReceiveRunner($this->gitDir, $this->projectName);
+				return new PostReceiveRunner($commit);
 				break;
 			default:
 				throw new GitHookException('Unknown hook type: ' . $this->hookName);
@@ -128,11 +131,10 @@ class GitHookController
 			foreach ($revisions as $revision) {
 				$hookRunner = $this->createHookRunner($revision);
 				$this->logger->debug("Created $hookRunner");
-
-				$this->logger->debug("Verifying all configured hooks against $revision");
+				$this->logger->debug("Verifying all configured hook actions against $revision");
 
 				// Let any failures bubble up to caller
-				$hookRunner->runAllHooks($revision);
+				$hookRunner->runAllActions();
 			}
 		}
 	}

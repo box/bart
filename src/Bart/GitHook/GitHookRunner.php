@@ -19,7 +19,7 @@ abstract class GitHookRunner
 	/**
 	 * @param Commit $commit current commit against which hook is being run
 	 */
-	public function __construct($gitDir, $repo, Commit $commit)
+	public function __construct(Commit $commit)
 	{
 		$this->logger = Log4PHP::getLogger(get_called_class());
 		$this->commit = $commit;
