@@ -13,7 +13,7 @@ abstract class GitHookRunner
 	protected $logger;
 	/** @var \Bart\Git\Commit current commit against which hook is being run */
 	protected $commit;
-	/** @var \Bart\GitHook\GitHookConfigs Hook configurations defined at time of $this->commit */
+	/** @var \Bart\GitHook\GitHookConfig Hook configurations defined at time of $this->commit */
 	protected $configs;
 
 	/**
@@ -24,7 +24,8 @@ abstract class GitHookRunner
 		$this->logger = Log4PHP::getLogger(get_called_class());
 		$this->commit = $commit;
 
-		$this->configs = new GitHookConfigs($this->commit);
+		/** @var \Bart\GitHook\GitHookConfig configs */
+		$this->configs = Diesel::create('\Bart\GitHook\GitHookConfigs', $this->commit);
 	}
 
 	/**

@@ -31,7 +31,7 @@ class JiraComment extends GitHookAction
 	 */
 	public function run(Commit $commit)
 	{
-		$configs = new GitHookConfigs($this->commit);
+		$configs = new GitHookConfig($this->commit);
 
 		// Apply template to produce desired comment for JIRA issue
 		$template = $configs->jiraCommentStem();

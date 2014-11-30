@@ -6,7 +6,7 @@ use Bart\Configuration\ProjectConfiguration;
 /**
  * Configurations for Git Hooks
  */
-class GitHookConfigs extends ProjectConfiguration
+class GitHookConfig extends ProjectConfiguration
 {
 	/**
 	 * @return string Sample of how configuration is intended to be defined
