@@ -85,13 +85,12 @@ class GitHookController
 
 	/**
 	 * Instantiate hook runner for hook type
+	 * @param Commit $commit The commit relevant to the hook actions
 	 * @return GitHookRunner
 	 * @throws GitHookException
 	 */
-	private function createHookRunner($revision)
+	private function createHookRunner(Commit $commit)
 	{
-		$commit = new Commit($this->gitRoot, $revision);
-
 		switch ($this->hookName) {
 			case 'pre-receive':
 				return new PreReceiveRunner($commit);
@@ -129,6 +128,14 @@ class GitHookController
 			$revisions = $git->getRevList($start, $end);
 
 			foreach ($revisions as $revision) {
+
+				$commit = new Commit($this->gitRoot, $revision);
+
+				// Allow a backdoor in case of emergency or broken hook configuration
+				if ($this->shouldSkip($commit)) {
+					continue;
+				}
+
 				$hookRunner = $this->createHookRunner($revision);
 				$this->logger->debug("Created $hookRunner");
 				$this->logger->debug("Verifying all configured hook actions against $revision");
@@ -137,5 +144,16 @@ class GitHookController
 				$hookRunner->runAllActions();
 			}
 		}
+	}
+
+	/**
+	 * @param Commit $commit
+	 * @return bool If the commit should be skipped by the hook
+	 */
+	private function shouldSkip(Commit $commit)
+	{
+		$message = $commit->message();
+
+		return preg_match('/^EMERGENCY/', $message) === 1;
 	}
 }
