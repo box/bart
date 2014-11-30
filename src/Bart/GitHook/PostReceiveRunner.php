@@ -27,6 +27,6 @@ class PostReceiveRunner extends GitHookRunner
 	 */
 	protected function getHookActionNames()
 	{
-		$this->configs->getPostReceiveHookActions();
+		return $this->configs->getPostReceiveHookActions();
 	}
 }

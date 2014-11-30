@@ -5,7 +5,8 @@ use Bart\Git\Commit;
 use Bart\Log4PHP;
 
 /**
- * Abstract class representing any class capable of running a git hook
+ * Class GitHookRunner Runs the configured Git Hook Actions against a single commit
+ * @package Bart\GitHook
  */
 abstract class GitHookRunner
 {
@@ -25,7 +26,7 @@ abstract class GitHookRunner
 		$this->commit = $commit;
 
 		/** @var \Bart\GitHook\GitHookConfig configs */
-		$this->configs = Diesel::create('\Bart\GitHook\GitHookConfigs', $this->commit);
+		$this->configs = Diesel::create('\Bart\GitHook\GitHookConfig', $this->commit);
 	}
 
 	/**
@@ -56,10 +57,10 @@ abstract class GitHookRunner
 	 */
 	public function runAllActions()
 	{
-		$actionsNames = $this->getHookActionNames();
-		$this->logger->debug(count($actionsNames) . " hook action name(s) configured for $this");
+		$actionNames = $this->getHookActionNames();
+		$this->logger->debug(count($actionNames) . " hook action name(s) configured for $this");
 
-		foreach ($actionsNames as $actionName) {
+		foreach ($actionNames as $actionName) {
 			$this->logger->debug("Creating and running hook action '{$actionName}'");
 			try {
 				$hookAction = $this->createHookActionFor($actionName);
