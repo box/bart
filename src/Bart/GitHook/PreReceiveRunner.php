@@ -27,6 +27,6 @@ class PreReceiveRunner extends GitHookRunner
 	 */
 	protected function getHookActionNames()
 	{
-		$this->configs->getPreReceiveHookActions();
+		return $this->configs->getPreReceiveHookActions();
 	}
 }

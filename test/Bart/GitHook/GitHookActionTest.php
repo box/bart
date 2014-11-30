@@ -33,7 +33,7 @@ class GitHookActionTest extends \Bart\BaseTestCase
 /**
  * Silly class to help us test that the base class will do its stuff
  */
-class TestGitHookAction extends GitHookAction
+class TestGitHookAction extends DeprecatedHookAction
 {
 	public function run($phpu)
 	{

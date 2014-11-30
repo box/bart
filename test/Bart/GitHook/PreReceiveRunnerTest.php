@@ -2,132 +2,68 @@
 namespace Bart\GitHook;
 
 use Bart\Diesel;
+use Bart\Git\Commit;
 
 class PreReceiveRunnerTest extends TestBase
 {
-	public function testConfKeyMissing()
+	public function testBadClassNamesIgnored()
 	{
-		$repo = 'Isengard';
-		$hookConf = array(
-			'pre-receive' => array('names' => 'jenkins'),
-		);
-
-		$preReceive = $this->configureFor($hookConf, $repo);
-
-		$msg = 'No configuration section for hook jenkins';
-		$closure = function() use ($preReceive) {
-			$preReceive->runAllHooks('doesnt matter');
-		};
-
-		$this->assertThrows('\Exception', $msg, $closure);
-	}
-
-	public function test_no_class_exists()
-	{
-		$repo = 'Isengard';
-		$monty = 'sir_not_appearing_in_this_film';
-		$hookConf = array(
-			'pre-receive' => array('names' => 'jenkins'),
-			'jenkins' => array(
-				'class' => $monty,
-				'enabled' => true,
-			),
-		);
-
-		$preReceive = $this->configureFor($hookConf, $repo);
-
-		$msg = "Hook action class (Bart\\GitHook\\$monty) does not exist";
-		$closure = function() use ($preReceive) {
-			$preReceive->runAllHooks('doesnt matter');
-		};
-		$this->assertThrows('\Bart\GitHook\GitHookException', $msg, $closure);
-	}
-
-	public function test_disabled_class()
-	{
-		$repo = 'Isengard';
-		$hookConf = array(
-			'pre-receive' => array('names' => 'jenkins'),
-			'jenkins' => array(
-				'class' => 'Gerrit_Approved',
-				'enabled' => false,
-			),
-		);
-
-		$preReceive = $this->configureFor($hookConf, $repo);
-
-		// Not necessarily accurate, but it should be true that if pre-receive
-		// ...attempted to instantiate the GitHook it would crash when it
-		// ...it couldn't find the dependency for class GitHook_Gerrit_Approved
-		$preReceive->runAllHooks('doesnt matter');
-	}
-
-	public function test_verify_fails()
-	{
-		$repo = 'Isengard';
-		$hookConf = array(
-			'pre-receive' => array('names' => 'jenkins'),
-			'jenkins' => array(
-				'class' => 'ForTesting',
-				'verbose' => false,
-				'enabled' => true,
-				'super' => 'duper',
-			),
-		);
-
-		$preReceive = $this->configureFor($hookConf, $repo);
-
-		$phpu = $this;
-		Diesel::registerInstantiator('Bart\GitHook\ForTesting', function() use ($phpu){
-			return $phpu;
+		$this->shmockAndDieselify('\Bart\GitHook\GitHookConfig', function($configs) {
+			$configs->disable_original_constructor();
+			$configs->getPreReceiveHookActions()->once()->return_value(['\This\Class\DNE']);
 		});
 
-		$preReceive->runAllHooks('doesnt matter');
+		$head = $this->shmock('Bart\Git\Commit', function($commit) {
+			$commit->disable_original_constructor();
+			$commit->__toString()->any()->return_value('HEAD');
+		});
+
+		$preReceive = new PreReceiveRunner($head);
+		// This should pass with no side effects
+		$preReceive->runAllActions();
 	}
 
-	private function configureFor($hookConf, $repo)
+	public function testValidHookNameRuns()
 	{
-		$gitDir = '.git';
+		$this->shmockAndDieselify('\Bart\GitHook\GitHookConfig', function($configs) {
+			$configs->disable_original_constructor();
+			$configs->getPreReceiveHookActions()->once()->return_value([
+				'\Bart\GitHook\ForTesting',
+				'\Bart\GitHook\ForTesting',
+			]);
+		});
 
-		$mockConf = $this->getMock('\\Bart\\Config_Parser', array(), array(), '', false);
-		$mockConf->expects($this->once())
-				->method('parse_conf_file')
-				->with($this->equalTo(BART_DIR . 'etc/php/hooks.conf'))
-				->will($this->returnValue($hookConf));
+		// Register a real test hook action instance
+		$testHookAction = new ForTesting();
+		$this->registerDiesel('\Bart\GitHook\ForTesting', $testHookAction);
 
-		$phpu = $this;
-		$createConf = function($repoParam) use ($phpu, $mockConf, $repo) {
-			$phpu->assertEquals(array($repo), $repoParam,
-					'Repo param to Config_Parser constructor');
+		$head = $this->shmock('Bart\Git\Commit', function($commit) {
+			$commit->disable_original_constructor();
+			$commit->__toString()->any()->return_value('HEAD');
+		});
 
-			return $mockConf;
-		};
+		$preReceive = new PreReceiveRunner($head);
+		// This should pass with no side effects
+		$preReceive->runAllActions();
 
-		Diesel::registerInstantiator('Bart\Config_Parser', $createConf);
-
-		return new PreReceiveRunner($gitDir, $repo);
+		$this->assertCount(2, $testHookAction->commits, 'List of commits run against hooks');
+		$this->assertSame($head, $testHookAction->commits[0], 'Commit for hook');
+		// "Second" hook configured to run for this commit
+		$this->assertSame($head, $testHookAction->commits[1], 'Commit for hook');
 	}
 }
 
+/**
+ * Class ForTesting Basic Hook Action to let us inject ourselves into execution path
+ * @package Bart\GitHook
+ */
 class ForTesting extends GitHookAction
 {
-	protected $conf;
-	protected $dir;
-	protected $repo;
+	/** @var Commit[] List of each commit sent to run() method */
+	public $commits = [];
 
-	public function __construct(array $conf, $dir, $repo)
+	public function run(Commit $commit)
 	{
-		$this->conf = $conf;
-		$this->dir = $dir;
-		$this->repo = $repo;
-	}
-
-	public function run($commit_hash)
-	{
-		// Make sure everything got passed through as expected
-		$phpu = Diesel::create('Bart\GitHook\ForTesting');
-		$phpu->assertEquals('Isengard', $this->repo, 'Wrong repo passed');
-		$phpu->assertEquals('.git', $this->dir, 'Wrong git dir passed');
-		$phpu->assertEquals('duper', $this->conf['jenkins']['super'], 'Wrong conf passed');
+		$this->commits[] = $commit;
 	}
 }
