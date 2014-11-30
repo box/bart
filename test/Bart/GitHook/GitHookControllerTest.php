@@ -15,6 +15,9 @@ class GitHookControllerTest extends BaseTestCase
 
 		$this->registerDiesel('\Bart\Shell', $stubShell);
 
+		// This value won't be used during this test
+		$this->registerDiesel('\Bart\Git\GitRoot', null);
+
 		$runner = GitHookController::createFromScriptName('hook/post-receive.d/bart-runner');
 		$this->assertEquals('monty.post-receive', "$runner", 'hook runner to string');
 	}
