@@ -20,6 +20,11 @@ hook_actions = '\Bart\GitHook\StopTheLineTravis'
 [post_receive]
 hook_actions = '\Bart\GitHook\JiraComment', '\Bart\GitHook\GerritAbandon'
 
+[jira]
+; Used by JiraComment Hook Action
+; %s will be replaced with commit revision hash
+comment_template = "Commit %s pushed to JIRA. See online at https://git.example.com/?h=%s"
+
 README;
 	}
 
@@ -37,5 +42,13 @@ README;
 	public function getPostReceiveHookActions()
 	{
 		return $this->getArray('post_receive', 'hook_actions');
+	}
+
+	/**
+	 * @return string Template string to be sent to sprintf
+	 */
+	public function jiraCommentStem()
+	{
+		return $this->getValue('jira', 'comment_template');
 	}
 }

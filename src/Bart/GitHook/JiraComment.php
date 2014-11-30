@@ -25,17 +25,28 @@ class JiraComment extends GitHookAction
 	}
 
 	/**
-	 * Add a comment with the commit hash
-	 * @param $commitHash string of commit to verify
+	 * Add a comment in JIRA with the commit hash
+	 * @param Commit $commit The commit for which we're running the Git Hook
 	 * @throws GitHookException if requirement fails
 	 */
 	public function run(Commit $commit)
 	{
 		$configs = new GitHookConfigs($this->commit);
 
+		// Apply template to produce desired comment for JIRA issue
+		$template = $configs->jiraCommentStem();
+		$count = preg_match('/\%s/', $template);
+
+		$vsprintf_args = [];
+		if ($count !== false) {
+			$vsprintf_args = array_fill(0, $count, $commit->revision());
+		}
+
+		$comment = vsprintf($template, $vsprintf_args);
+
 		foreach ($commit->jiras() as $jira) {
 			$this->logger->debug("Adding comment to jira {$jira}");
-			$this->jiraClient->addComment($jira->id(), "{$configs->jiraCommentStem()} {$commit}");
+			$this->jiraClient->addComment($jira->id(), $comment);
 		}
 	}
 }
