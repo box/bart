@@ -1,7 +1,6 @@
 <?php
 namespace Bart\GitHook;
 
-use Bart\Diesel;
 use Bart\Git\Commit;
 
 class PreReceiveRunnerTest extends TestBase
