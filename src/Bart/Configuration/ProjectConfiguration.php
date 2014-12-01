@@ -5,6 +5,9 @@ use Bart\GitException;
 
 /**
  * Configurations loaded from a project repository file
+ * TODO Static config cache does not vary by $commit. If configs are requested at different
+ * TODO ...revisions, then the configs from the first loaded will always be used. Fix this
+ * TODO ...by diversifying the caching key
  */
 abstract class ProjectConfiguration extends Configuration
 {

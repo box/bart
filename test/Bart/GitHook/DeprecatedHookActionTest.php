@@ -4,7 +4,7 @@ namespace Bart\GitHook;
 use Bart\Diesel;
 use Bart\Git;
 
-class GitHookActionTest extends \Bart\BaseTestCase
+class DeprecatedHookActionTest extends \Bart\BaseTestCase
 {
 	public function testConstructor()
 	{
