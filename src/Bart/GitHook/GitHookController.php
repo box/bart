@@ -125,10 +125,11 @@ class GitHookController
 				continue;
 			}
 
+			// TODO should this be reversed?
 			$revisions = $git->getRevList($start, $end);
+			$this->logger->debug('Found ' . count($revisions) . ' revision(s)');
 
 			foreach ($revisions as $revision) {
-
 				$commit = new Commit($this->gitRoot, $revision);
 
 				// Allow a backdoor in case of emergency or broken hook configuration
@@ -136,7 +137,7 @@ class GitHookController
 					continue;
 				}
 
-				$hookRunner = $this->createHookRunner($revision);
+				$hookRunner = $this->createHookRunner($commit);
 				$this->logger->debug("Created $hookRunner");
 				$this->logger->debug("Verifying all configured hook actions against $revision");
 

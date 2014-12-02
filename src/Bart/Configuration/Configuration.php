@@ -2,8 +2,7 @@
 namespace Bart\Configuration;
 
 use Bart\Diesel;
-use Bart\Git\Commit;
-use Bart\GitException;
+use Bart\Log4PHP;
 use Bart\Primitives\Arrays;
 
 /**
@@ -18,6 +17,8 @@ abstract class Configuration
 	private static $configCache = array();
 	/** @var array */
 	protected $configurations;
+	/** @var \Logger */
+	protected $logger;
 	/** @var string File path on disk whence configuration file was loaded */
 	private $filePath;
 
@@ -46,6 +47,7 @@ abstract class Configuration
 	 */
 	public function __construct()
 	{
+		$this->logger = Log4PHP::getLogger(get_called_class());
 		$this->load();
 	}
 
