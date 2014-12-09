@@ -1,5 +1,6 @@
 <?php
 namespace Bart\GitHook;
+use Bart\Git\CommitTest;
 
 /**
  * For other tests of GitHookRunner, see PreReceiveRunnerTest
@@ -11,14 +12,10 @@ class PostReceiveRunnerTest extends TestBase
 	public function testValidHookNameRuns()
 	{
 		$this->shmockAndDieselify('\Bart\GitHook\GitHookConfig', function($configs) {
-			$configs->disable_original_constructor();
 			$configs->getPostReceiveHookActions()->once()->return_value(['\This\Class\DNE']);
-		});
+		}, true);
 
-		$head = $this->shmock('Bart\Git\Commit', function($commit) {
-			$commit->disable_original_constructor();
-			$commit->__toString()->any()->return_value('HEAD');
-		});
+		$head = CommitTest::getStubCommit($this);
 
 		$preReceive = new PostReceiveRunner($head);
 		// This should pass with no side effects
