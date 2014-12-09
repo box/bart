@@ -26,7 +26,7 @@ $message";
 		$this->gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root) use ($message) {
 			$resultStub = new StubbedCommandResult([$message], 0);
 
-			$root->getCommandResult('show -s --no-color %s', 'HEAD')->once()->return_value($resultStub);
+			$root->getCommandResult('show -s --format=full --no-color %s', 'HEAD')->once()->return_value($resultStub);
 		});
 	}
 

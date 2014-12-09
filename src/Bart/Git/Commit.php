@@ -48,7 +48,7 @@ class Commit
 	 */
 	public function message()
 	{
-		$result = $this->gitRoot->getCommandResult('show -s --no-color %s', $this->revision);
+		$result = $this->gitRoot->getCommandResult('show -s --format=full --no-color %s', $this->revision);
 
 		if (!$result->wasOk()) {
 			throw new GitException("Could not get contents of commit {$this}");
