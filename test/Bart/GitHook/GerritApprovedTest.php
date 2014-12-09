@@ -2,6 +2,7 @@
 namespace Bart\GitHook;
 
 use Bart\BaseTestCase;
+use Bart\Git\CommitTest;
 
 class GerritApprovedTest extends BaseTestCase
 {
@@ -13,23 +14,19 @@ class GerritApprovedTest extends BaseTestCase
 	{
 		parent::setUp();
 
-		$this->head = $this->shmock('Bart\Git\Commit', function($commit) {
-			$commit->disable_original_constructor();
+		$this->head = CommitTest::getStubCommit($this, $this->commitHash, function($commit) {
 			$commit->gerritChangeId()->once()->return_value($this->changeId);
-			$commit->revision()->once()->return_value($this->commitHash);
-			$commit->__toString()->any()->return_value($this->commitHash);
 		});
 	}
 
 	public function testValidCommit()
 	{
 		$this->shmockAndDieselify('Bart\Gerrit\Api', function($api) {
-			$api->disable_original_constructor();
 			// Any value will do here, just can't be null
 			$api->getApprovedChange($this->changeId, $this->commitHash)
 				->once()
 				->return_value(['id' => $this->changeId]);
-		});
+		}, true);
 
 		$hookAction = new GerritApproved();
 		$hookAction->run($this->head);
@@ -38,12 +35,11 @@ class GerritApprovedTest extends BaseTestCase
 	public function testApprovedChangeNotFound()
 	{
 		$this->shmockAndDieselify('Bart\Gerrit\Api', function($api) {
-			$api->disable_original_constructor();
 			// Any value will do here, just can't be null
 			$api->getApprovedChange($this->changeId, $this->commitHash)
 				->once()
 				->return_value(null);
-		});
+		}, true);
 
 		$msg = "approved review was not found in Gerrit for commit {$this->commitHash} "
 		. "with Change-Id {$this->changeId}";
@@ -56,12 +52,11 @@ class GerritApprovedTest extends BaseTestCase
 	public function testGerritException()
 	{
 		$this->shmockAndDieselify('Bart\Gerrit\Api', function($api) {
-			$api->disable_original_constructor();
 			// Any value will do here, just can't be null
 			$api->getApprovedChange($this->changeId, $this->commitHash)
 				->once()
 				->throw_exception(new \Exception('Invalid credentials'));
-		});
+		}, true);
 
 		$msg = 'Error getting Gerrit review info';
 		$this->assertThrows('\Exception', $msg, function() {

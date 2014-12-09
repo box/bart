@@ -83,5 +83,26 @@ $message";
 		$actualContents = trim($commit->rawFileContents('composer.json'));
 		$this->assertEquals($expectedContents, $actualContents, 'Raw file contents');
 	}
+
+	/**
+	 * Utility method to create a stub Commit for any tests that need one
+	 * Custom expectations can be set via the $configure parameter
+	 * @param BaseTestCase $phpu
+	 * @param string $revision
+	 * @param callable $configure Shmock configuration function
+	 * @return mixed
+	 */
+	public static function getStubCommit(BaseTestCase $phpu, $revision = 'HEAD', callable $configure = null)
+	{
+		return $phpu->shmock('\Bart\Git\Commit', function($commit) use ($revision, $configure) {
+			$commit->disable_original_constructor();
+			$commit->__toString()->any()->return_value($revision);
+			$commit->revision()->any()->return_value($revision);
+
+			if ($configure) {
+				$configure($commit);
+			}
+		});
+	}
 }
  

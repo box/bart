@@ -97,6 +97,8 @@ class Commit
 	public function jiras()
 	{
 		if ($this->_jiras === null) {
+			$this->_jiras = [];
+
 			$message = $this->message();
 
 			$matches = [];

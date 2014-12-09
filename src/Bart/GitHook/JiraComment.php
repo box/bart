@@ -17,11 +17,13 @@ class JiraComment extends GitHookAction
 	 */
 	public function __construct()
 	{
-		/** @var \Bart\Jira\JiraClientConfig $configs */
-		$configs = Diesel::create('\Bart\Jira\JiraClientConfig');
+		parent::__construct();
+
+		/** @var \Bart\Jira\JiraClientConfig $jConfigs */
+		$jConfigs = Diesel::create('\Bart\Jira\JiraClientConfig');
 
 		$this->jiraClient = Diesel::create('\chobie\Jira\Api',
-			$configs->baseURL(), new Basic($configs->username(), $configs->password()));
+			$jConfigs->baseURL(), new Basic($jConfigs->username(), $jConfigs->password()));
 	}
 
 	/**
@@ -31,12 +33,14 @@ class JiraComment extends GitHookAction
 	 */
 	public function run(Commit $commit)
 	{
-		$configs = new GitHookConfig($this->commit);
+		/** @var \Bart\GitHook\GitHookConfig $hConfigs */
+		$hConfigs = Diesel::create('\Bart\GitHook\GitHookConfig', $commit);
 
 		// Apply template to produce desired comment for JIRA issue
-		$template = $configs->jiraCommentStem();
-		$count = preg_match('/\%s/', $template);
+		$template = $hConfigs->jiraCommentTemplate();
+		$count = preg_match_all('/\%s/', $template);
 
+		$this->logger->debug("Loaded jira template --$template-- and found $count token(s)");
 		$vsprintf_args = [];
 		if ($count !== false) {
 			$vsprintf_args = array_fill(0, $count, $commit->revision());
@@ -44,7 +48,9 @@ class JiraComment extends GitHookAction
 
 		$comment = vsprintf($template, $vsprintf_args);
 
-		foreach ($commit->jiras() as $jira) {
+		$jiraIssues = $commit->jiras();
+		$this->logger->debug('Found ' . count($jiraIssues) . " jira issue(s) in $commit");
+		foreach ($jiraIssues as $jira) {
 			$this->logger->debug("Adding comment to jira {$jira}");
 			$this->jiraClient->addComment($jira->id(), $comment);
 		}

@@ -2,20 +2,17 @@
 namespace Bart\GitHook;
 
 use Bart\Git\Commit;
+use Bart\Git\CommitTest;
 
 class PreReceiveRunnerTest extends TestBase
 {
 	public function testBadClassNamesIgnored()
 	{
 		$this->shmockAndDieselify('\Bart\GitHook\GitHookConfig', function($configs) {
-			$configs->disable_original_constructor();
 			$configs->getPreReceiveHookActions()->once()->return_value(['\This\Class\DNE']);
-		});
+		}, true);
 
-		$head = $this->shmock('Bart\Git\Commit', function($commit) {
-			$commit->disable_original_constructor();
-			$commit->__toString()->any()->return_value('HEAD');
-		});
+		$head = CommitTest::getStubCommit($this);
 
 		$preReceive = new PreReceiveRunner($head);
 		// This should pass with no side effects

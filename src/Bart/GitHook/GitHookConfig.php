@@ -47,7 +47,7 @@ README;
 	/**
 	 * @return string Template string to be sent to sprintf
 	 */
-	public function jiraCommentStem()
+	public function jiraCommentTemplate()
 	{
 		return $this->getValue('jira', 'comment_template');
 	}

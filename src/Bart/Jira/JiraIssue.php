@@ -17,6 +17,14 @@ class JiraIssue
 		$this->id = $id;
 	}
 
+	/**
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return $this->id;
+	}
+
 	public function id()
 	{
 		return $this->id;
