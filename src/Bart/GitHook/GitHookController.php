@@ -119,18 +119,13 @@ class GitHookController
 		foreach ($stdin as $rangeAndRef) {
 			list($start, $end, $ref) = explode(" ", $rangeAndRef);
 
-			// TODO make this configurable per project/hook
-			if ($ref != 'refs/heads/master') {
-				$this->logger->info('Skipping hooks on non-master ref ' . $ref);
-				continue;
-			}
-
 			// TODO should this be reversed?
 			$revisions = $git->getRevList($start, $end);
 			$this->logger->debug('Found ' . count($revisions) . ' revision(s)');
 
 			foreach ($revisions as $revision) {
 				$commit = new Commit($this->gitRoot, $revision);
+
 
 				// Allow a backdoor in case of emergency or broken hook configuration
 				if ($this->shouldSkip($commit)) {
@@ -140,6 +135,21 @@ class GitHookController
 				$hookRunner = $this->createHookRunner($commit);
 				$this->logger->debug("Created $hookRunner");
 				$this->logger->debug("Verifying all configured hook actions against $revision");
+
+                $gitHookBranches = $hookRunner->getHookBranches();
+
+                // Prefix each branch name with refs/heads/
+                foreach($gitHookBranches as &$value) {
+                    $value = 'refs/heads/'.$value;
+                }
+
+                // Check whether current branch should have git hooks run or not
+                $shouldRunHooks = in_array($ref, $gitHookBranches, true);
+
+                if (!$shouldRunHooks) {
+                    $this->logger->info('Skipping hooks on branch ' . $ref);
+                    continue;
+                }
 
 				// Let any failures bubble up to caller
 				$hookRunner->runAllActions();

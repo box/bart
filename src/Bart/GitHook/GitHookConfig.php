@@ -25,6 +25,10 @@ hook_actions = '\Bart\GitHook\JiraComment', '\Bart\GitHook\GerritAbandon'
 ; %s will be replaced with commit revision hash
 comment_template = "Commit %s pushed to JIRA. See online at https://git.example.com/?h=%s"
 
+[run_hooks]
+; Used to determine which branches to run git hooks on
+branches = "master"
+
 README;
 	}
 
@@ -51,4 +55,13 @@ README;
 	{
 		return $this->getValue('jira', 'comment_template');
 	}
+
+    /**
+     * @return \string[] List of branches to run git hooks on
+     */
+    public function getHookBranches()
+    {
+        return $this->getArray('run_hooks', 'branches');
+    }
+
 }
