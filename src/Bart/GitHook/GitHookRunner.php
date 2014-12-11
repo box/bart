@@ -52,13 +52,6 @@ abstract class GitHookRunner
 	 */
 	abstract protected function getHookActionNames();
 
-    /**
-     * @return \string[] array of git hook branches to run git hooks on from GitHookConfig
-     */
-    public function getHookBranches() {
-        $this->configs->getHookBranches();
-    }
-
 	/**
 	 * Run all hook actions configured for this hook
 	 */

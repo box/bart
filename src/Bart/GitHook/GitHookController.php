@@ -126,6 +126,14 @@ class GitHookController
 			foreach ($revisions as $revision) {
 				$commit = new Commit($this->gitRoot, $revision);
 
+                $configs = new GitHookConfig($commit);
+                $validRefs = $configs->getValidRefs();
+
+                // Check whether current ref should have git hooks run or not
+                if(in_array($ref, $validRefs)) {
+                    $this->logger->info('Skipping hooks on ref ' . $ref);
+                    continue;
+                }
 
 				// Allow a backdoor in case of emergency or broken hook configuration
 				if ($this->shouldSkip($commit)) {
@@ -135,21 +143,6 @@ class GitHookController
 				$hookRunner = $this->createHookRunner($commit);
 				$this->logger->debug("Created $hookRunner");
 				$this->logger->debug("Verifying all configured hook actions against $revision");
-
-                $gitHookBranches = $hookRunner->getHookBranches();
-
-                // Prefix each branch name with refs/heads/
-                foreach($gitHookBranches as &$value) {
-                    $value = 'refs/heads/'.$value;
-                }
-
-                // Check whether current branch should have git hooks run or not
-                $shouldRunHooks = in_array($ref, $gitHookBranches, true);
-
-                if (!$shouldRunHooks) {
-                    $this->logger->info('Skipping hooks on branch ' . $ref);
-                    continue;
-                }
 
 				// Let any failures bubble up to caller
 				$hookRunner->runAllActions();
