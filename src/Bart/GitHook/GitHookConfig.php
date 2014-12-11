@@ -26,8 +26,8 @@ hook_actions = '\Bart\GitHook\JiraComment', '\Bart\GitHook\GerritAbandon'
 comment_template = "Commit %s pushed to JIRA. See online at https://git.example.com/?h=%s"
 
 [run_hooks]
-; Used to determine which branches to run git hooks on
-branches = "master"
+; Used to determine which refs to run git hooks on. Full ref must be specified.
+valid_refs = "refs/head/master"
 
 README;
 	}
@@ -57,11 +57,11 @@ README;
 	}
 
     /**
-     * @return \string[] List of branches to run git hooks on
+     * @return \string[] List of refs to run git hooks on
      */
-    public function getHookBranches()
+    public function getValidRefs()
     {
-        return $this->getArray('run_hooks', 'branches');
+        return $this->getArray('run_hooks', 'valid_refs');
     }
 
 }
