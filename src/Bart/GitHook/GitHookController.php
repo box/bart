@@ -93,10 +93,10 @@ class GitHookController
 	{
 		switch ($this->hookName) {
 			case 'pre-receive':
-				return new PreReceiveRunner($commit);
+				return Diesel::create('\Bart\GitHook\PreReceiveRunner', $commit);
 				break;
 			case 'post-receive':
-				return new PostReceiveRunner($commit);
+				return Diesel::create('\Bart\GitHook\PostReceiveRunner', $commit);
 				break;
 			default:
 				throw new GitHookException('Unknown hook type: ' . $this->hookName);
@@ -124,13 +124,13 @@ class GitHookController
 			$this->logger->debug('Found ' . count($revisions) . ' revision(s)');
 
 			foreach ($revisions as $revision) {
-				$commit = new Commit($this->gitRoot, $revision);
+                $commit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $revision );
 
-                $configs = new GitHookConfig($commit);
+                $configs = Diesel::create('\Bart\GitHook\GitHookConfig', $commit);
                 $validRefs = $configs->getValidRefs();
 
                 // Check whether current ref should have git hooks run or not
-                if(in_array($ref, $validRefs)) {
+                if(!in_array($ref, $validRefs)) {
                     $this->logger->info('Skipping hooks on ref ' . $ref);
                     continue;
                 }
