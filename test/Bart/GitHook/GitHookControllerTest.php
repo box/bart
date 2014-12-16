@@ -2,6 +2,7 @@
 namespace Bart\GitHook;
 
 use Bart\BaseTestCase;
+use Bart\Git\GitRoot;
 
 class GitHookControllerTest extends BaseTestCase
 {
@@ -33,7 +34,6 @@ class GitHookControllerTest extends BaseTestCase
     public function testProcessRevision()
     {
         $this->shmockAndDieselify('\Bart\Shell', function ($shell) {
-
             $stdInValue = [self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF];
 
             $shell->realpath(self::POST_RECEIVE_PATH)->once()->return_value(self::POST_RECEIVE_REAL_PATH);
@@ -41,14 +41,12 @@ class GitHookControllerTest extends BaseTestCase
         });
 
         $this->shmockAndDieselify('\Bart\Git', function ($git) {
-
             $revList = ['hashOne', 'hashTwo'];
-
             $git->getRevList(self::START_HASH, self::END_HASH)->once()->return_value($revList);
         }, true);
 
-        // Value not used in this test
         $this->shmockAndDieselify('\Bart\Git\GitRoot', function ($gitRoot) {
+            $gitRoot->getCommandResult()->never();
         }, true);
 
         // Since there are two values in the revision list, there will be two runs for each object
@@ -60,15 +58,13 @@ class GitHookControllerTest extends BaseTestCase
             $gitHookConfig->getValidRefs()->twice()->return_value([self::MASTER_REF]);
         }, true);
 
-        //
         $this->shmockAndDieselify('\Bart\GitHook\PostReceiveRunner', function ($postReceiveRunner) {
+            // Expect it to run twice b/c `$git->getRevList()` returns two commits
             $postReceiveRunner->runAllActions()->twice();
         }, true);
 
-
+        // Create the controller and verify the mocks
         $controller = GitHookController::createFromScriptName('hook/post-receive.d/bart-runner');
-
-
         $controller->run();
     }
 }
