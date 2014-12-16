@@ -60,7 +60,10 @@ class GitHookControllerTest extends BaseTestCase
 
 	public function testProcessRevisionWithOneRefOutOfTwoIncluded()
 	{
-		$stdInArray = [self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF, self::START_HASH . ' ' . self::END_HASH . ' ' . self::JIRA_REF];
+		$stdInArray = [
+			self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF,
+			self::START_HASH . ' ' . self::END_HASH . ' ' . self::JIRA_REF
+		];
 		$revList = ['hashOne'];
 		$validRefs = [self::MASTER_REF];
 
@@ -72,7 +75,10 @@ class GitHookControllerTest extends BaseTestCase
 
 	public function testProcessRevisionWithTwoRefsIncluded()
 	{
-		$stdInArray = [self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF, self::START_HASH . ' ' . self::END_HASH . ' ' . self::JIRA_REF];
+		$stdInArray = [
+			self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF,
+			self::START_HASH . ' ' . self::END_HASH . ' ' . self::JIRA_REF
+		];
 		$revList = ['hashOne'];
 		$validRefs = [self::MASTER_REF, self::JIRA_REF];
 
@@ -107,12 +113,12 @@ class GitHookControllerTest extends BaseTestCase
 	}
 
 	/**
-	 * @param array $stdInArray Array of standard input values
-	 * @param array $revList Array of revisions
-	 * @param array $validRefs Array of all valid refs
+	 * @param string[] $stdInArray Array of standard input values
+	 * @param string[] $revList Array of revisions
+	 * @param string[] $validRefs Array of all valid refs
 	 * @param int $numValidRefs Number of valid refs in the standard input array that are actually in $validRefs
 	 */
-	private function runProcessRevisionTest($stdInArray, $revList, $validRefs, $numValidRefs)
+	private function runProcessRevisionTest(array $stdInArray, array $revList, array $validRefs, $numValidRefs)
 	{
 		$numInputs = count($stdInArray);
 		$numRevs = count($revList);
@@ -132,34 +138,33 @@ class GitHookControllerTest extends BaseTestCase
 
 		// The number of runs for $gitHookConfig->getValidRefs() depend on the total number of
 		// inputs in the standard input array and the number of revisions
-		$numRuns = $numInputs * $numRevs;
-		$stubConfig = $this->shmock('\Bart\GitHook\GitHookConfig', function($gitHookConfig) use($numRuns, $validRefs) {
-			$gitHookConfig->getValidRefs()->times($numRuns)->return_value($validRefs);
+		$validRefsTimes = $numInputs * $numRevs;
+		$stubConfig = $this->shmock('\Bart\GitHook\GitHookConfig', function($gitHookConfig) use($validRefsTimes, $validRefs) {
+			$gitHookConfig->getValidRefs()->times($validRefsTimes)->return_value($validRefs);
 		}, true);
-
 
 		// The number of runs for $gitCommit->message() and $postReceiveRunner->runAllActions depend on $numValidRefs
-		$numRuns = $numValidRefs * $numRevs;
-
-		$stubCommit = $this->shmockAndDieselify('\Bart\Git\Commit', function($gitCommit) use($numRuns) {
-			$gitCommit->message()->times($numRuns)->return_value('NOT IMPORTANT');
+		$numValidCommits = $numValidRefs * $numRevs;
+		$stubCommit = $this->shmockAndDieselify('\Bart\Git\Commit', function($gitCommit) use($numValidCommits) {
+			$gitCommit->message()->times($numValidCommits)->return_value('NOT IMPORTANT');
 		}, true);
 
 
-		$stubRunner = $this->shmock('\Bart\GitHook\PostReceiveRunner', function($postReceiveRunner) use($numRuns) {
-			$postReceiveRunner->runAllActions()->times($numRuns);
+		$stubRunner = $this->shmock('\Bart\GitHook\PostReceiveRunner', function($postReceiveRunner) use($numValidCommits) {
+			$postReceiveRunner->runAllActions()->times($numValidCommits);
 		}, true);
 
-		$phpUnit = $this;
+		// Explicitly register GitHookConfig and PostReceiveRunner stubs so that we can
+		// ...assert the constructor args are what we expect
 		Diesel::registerInstantiator('\Bart\GitHook\GitHookConfig',
-			function($commit) use($phpUnit, $stubCommit, $stubConfig) {
-				$phpUnit->assertSame($commit, $stubCommit);
+			function($commit) use($stubCommit, $stubConfig) {
+				$this->assertSame($commit, $stubCommit);
 				return $stubConfig;
 			});
 
 		Diesel::registerInstantiator('\Bart\GitHook\PostReceiveRunner',
-			function($commit) use($phpUnit, $stubCommit, $stubRunner) {
-				$phpUnit->assertSame($commit, $stubCommit);
+			function($commit) use($stubCommit, $stubRunner) {
+				$this->assertSame($commit, $stubCommit);
 				return $stubRunner;
 			});
 
