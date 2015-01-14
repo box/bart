@@ -14,6 +14,10 @@ class GitHookConfig extends ProjectConfiguration
 	public function README()
 	{
 		return <<<README
+[general]
+; Used to determine which refs to run git hooks on. Full ref must be specified.
+valid_refs = 'refs/head/master'
+
 [pre_receive]
 hook_actions = '\Bart\GitHook\StopTheLineTravis'
 
@@ -23,11 +27,7 @@ hook_actions = '\Bart\GitHook\JiraComment', '\Bart\GitHook\GerritAbandon'
 [jira]
 ; Used by JiraComment Hook Action
 ; %s will be replaced with commit revision hash
-comment_template = "Commit %s pushed to JIRA. See online at https://git.example.com/?h=%s"
-
-[run_hooks]
-; Used to determine which refs to run git hooks on. Full ref must be specified.
-valid_refs = "refs/head/master"
+comment_template = 'Commit %s pushed to JIRA. See online at https://git.example.com/?h=%s'
 
 README;
 	}
@@ -61,7 +61,7 @@ README;
      */
     public function getValidRefs()
     {
-        return $this->getArray('run_hooks', 'valid_refs');
+        return $this->getArray('general', 'valid_refs');
     }
 
 }
