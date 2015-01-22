@@ -93,10 +93,10 @@ class GitHookController
 	{
 		switch ($this->hookName) {
 			case 'pre-receive':
-				return new PreReceiveRunner($commit);
+				return Diesel::create('\Bart\GitHook\PreReceiveRunner', $commit);
 				break;
 			case 'post-receive':
-				return new PostReceiveRunner($commit);
+				return Diesel::create('\Bart\GitHook\PostReceiveRunner', $commit);
 				break;
 			default:
 				throw new GitHookException('Unknown hook type: ' . $this->hookName);
@@ -119,18 +119,21 @@ class GitHookController
 		foreach ($stdin as $rangeAndRef) {
 			list($start, $end, $ref) = explode(" ", $rangeAndRef);
 
-			// TODO make this configurable per project/hook
-			if ($ref != 'refs/heads/master') {
-				$this->logger->info('Skipping hooks on non-master ref ' . $ref);
-				continue;
-			}
-
 			// TODO should this be reversed?
 			$revisions = $git->getRevList($start, $end);
 			$this->logger->debug('Found ' . count($revisions) . ' revision(s)');
 
 			foreach ($revisions as $revision) {
-				$commit = new Commit($this->gitRoot, $revision);
+                $commit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $revision );
+
+                $configs = Diesel::create('\Bart\GitHook\GitHookConfig', $commit);
+                $validRefs = $configs->getValidRefs();
+
+                // Check whether current ref should have git hooks run or not
+                if(!in_array($ref, $validRefs)) {
+                    $this->logger->info('Skipping hooks on ref ' . $ref);
+                    continue;
+                }
 
 				// Allow a backdoor in case of emergency or broken hook configuration
 				if ($this->shouldSkip($commit)) {
