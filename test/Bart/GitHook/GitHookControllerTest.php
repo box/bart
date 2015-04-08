@@ -11,8 +11,8 @@ class GitHookControllerTest extends BaseTestCase
 	const POST_RECEIVE_REAL_PATH = '/var/lib/gitosis/monty.git/hooks/post-receive.d';
 	const POST_RECEIVE_SCRIPT = 'hook/post-receive.d/bart-runner';
 
-	const MASTER_REF = '/refs/head/master';
-	const JIRA_REF = '/refs/head/jira';
+	const MASTER_REF = '/refs/heads/master';
+	const JIRA_REF = '/refs/heads/jira';
 	const START_HASH = 'startHash';
 	const END_HASH = 'endHash';
 
