@@ -78,6 +78,9 @@ abstract class GitHookRunner
 				if ($this->haltOnFailure()) {
 					throw $e;
 				}
+				else {
+					$this->logger->warn("The GitHook $actionName did not halt on failure but also did run successfully. Continuing other hooks.");
+				}
 			}
 		}
 	}
