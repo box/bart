@@ -19,7 +19,7 @@ class ConfigurationTest extends BaseTestCase
 
 	public function setUp()
 	{
-		TestConfig::resetConfigurations();
+		TestConfigurationsHelper::reset();
 		parent::setUp();
 	}
 
@@ -311,21 +311,6 @@ class ConfigurationTest extends BaseTestCase
 		});
 	}
 
-	/**
-	 * Asserts that the sample conf returned by README() on $configurationClassName
-	 * can be parsed successfully by the class.
-	 *
-	 * This is a good practice to ensure that READMEs stay up to date with their class
-	 *
-	 * Technical details:
-	 *    Will parse and use $configurationClassName::README() as the configuration
-	 *    and call public methods on the class. Any missing or misconfigured
-	 *    samples in the README will raise exceptions.
-	 *
-	 * @param BaseTestCase $case The current test instance running
-	 * @param string $configurationClassName FQCN E.g. \Bart\Configuration\GerritConfig
-	 * @param string $configFileName E.g. gerrit.conf
-	 */
 	public static function assertREADME(BaseTestCase $phpu, $configurationClassName, $configFileName)
 	{
 		$phpu->shmockAndDieselify('\Bart\Shell', function($shell) {
@@ -338,42 +323,21 @@ class ConfigurationTest extends BaseTestCase
 			$logger = \Logger::getLogger(__CLASS__);
 			$logger->debug("Starting README test for $configurationClassName");
 
-			// Setup cache so we can skip loading until we've written the actual configs
-			// We need to do (something like) this because README() is not static
-			TestConfig::resetConfigurations($dirName, $configFileName, array());
-			$configs = new $configurationClassName();
-
-			$logger->debug("Writing README to $configFileName");
-			file_put_contents("{$dirName}/$configFileName", $configs->README());
+			$readme = TestConfigurationsHelper::getReadme($phpu, $configurationClassName);
+			file_put_contents("{$dirName}/$configFileName", $readme);
 
 			// Reset the cache so that the configs will be read from disk
 			$logger->debug("Configuring system to load configs from $dirName");
-			TestConfig::resetConfigurations($dirName);
+			TestConfigurationsHelper::reset($dirName);
 			$configs = new $configurationClassName();
 
-			$reflect = new \ReflectionClass($configurationClassName);
-			$methods = $reflect->getMethods(\ReflectionMethod::IS_PUBLIC);
-
-			$logger->debug("Iterating over relevant methods for $configurationClassName");
-			foreach ($methods as $method) {
-				if ($method->isStatic()) continue;
-				if ($method->isConstructor()) continue;
-
-				$logger->debug("Calling {$method->getName()} for $configurationClassName");
-				$methodName = $method->getName();
-
-				// Let's call the method! E.g. $gerritConfig::sshUser()
-				$phpu->assertNotEmpty($configs->$methodName(), "$methodName()");
-			}
+			TestConfigurationsHelper::assertConfigurationGetters($configs, $phpu, $configurationClassName);
 		});
 	}
 }
 
 class TestConfig extends Configuration
 {
-	private static $pathField;
-	private static $configCacheField;
-
 	public function __construct($skipLoad = true)
 	{
 		if ($skipLoad) return;
@@ -449,23 +413,8 @@ class TestConfig extends Configuration
 		// Some rigmarole for any methods using updateRuntimeConfiguration
 		$pathField = Reflection_Helper::get_property('Bart\Configuration\Configuration', 'filePath');
 		$pathField->setValue($this, '');
-		self::$configCacheField->setValue(null, ['' => $configsArray]);
-	}
 
-	public static function resetConfigurations($path = null, $confName = null, $value = null)
-	{
-		if (!self::$pathField) {
-			self::$pathField = Reflection_Helper::get_property('Bart\Configuration\Configuration', 'path');
-			self::$configCacheField = Reflection_Helper::get_property('Bart\Configuration\Configuration', 'configCache');
-		}
-
-		$cache = array();
-		if ($confName) {
-			$cache["$path/$confName"] = $value;
-		}
-
-		self::$pathField->setValue(null, $path);
-		self::$configCacheField->setValue(null, $cache);
+		TestConfigurationsHelper::setConfigCache($configsArray);
 	}
 }
 

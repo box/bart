@@ -2,6 +2,8 @@
 namespace Bart;
 
 use Bart\Diesel;
+use Bart\Git\Commit;
+use Bart\Git\GitRoot;
 use Bart\Shell;
 use Bart\Shell\CommandException;
 
@@ -11,6 +13,7 @@ use Bart\Shell\CommandException;
 class Git
 {
 	private static $blame_pattern = '/^(\S*)\s.*?\((.*?)\s(\d{4}-\d{2}-\d{2}).*?\s\d+\)\s(.*)$/';
+	private $dir;
 	private $git;
 	private $origin;
 	/** @var Shell */
@@ -19,13 +22,24 @@ class Git
 	/**
 	 * @param string $dir The git directory of interest
 	 * @param string $origin Upstream origin name
+	 * @maintenance Migrate over to GitCommit and Bart\Git namespace
 	 */
 	public function __construct($dir = '.git', $origin = 'origin')
 	{
+		$this->dir = $dir;
 		$this->git = "git --git-dir=$dir";
 		$this->origin = $origin;
 
 		$this->shell = Diesel::singleton('Bart\Shell');
+	}
+
+	/**
+	 * @param string $hash
+	 * @return Commit for given $hash
+	 */
+	public function toCommit($hash)
+	{
+		return new Commit(new GitRoot($this->dir), $hash);
 	}
 
 	/**
@@ -81,7 +95,7 @@ class Git
 
 		if (count($matches) === 0)
 		{
-			throw new Git_Exception("No Change-Id in commit message for $commit_hash");
+			throw new GitException("No Change-Id in commit message for $commit_hash");
 		}
 
 		return $matches[1];
@@ -151,7 +165,7 @@ class Git
 
 		if ($exit_status !== 0)
 		{
-			throw new Git_Exception('Error in fetch: ' . print_r($output, true));
+			throw new GitException('Error in fetch: ' . print_r($output, true));
 		}
 	}
 
@@ -175,7 +189,7 @@ class Git
 
 		if ($exit_status !== 0)
 		{
-			throw new Git_Exception('Error in checkout: ' . print_r($output, true));
+			throw new GitException('Error in checkout: ' . print_r($output, true));
 		}
 	}
 
@@ -186,7 +200,7 @@ class Git
 	{
 		if (!$branch)
 		{
-			throw new Git_Exception(
+			throw new GitException(
 					"Error in Git reset: Must specify branch name for origin: $this->origin");
 		}
 
@@ -203,7 +217,7 @@ class Git
 
 		if ($exit_status !== 0)
 		{
-			throw new Git_Exception("Error in reset $hard: " . print_r($output, true));
+			throw new GitException("Error in reset $hard: " . print_r($output, true));
 		}
 	}
 
@@ -220,7 +234,7 @@ class Git
 		}
 		catch (CommandException $e)
 		{
-			throw new Git_Exception('Unable to update server info. ' . $e->getMessage());
+			throw new GitException('Unable to update server info. ' . $e->getMessage());
 		}
 	}
 
@@ -234,6 +248,6 @@ class Git
 	}
 }
 
-class Git_Exception extends \Exception
+class GitException extends \Exception
 {
 }
