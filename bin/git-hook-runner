@@ -15,26 +15,30 @@
  *    BART/etc/php/hooks.conf
  * 		- (this is the old school configuration, which is deprecated but not yet replaced; sorry)
  *    Configuration Root/*.conf
- * 		- Configuration for any of the Git_Hook classes. Presently, this includes only GerritMerged
+ * 		- Configuration for any of the GitHook classes. Presently, this includes only GerritMerged
  */
-use Bart\Git_Hook\GitHookController;
+use Bart\GitHook\GitHookController;
 use Bart\Log4PHP;
 
 error_reporting(E_ALL);
 
 $bartRoot = dirname(__DIR__);
 require_once "$bartRoot/src/Bart/bart-common.php";
+require_once "$bartRoot/vendor/autoload.php";
 
 require_once 'log4php/Logger.php';
-Log4PHP::initForConsole('debug');
+Log4PHP::initForConsole('trace');
+$logger = \Logger::getLogger(__CLASS__);
 
-// Hook up root of where to find configuration files
+// Hook up root of where to find system wide app configuration files
 // Your system configuration or deployment tools should be responsible for
 // ...defining the content of the files in this directory
-// NOTE Older git hooks still expect configuration in the hard-coded hooks.conf file
-\Bart\Configuration\Configuration::configure("$bartRoot/etc/php");
+// NOTE *project* configuration files belong checked into repo in the 'etc' dir
+\Bart\Configuration\Configuration::configure('/etc/box/');
 
 $controller = GitHookController::createFromScriptName($_SERVER['SCRIPT_NAME']);
+$logger->debug("Created git hook controller $controller");
+
 
 try {
 	$controller->run();

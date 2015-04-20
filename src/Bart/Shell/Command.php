@@ -1,5 +1,6 @@
 <?php
 namespace Bart\Shell;
+use Bart\Diesel;
 use Bart\Log4PHP;
 
 /**
@@ -34,6 +35,22 @@ class Command
 	public function __toString()
 	{
 		return "{$this->safeCommandStr}";
+	}
+
+	/**
+	 * Helper for creating Commands when you've got a layer of indirection and can't use {@see Shell::command()}
+	 * All parameters and results same as {@see self::__construct()}
+	 * @param string $commandFormat The command itself
+	 * @param array $args All arguments to command
+	 * @return Command
+	 */
+	public static function fromFmtAndArgs($commandFormat, $args)
+	{
+		array_unshift($args, $commandFormat);
+		array_unshift($args, __CLASS__);
+
+		// Create instance of self using Diesel so that we can use this (static) method in tests
+		return call_user_func_array(['\Bart\Diesel', 'create'], $args);
 	}
 
 	/**

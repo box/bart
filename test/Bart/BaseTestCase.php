@@ -35,10 +35,18 @@ abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
 	/**
 	 * @param string $className Class to shmock (Tip use IntelliJ "copy reference" for FQCN)
 	 * @param callable $configureShmock Cofiguration closure with which to configure shmock
+	 * @param boolean $noConstructor Disable original constructor?
 	 * @return mixed The shmocked class
 	 */
-	public function shmock($className, $configureShmock)
+	public function shmock($className, $configureShmock, $noConstructor = false)
 	{
+		if ($noConstructor) {
+			$configureShmock = function($shmock) use ($configureShmock) {
+				$shmock->disable_original_constructor();
+				$configureShmock($shmock);
+			};
+		}
+
 		return \Shmock\Shmock::create($this, $className, $configureShmock);
 	}
 
@@ -48,11 +56,12 @@ abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
 	 *
 	 * @param string $className FQCN to shmock and reigster with Diesel
 	 * @param callable $configureShmock Closure that will configure all expectations on \Shmock\PHPUnitSpec
+	 * @param boolean $noConstructor Disable original constructor?
 	 * @return mixed The shmocked class
 	 */
-	public function shmockAndDieselify($className, $configureShmock)
+	public function shmockAndDieselify($className, $configureShmock, $noConstructor = false)
 	{
-		$shmock = $this->shmock($className, $configureShmock);
+		$shmock = $this->shmock($className, $configureShmock, $noConstructor);
 
 		Diesel::registerInstantiator($className, function() use ($shmock) {
 			return $shmock;
@@ -61,6 +70,12 @@ abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
 		return $shmock;
 	}
 
+	/**
+	 * Assert that key does not exist in array
+	 * @param mixed $key
+	 * @param array $array
+	 * @param string $message
+	 */
 	protected function assertArrayKeyNotExists($key, array $array, $message = '')
 	{
 		$this->assertFalse(array_key_exists($key, $array), $message);
