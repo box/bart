@@ -89,14 +89,15 @@ class Change
 	/**
 	 * Posts comment on the latest patch set
 	 * @param string $comment
+	 * @param null|string $score E.g. +2
 	 */
-	public function comment($comment)
+	public function comment($comment, $score=null)
 	{
 		// We don't necessarily know the current commit hash, but we do know
 		// ...the change_num and current patch set
 		$uniqueId = "{$this->pk()},{$this->currentPatchSetNumber()}";
 
-		$this->api->review($uniqueId, null, $comment);
+		$this->api->review($uniqueId, $score, $comment);
 
 		$this->logger->info("Commented on {$this}");
 	}
