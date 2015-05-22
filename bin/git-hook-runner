@@ -26,7 +26,6 @@ $bartRoot = dirname(__DIR__);
 require_once "$bartRoot/src/Bart/bart-common.php";
 require_once "$bartRoot/vendor/autoload.php";
 
-require_once 'log4php/Logger.php';
 Log4PHP::initForConsole('trace');
 $logger = \Logger::getLogger(__CLASS__);
 
