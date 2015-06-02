@@ -126,7 +126,7 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 			'Git did not return proper commit message');
 	}
 
-	public function testGetRevList()
+	public function testGetRevListNormal()
 	{
 		$command = $this->getMock('\Bart\Shell\Command', array(), array(), '', false);
 		$command->expects($this->once())
@@ -136,7 +136,7 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 		$shell = $this->getMock('\Bart\Shell');
 		$shell->expects($this->once())
 			->method('command')
-			->with('git --git-dir= rev-list %s..%s', 'HEAD^', 'HEAD')
+			->with('git --git-dir= rev-list %s', 'HEAD^..HEAD')
 			->will($this->returnValue($command));
 
 		$this->registerMockShell($shell);
@@ -144,6 +144,31 @@ Date:   Fri Jan 13 10:37:42 2012 -0800
 		$git = new Git('', 'origin');
 
 		$this->assertEquals(['abcdef123'], $git->getRevList('HEAD^', 'HEAD'), 'rev list');
+	}
+
+	public function testGetRevListNormalNewBranch()
+	{
+		$expectedRevisions = ['abcdef123', 'abcdef124', 'abcdef125', 'abcdef126'];
+
+		$command = $this->getMock('\Bart\Shell\Command', array(), array(), '', false);
+		$command->expects($this->once())
+			->method('run')
+			->will($this->returnValue($expectedRevisions));
+
+		$shell = $this->getMock('\Bart\Shell');
+		$shell->expects($this->once())
+			->method('command')
+			->with('git --git-dir= rev-list %s', 'my-branch')
+			->will($this->returnValue($command));
+
+		$this->registerMockShell($shell);
+
+		$git = new Git('', 'origin');
+
+		$this->assertEquals(
+			$expectedRevisions,
+			$git->getRevList('0000000000000000000000000000000000000000', 'my-branch'),
+			'branch rev list');
 	}
 
 	public function testGetRevListCount()
