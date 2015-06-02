@@ -104,11 +104,20 @@ class Git
 	/**
 	 * @param string $startHash
 	 * @param string $endHash
-	 * @return string[] The commit hashes
+	 * @return string[] The commit hashes between $startHash and $endHash in reverse chronology
 	 */
 	public function getRevList($startHash, $endHash)
 	{
-		$cmd = $this->shell->command($this->git . ' rev-list %s..%s', $startHash, $endHash);
+		$dots = '..';
+
+		// When a new branch is created, the start hash is a string of 0's
+		// ...in that case, the rev list should be each commit in the branch
+		if (count_chars($startHash, 3) == '0') {
+			$startHash = '';
+			$dots = '';
+		}
+
+		$cmd = $this->shell->command("{$this->git} rev-list %s", "{$startHash}{$dots}{$endHash}");
 
 		return $cmd->run();
 	}
