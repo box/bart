@@ -117,23 +117,25 @@ class GitHookController
 		$stdin = $shell->std_in();
 
 		foreach ($stdin as $rangeAndRef) {
-			list($start, $end, $ref) = explode(" ", $rangeAndRef);
+			list($startHash, $endHash, $ref) = explode(" ", $rangeAndRef);
+
+			$endCommit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $endHash);
+			$configs = Diesel::create('\Bart\GitHook\GitHookConfig', $endCommit);
+			$validRefs = $configs->getValidRefs();
+
+			// Check whether current ref should have git hooks run or not
+			if(!in_array($ref, $validRefs)) {
+				$this->logger->info('Skipping hooks on ref ' . $ref);
+				continue;
+			}
 
 			// TODO should this be reversed?
-			$revisions = $git->getRevList($start, $end);
+			// TODO This list could be massive for branches, should we have some config for how deep to go?
+			$revisions = $git->getRevList($startHash, $endHash);
 			$this->logger->debug('Found ' . count($revisions) . ' revision(s)');
 
 			foreach ($revisions as $revision) {
-                $commit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $revision );
-
-                $configs = Diesel::create('\Bart\GitHook\GitHookConfig', $commit);
-                $validRefs = $configs->getValidRefs();
-
-                // Check whether current ref should have git hooks run or not
-                if(!in_array($ref, $validRefs)) {
-                    $this->logger->info('Skipping hooks on ref ' . $ref);
-                    continue;
-                }
+				$commit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $revision );
 
 				// Allow a backdoor in case of emergency or broken hook configuration
 				if ($this->shouldSkip($commit)) {

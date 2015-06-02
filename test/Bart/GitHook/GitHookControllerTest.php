@@ -102,7 +102,10 @@ class GitHookControllerTest extends BaseTestCase
 
 	public function testProcessRevisionWithMultipleIncludedRefsAndRevs()
 	{
-		$stdInArray = [self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF, self::START_HASH . ' ' . self::END_HASH . ' ' . self::JIRA_REF];
+		$stdInArray = [
+			self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF,
+			self::START_HASH . ' ' . self::END_HASH . ' ' . self::JIRA_REF
+		];
 		$revList = ['hashOne', 'hashTwo', 'hashThree'];
 		$validRefs = [self::MASTER_REF, self::JIRA_REF];
 
@@ -132,15 +135,19 @@ class GitHookControllerTest extends BaseTestCase
 			$gitRoot->getCommandResult()->never();
 		}, true);
 
-		$this->shmockAndDieselify('\Bart\Git', function($git) use($revList, $numInputs) {
-			$git->getRevList(self::START_HASH, self::END_HASH)->times($numInputs)->return_value($revList);
+		$this->shmockAndDieselify('\Bart\Git', function($git) use($revList, $numValidRefs) {
+			if ($numValidRefs === 0) {
+				$git->getRevList()->never();
+			}
+			else {
+				$git->getRevList(self::START_HASH, self::END_HASH)->times($numValidRefs)->return_value($revList);
+			}
 		}, true);
 
 		// The number of runs for $gitHookConfig->getValidRefs() depend on the total number of
 		// inputs in the standard input array and the number of revisions
-		$validRefsTimes = $numInputs * $numRevs;
-		$stubConfig = $this->shmock('\Bart\GitHook\GitHookConfig', function($gitHookConfig) use($validRefsTimes, $validRefs) {
-			$gitHookConfig->getValidRefs()->times($validRefsTimes)->return_value($validRefs);
+		$stubConfig = $this->shmock('\Bart\GitHook\GitHookConfig', function($gitHookConfig) use($numInputs, $validRefs) {
+			$gitHookConfig->getValidRefs()->times($numInputs)->return_value($validRefs);
 		}, true);
 
 		// The number of runs for $gitCommit->message() and $postReceiveRunner->runAllActions depend on $numValidRefs
