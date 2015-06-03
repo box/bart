@@ -3,7 +3,7 @@ namespace Bart\GitHook;
 use Bart\Gerrit\Change;
 use Bart\Gerrit\GerritException;
 use Bart\Git\Commit;
-use Bart\GitException;
+use Bart\Git\GitException;
 
 /**
  * Abandon Gerrit review

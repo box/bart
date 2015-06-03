@@ -1,6 +1,6 @@
 <?php
 namespace Bart\Git;
-use Bart\GitException;
+
 use Bart\Jira\JiraIssue;
 use Bart\Shell;
 

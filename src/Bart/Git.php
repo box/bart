@@ -4,6 +4,7 @@ namespace Bart;
 use Bart\Diesel;
 use Bart\Git\Commit;
 use Bart\Git\GitRoot;
+use Bart\Git\GitException;
 use Bart\Shell;
 use Bart\Shell\CommandException;
 
@@ -255,8 +256,4 @@ class Git
 	{
 		return $this->git . ' ' . implode(" && {$this->git} ", $cmds);
 	}
-}
-
-class GitException extends \Exception
-{
 }

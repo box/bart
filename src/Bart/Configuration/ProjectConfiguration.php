@@ -1,7 +1,7 @@
 <?php
 namespace Bart\Configuration;
 use Bart\Git\Commit;
-use Bart\GitException;
+use Bart\Git\GitException;
 
 /**
  * Configurations loaded from a project repository file
