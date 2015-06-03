@@ -1,6 +1,8 @@
 <?php
 namespace Bart;
 
+use Bart\Git\GitException;
+
 class BaseTestCaseTest extends \Bart\BaseTestCase
 {
 	public function testCaptureOutputBuffer()
@@ -32,7 +34,7 @@ class BaseTestCaseTest extends \Bart\BaseTestCase
 	public function testAssertThrowsAssertsTypeAndMessage()
 	{
 		Autoloader::autoload('Git');
-		$this->assertThrows('\Bart\GitException', 'Contrived message', function()
+		$this->assertThrows('\Bart\Git\GitException', 'Contrived message', function()
 		{
 			throw new GitException('This is a Contrived message');
 		});
