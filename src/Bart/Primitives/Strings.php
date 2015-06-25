@@ -75,7 +75,7 @@ class Strings
 
     /**
      * Determine if $fullString starts with $subString (case-sensitive).
-     * If a passed in string is null, it is treated as an empty string.
+     * An exception is thrown if the passed in argument is not a string, or is null.
      * Reference: http://stackoverflow.com/questions/834303/startswith-and-endswith-functions-in-php
      *
      * NOTE: This method assumes that an empty string ('') contains an empty string. This is an ongoing discussion with
@@ -84,11 +84,11 @@ class Strings
      * @param string $fullString
      * @param string $subString
      * @return bool If $fullString starts with $subString, return true, else, return false.
+     * @throws PrimitivesException
      */
     public static function startsWith($fullString, $subString)
     {
-        $fullString = self::stringOrEmpty($fullString);
-        $subString = self::stringOrEmpty($subString);
+        self::validateArgsAreString($fullString, $subString, '$fullString', '$subString');
 
         $length = strlen($subString);
         if ($length === 0) {
@@ -109,11 +109,11 @@ class Strings
      * @param string $fullString
      * @param string $subString
      * @return bool If $fullString ends with $subString, return true, else, return false.
+     * @throws PrimitivesException
      */
      public static function endsWith($fullString, $subString)
      {
-         $fullString = self::stringOrEmpty($fullString);
-         $subString = self::stringOrEmpty($subString);
+         self::validateArgsAreString($fullString, $subString, '$fullString', '$subString');
 
          $length = strlen($subString);
          if ($length === 0) {
@@ -133,19 +133,35 @@ class Strings
         return ($string === null || $string === Strings::EMPTY_STRING);
     }
 
-
     /**
      * Checks to see if string is null or empty, and if it is, returns an empty string. If the string is not null or
      * empty, it returns back the original passed in $string.
      * @param string $string A string reference to check
      * @return string If $string is empty or null, the empty string. Else, the original $string.
      */
-    private static function stringOrEmpty($string)
+    public static function stringOrEmpty($string)
     {
         if (Strings::isNullOrEmpty($string)) {
             return Strings::EMPTY_STRING;
         } else {
             return $string;
+        }
+    }
+
+    /**
+     * Validates that the type of the passed-in arguments is string, by throwing an exception if either of them are not.
+     * @param string $firstArg
+     * @param string $secondArg
+     * @param string $firstArgName Name to display for the first argument.
+     * @param string $secondArgName Name to display for the second argument.
+     * @throws PrimitivesException
+     */
+    private static function validateArgsAreString($firstArg, $secondArg, $firstArgName, $secondArgName)
+    {
+        if (!is_string($firstArg) || !is_string($secondArg)) {
+            throw new PrimitivesException('Both passed in arguments must be of type "string". The type of argument ' .
+                $firstArgName . ' is currently ' . gettype($firstArg) . ' while the type of argument ' . $secondArgName
+                . ' is currently ' . gettype($secondArg) . '.');
         }
     }
 
