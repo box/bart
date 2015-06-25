@@ -43,6 +43,48 @@ class StringsTest extends BaseTestCase
 		];
 	}
 
+    public function dataProviderTestStartsWith()
+    {
+        return [
+         ['testString', 'test', true],
+         ['m1.hostname', 'm1.', true],
+         ['fullString', null, false],
+         [null, 'full', false],
+         ['fullString', ' ', false],
+         ['fullString', '', true],
+         ['fullString', 'FULL', false],
+        ];
+    }
+
+    public function dataProviderTestEndsWith()
+    {
+        return [
+            ['test.String.', '.', true],
+            ['m1.hostname', 'm1.', false],
+            ['m1.hostname', 'Name', false],
+            ['stringsTest', 'est', true],
+            ['stringsTest', '', true],
+            ['stringsTest', ' ', false],
+            ['stringsTest ', ' ', true],
+        ];
+    }
+
+    /**
+     * @dataProvider dataProviderTestStartsWith
+     */
+    public function testStartsWith($fullString, $subString, $expectedBool) {
+        $this->assertEquals($expectedBool, Strings::startsWith($fullString, $subString));
+
+    }
+
+    /**
+     * @dataProvider dataProviderTestEndsWith
+     */
+    public function testEndsWith($fullString, $subString, $expectedBool) {
+        $this->assertEquals($expectedBool, Strings::endsWith($fullString, $subString));
+
+    }
+
 	/**
 	 * @dataProvider dataProviderTestTitleize
 	 */
