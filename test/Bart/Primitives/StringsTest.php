@@ -48,17 +48,12 @@ class StringsTest extends BaseTestCase
         return [
             ['testString', 'test', true],
             ['m1.hostname', 'm1.', true],
-            ['fullString', null, true],
-            [null, 'full', false],
             ['fullString', ' ', false],
             ['fullString', ' ', false],
             ['fullString', '', true],
             ['fullString', 'FULL', false],
             ['string', 'stringLonger', false],
             ['', '', true],
-            [null, null, true],
-            ['24567Test', 24567, false],
-            [256, 25, false],
         ];
     }
 
@@ -73,11 +68,28 @@ class StringsTest extends BaseTestCase
             ['stringsTest', ' ', false],
             ['stringsTest ', ' ', true],
             ['String', 'longerString', false],
-            [null, 2, false],
-            [2562, 2, false],
-            ['Test2', 2, false],
-            [null, null, true],
             ['', '', true],
+        ];
+    }
+
+    public function dataProviderTestEndsWithInvalidTypes()
+    {
+        return [
+            ['string', null, 'string', 'NULL'],
+            [null, null, 'NULL', 'NULL'],
+            [245, 245, 'integer', 'integer'],
+            [true, false, 'boolean', 'boolean'],
+            ['', ['Test'], 'string', 'array'],
+        ];
+    }
+
+    public function dataProviderTestStartsWithInvalidTypes()
+    {
+        return [
+            [null, null, 'NULL', 'NULL'],
+            [245, null, 'integer', 'NULL'],
+            [245, false, 'integer', 'boolean'],
+            [true, ['Test'], 'boolean', 'array'],
         ];
     }
 
@@ -97,6 +109,30 @@ class StringsTest extends BaseTestCase
     {
         $this->assertEquals($expectedBool, Strings::endsWith($fullString, $subString));
 
+    }
+
+    /**
+     * @dataProvider dataProviderTestStartsWithInvalidTypes
+     */
+    public function testStartsWithInvalidTypes($fullString, $subString, $fullStringType, $subStringType)
+    {
+        $exceptionMsg = $this->getInvalidTypeExceptionMsg($fullStringType, $subStringType);
+        $this->assertThrows('\Bart\Primitives\PrimitivesException', $exceptionMsg, function()
+        use ($fullString, $subString) {
+            Strings::startsWith($fullString, $subString);
+        });
+    }
+
+    /**
+     * @dataProvider dataProviderTestEndsWithInvalidTypes
+     */
+    public function testEndsWithInvalidTypes($fullString, $subString, $fullStringType, $subStringType)
+    {
+        $exceptionMsg = $this->getInvalidTypeExceptionMsg($fullStringType, $subStringType);
+        $this->assertThrows('\Bart\Primitives\PrimitivesException', $exceptionMsg, function()
+        use ($fullString, $subString) {
+            Strings::endsWith($fullString, $subString);
+        });
     }
 
     /**
@@ -121,5 +157,16 @@ class StringsTest extends BaseTestCase
     public function testSummarizeWithSuffix($subject, $maxLength, $suffix, $expected)
     {
         $this->assertEquals($expected, Strings::summarize($subject, $maxLength, $suffix));
+    }
+
+    /**
+     * @param $fullStringType
+     * @param $subStringType
+     * @return string
+     */
+    private function getInvalidTypeExceptionMsg($fullStringType, $subStringType)
+    {
+        return 'Both passed in arguments must be of type "string". The type of argument $fullString is currently '
+            . $fullStringType . ' while the type of argument $subString is currently ' . $subStringType . '.';
     }
 }
