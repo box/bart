@@ -66,4 +66,35 @@ class Strings
 
 		return substr($subject, 0, $index) . $suffix;
 	}
+
+    /**
+     * Determine if $fullString starts with $subString. Case is sensitive.
+     * Adapted from: http://stackoverflow.com/questions/834303/startswith-and-endswith-functions-in-php
+     * @param string $fullString
+     * @param string $subString
+     * @return bool If $fullString starts with $subString, return true, else, return false.
+     */
+    public static function startsWith($fullString, $subString)
+    {
+        $length = strlen($subString);
+        return (substr($fullString, 0, $length) === $subString);
+    }
+
+    /**
+     * Determine if $fullString ends with $subString. Case is sensitive.
+     * Taken from: http://stackoverflow.com/questions/834303/startswith-and-endswith-functions-in-php
+     * @param string $fullString
+     * @param string $subString
+     * @return bool If $fullString ends with $subString, return true, else, return false.
+     */
+     public static function endsWith($fullString, $subString)
+     {
+         $length = strlen($subString);
+         if ($length == 0) {
+             return true;
+         }
+
+         return (substr($fullString, -$length) === $subString);
+     }
+
 } 
