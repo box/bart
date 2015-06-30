@@ -3,7 +3,16 @@
 namespace Bart\Optional;
 
 /**
- * Class that handles containing an existent (non-null) value
+ * Class that contains an optional value that exists (is not Null). This
+ * class extends Optional. This class will not allow the contained reference
+ * to be null and will throw exceptions if instantiated with a null value.
+ *
+ * In order to encapsulate a null value, use Optional::fromNullable.
+ *
+ * Implementation inspired by:
+ * http://nitschinger.at/A-Journey-on-Avoiding-Nulls-in-PHP
+ * https://gist.github.com/philix/7312211
+ *
  * Class Present
  * @package Bart\Optional
  */
@@ -14,7 +23,7 @@ class Present extends Optional
 
     /**
      * Creates an instance of Present with the passed object. Throws an exception
-     * if the object is null
+     * if the object is null as Present may only contain a non-null value.
      * @param mixed $ref
      * @throws \Bart\Exceptions\IllegalStateException
      */
@@ -42,7 +51,8 @@ class Present extends Optional
     }
 
     /**
-     * Gets the contained reference
+     * Returns the value of the option. This method will throw
+     * exceptions for nonexistent values.
      * @return mixed
      */
     public function get()
@@ -61,7 +71,8 @@ class Present extends Optional
     }
 
     /**
-     * Gets the contained reference, or null if it is absent;
+     * Gets the contained reference, or null if it is absent. The idea of
+     * Optional is to avoid using null, but there may be cases where it is still relevant.
      * @return mixed
      */
     public function getOrNull()
@@ -70,17 +81,21 @@ class Present extends Optional
     }
 
     /**
+     * Returns an Optional containing the result of calling $callable on
+     * the contained value. If no value exists, as in the case of Absent, then
+     * this method will simply return Absent. The method will return Absent
+     * if the result of applying $callable to the contained value is null.
      * @param callable $callable
-     * @return mixed
+     * @return Present|Absent
      */
     public function map(Callable $callable)
     {
-        return new Present($callable($this->ref));
+        return Optional::fromNullable($callable($this->ref));
     }
 
     /**
-     * Whether the contained equals a provided object
-     * @param mixed $object
+     * Whether the contained value equals the value contained in another Optional
+     * @param Optional $object
      * @return bool
      */
     public function equals(Optional $object)
