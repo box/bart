@@ -4,7 +4,13 @@ namespace Bart\Optional;
 use Bart\Exceptions\IllegalStateException;
 
 /**
- * Abstract class that Optional classes such as Present and Absent should extend.
+ * This class represents optional values. Instances of Optional can include either Present or Absent, for
+ * values that exist or do not, respectively.
+ *
+ * Implementation inspired by:
+ * http://nitschinger.at/A-Journey-on-Avoiding-Nulls-in-PHP
+ * https://gist.github.com/philix/7312211
+ *
  * Class Optional
  * @package Bart\Optional
  */
@@ -77,7 +83,8 @@ abstract class Optional
     public abstract function isAbsent();
 
     /**
-     * Gets the contained reference
+     * Returns the value of the option. This method may throw
+     * exceptions for nonexistent values.
      * @return mixed
      */
     public abstract function get();
@@ -90,20 +97,25 @@ abstract class Optional
     public abstract function getOrElse($default);
 
     /**
-     * Gets the contained reference, or null if it is absent;
+     * Gets the contained reference, or null if it is absent. The idea of
+     * Optional is to avoid using null, but there may be cases where it is still relevant.
      * @return mixed
      */
     public abstract function getOrNull();
 
     /**
+     * Returns an Optional containing the result of calling $callable on
+     * the contained value. If no value exists, as in the case of Absent, then
+     * this method will simply return Absent. The method will return Absent
+     * if the result of applying $callable to the contained value is null.
      * @param callable $callable
-     * @return mixed
+     * @return Present|Absent
      */
     public abstract function map(Callable $callable);
 
     /**
-     * Whether the contained equals a provided object
-     * @param mixed $object
+     * Whether the contained value equals the value contained in another Optional
+     * @param Optional $object
      * @return bool
      */
     public abstract function equals(Optional $object);
