@@ -32,7 +32,7 @@ abstract class Optional
     {
         $message = $exceptionMessage === null ? 'Disallowed null in reference.' : $exceptionMessage;
 
-        if ($reference === null) {
+        if ($reference === null || $reference instanceof Absent) {
             throw new IllegalStateException($message);
         }
 
@@ -67,7 +67,7 @@ abstract class Optional
      */
     public static function fromNullable($ref)
     {
-        return $ref === null ? static::absent() : new Present($ref);
+        return ($ref === null || $ref instanceof Absent) ? static::absent() : new Present($ref);
     }
 
     /**
