@@ -3,35 +3,35 @@ namespace Bart\Optional;
 
 use Bart\BaseTestCase;
 
-class PresentTest extends BaseTestCase
+class SomeTest extends BaseTestCase
 {
     private $value = 'box_rox';
 
     private function getPresent()
     {
-        return new Present($this->value);
+        return new Some($this->value);
     }
 
     public function testConstruct()
     {
-        new Present($this->value);
+        new Some($this->value);
 
         $this->setExpectedException('Bart\Exceptions\IllegalStateException', 'Disallowed null in reference.');
-        new Present(null);
+        new Some(null);
     }
 
     public function testConstructFromAbsent()
     {
         $this->setExpectedException('Bart\Exceptions\IllegalStateException', 'Disallowed null in reference.');
-        new Present(Optional::absent());
+        new Some(Optional::absent());
     }
 
     public function testConstructFromPresent()
     {
         $present = $this->getPresent();
-        $newPresent = new Present($present);
+        $newPresent = new Some($present);
 
-        $this->assertInstanceOf('Bart\Optional\Present', $newPresent);
+        $this->assertInstanceOf('Bart\Optional\Some', $newPresent);
         $this->assertEquals($this->value, $newPresent->get());
     }
 
@@ -66,12 +66,12 @@ class PresentTest extends BaseTestCase
         $present = $this->getPresent();
         $mapped = $present->map('strtoupper');
 
-        $this->assertInstanceOf('Bart\Optional\Present', $mapped);
+        $this->assertInstanceOf('Bart\Optional\Some', $mapped);
         $this->assertEquals(strtoupper($this->value), $mapped->get());
     }
 
     /**
-     * Tests that the map function will return an instance of Absent
+     * Tests that the map function will return an instance of None
      * if the callable passed returns null
      */
     public function testMapReturnsAbsentOnNull()
@@ -81,12 +81,12 @@ class PresentTest extends BaseTestCase
             return null;
         });
 
-        $this->assertInstanceOf('Bart\Optional\Absent', $mapped);
+        $this->assertInstanceOf('Bart\Optional\None', $mapped);
     }
 
     /**
-     * Tests that the map function will return an instance of Absent
-     * if the callable passed returns Absent
+     * Tests that the map function will return an instance of None
+     * if the callable passed returns None
      */
     public function testMapReturnsAbsentOnAbsent()
     {
@@ -95,16 +95,16 @@ class PresentTest extends BaseTestCase
             return Optional::absent();
         });
 
-        $this->assertInstanceOf('Bart\Optional\Absent', $mapped);
+        $this->assertInstanceOf('Bart\Optional\None', $mapped);
     }
 
     public function testEquals()
     {
         $present = $this->getPresent();
 
-        $this->assertTrue($present->equals(new Present($this->value)));
-        $this->assertFalse($present->equals(new Present('some other value')));
-        $this->assertFalse($present->equals(Absent::instance()));
+        $this->assertTrue($present->equals(new Some($this->value)));
+        $this->assertFalse($present->equals(new Some('some other value')));
+        $this->assertFalse($present->equals(None::instance()));
     }
 
 }

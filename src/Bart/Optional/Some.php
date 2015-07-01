@@ -13,23 +13,23 @@ namespace Bart\Optional;
  * http://nitschinger.at/A-Journey-on-Avoiding-Nulls-in-PHP
  * https://gist.github.com/philix/7312211
  *
- * Class Present
+ * Class Some
  * @package Bart\Optional
  */
-class Present extends Optional
+class Some extends Optional
 {
     /** @var mixed $ref */
     private $ref;
 
     /**
-     * Creates an instance of Present with the passed object. Throws an exception
-     * if the object is null as Present may only contain a non-null value.
+     * Creates an instance of Some with the passed object. Throws an exception
+     * if the object is null as Some may only contain a non-null value.
      * @param mixed $ref
      * @throws \Bart\Exceptions\IllegalStateException
      */
     public function __construct($ref)
     {
-        if ($ref instanceof Present) {
+        if ($ref instanceof Some) {
             $this->ref = $ref->get();
         } else {
             $this->ref = self::notNull($ref);
@@ -86,11 +86,11 @@ class Present extends Optional
 
     /**
      * Returns an Optional containing the result of calling $callable on
-     * the contained value. If no value exists, as in the case of Absent, then
-     * this method will simply return Absent. The method will return Absent
+     * the contained value. If no value exists, as in the case of None, then
+     * this method will simply return None. The method will return None
      * if the result of applying $callable to the contained value is null.
      * @param callable $callable
-     * @return Present|Absent
+     * @return Some|None
      */
     public function map(Callable $callable)
     {
@@ -104,7 +104,7 @@ class Present extends Optional
      */
     public function equals(Optional $object)
     {
-        if ($object instanceof Present) {
+        if ($object instanceof Some) {
             return $this->ref === $object->get();
         }
 
