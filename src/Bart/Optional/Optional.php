@@ -4,7 +4,7 @@ namespace Bart\Optional;
 use Bart\Exceptions\IllegalStateException;
 
 /**
- * This class represents optional values. Instances of Optional can include either Present or Absent, for
+ * This class represents optional values. Instances of Optional can include either Some or None, for
  * values that exist or do not, respectively.
  *
  * Implementation inspired by:
@@ -32,7 +32,7 @@ abstract class Optional
     {
         $message = $exceptionMessage === null ? 'Disallowed null in reference.' : $exceptionMessage;
 
-        if ($reference === null || $reference instanceof Absent) {
+        if ($reference === null || $reference instanceof None) {
             throw new IllegalStateException($message);
         }
 
@@ -41,33 +41,33 @@ abstract class Optional
 
     /**
      * Returns an instance that contains no references
-     * @return Absent
+     * @return None
      */
     public static function absent()
     {
-        return Absent::instance();
+        return None::instance();
     }
 
     /**
      * Creates an instance containing the provided reference
      * @param mixed $ref
-     * @return Present
+     * @return Some
      * @throws IllegalStateException
      */
     public static function from($ref)
     {
-        // Present checks if the value is null on instantiation
-        return new Present($ref);
+        // Some checks if the value is null on instantiation
+        return new Some($ref);
     }
 
     /**
-     * Returns an Optional instance of the reference or returns Absent if it's null
+     * Returns an Optional instance of the reference or returns None if it's null
      * @param mixed $ref
-     * @return Absent|Present
+     * @return None|Some
      */
     public static function fromNullable($ref)
     {
-        return ($ref === null || $ref instanceof Absent) ? static::absent() : new Present($ref);
+        return ($ref === null || $ref instanceof None) ? static::absent() : new Some($ref);
     }
 
     /**
@@ -105,11 +105,11 @@ abstract class Optional
 
     /**
      * Returns an Optional containing the result of calling $callable on
-     * the contained value. If no value exists, as in the case of Absent, then
-     * this method will simply return Absent. The method will return Absent
+     * the contained value. If no value exists, as in the case of None, then
+     * this method will simply return None. The method will return None
      * if the result of applying $callable to the contained value is null.
      * @param callable $callable
-     * @return Present|Absent
+     * @return Some|None
      */
     public abstract function map(Callable $callable);
 

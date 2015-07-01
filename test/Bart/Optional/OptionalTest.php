@@ -8,7 +8,7 @@ class OptionalTest extends BaseTestCase
     public function testAbsent()
     {
         $absent = Optional::absent();
-        $this->assertInstanceOf('Bart\Optional\Absent', $absent);
+        $this->assertInstanceOf('Bart\Optional\None', $absent);
     }
 
     public function testFrom()
@@ -16,7 +16,7 @@ class OptionalTest extends BaseTestCase
         $value = 'box_rox';
         $present = Optional::from($value);
 
-        $this->assertInstanceOf('Bart\Optional\Present', $present);
+        $this->assertInstanceOf('Bart\Optional\Some', $present);
         $this->assertEquals($value, $present->get());
 
         $this->setExpectedException('Bart\Exceptions\IllegalStateException');
@@ -28,11 +28,11 @@ class OptionalTest extends BaseTestCase
         $value = 'box_rox';
         $present = Optional::fromNullable($value);
 
-        $this->assertInstanceOf('Bart\Optional\Present', $present);
+        $this->assertInstanceOf('Bart\Optional\Some', $present);
         $this->assertEquals($value, $present->get());
 
         $absent = Optional::fromNullable(null);
-        $this->assertInstanceOf('Bart\Optional\Absent', $absent);
+        $this->assertInstanceOf('Bart\Optional\None', $absent);
     }
 
 }
