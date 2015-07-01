@@ -26,6 +26,15 @@ class PresentTest extends BaseTestCase
         new Present(Optional::absent());
     }
 
+    public function testConstructFromPresent()
+    {
+        $present = $this->getPresent();
+        $newPresent = new Present($present);
+
+        $this->assertInstanceOf('Bart\Optional\Present', $newPresent);
+        $this->assertEquals($this->value, $newPresent->get());
+    }
+
     public function testIsPresent()
     {
         $present = $this->getPresent();
