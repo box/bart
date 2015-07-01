@@ -29,7 +29,11 @@ class Present extends Optional
      */
     public function __construct($ref)
     {
-        $this->ref = self::notNull($ref);
+        if ($ref instanceof Present) {
+            $this->ref = $ref->get();
+        } else {
+            $this->ref = self::notNull($ref);
+        }
     }
 
     /**
