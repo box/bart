@@ -88,7 +88,8 @@ class Strings
      */
     public static function startsWith($fullString, $subString)
     {
-        self::validateArgsAreString($fullString, $subString, '$fullString', '$subString');
+        self::validateArgIsString($fullString, '$fullString');
+        self::validateArgIsString($subString, '$subString');
 
         $length = strlen($subString);
         if ($length === 0) {
@@ -113,7 +114,8 @@ class Strings
      */
      public static function endsWith($fullString, $subString)
      {
-         self::validateArgsAreString($fullString, $subString, '$fullString', '$subString');
+         self::validateArgIsString($fullString, '$fullString');
+         self::validateArgIsString($subString, '$subString');
 
          $length = strlen($subString);
          if ($length === 0) {
@@ -149,19 +151,16 @@ class Strings
     }
 
     /**
-     * Validates that the type of the passed-in arguments is string, by throwing an exception if either of them are not.
-     * @param string $firstArg
-     * @param string $secondArg
-     * @param string $firstArgName Name to display for the first argument.
-     * @param string $secondArgName Name to display for the second argument.
-     * @throws PrimitivesException
+     * Validates that the type of the passed-in argument ($arg) is string, by throwing an exception if it is not.
+     * @param string $arg
+     * @param string $argName Name to display for the argument
+     * @throws \InvalidArgumentException
      */
-    private static function validateArgsAreString($firstArg, $secondArg, $firstArgName, $secondArgName)
+    private static function validateArgIsString($arg, $argName)
     {
-        if (!is_string($firstArg) || !is_string($secondArg)) {
-            throw new PrimitivesException('Both passed in arguments must be of type "string". The type of argument ' .
-                $firstArgName . ' is currently ' . gettype($firstArg) . ' while the type of argument ' . $secondArgName
-                . ' is currently ' . gettype($secondArg) . '.');
+        if (!is_string($arg)) {
+            throw new \InvalidArgumentException("The passed in argument '$argName' must be of type string. The type " .
+                'of the argument is currently ' . gettype($arg) . '.');
         }
     }
 
