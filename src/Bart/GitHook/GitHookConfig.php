@@ -18,6 +18,9 @@ class GitHookConfig extends ProjectConfiguration
 ; Used to determine which refs to run git hooks on. Full ref must be specified.
 valid_refs = 'refs/head/master'
 
+; Optional email address to notify when emergencies are pushed
+emergency_notification_email = emergencies@example.com
+
 [pre_receive]
 hook_actions = '\Bart\GitHook\StopTheLineTravis'
 
@@ -64,4 +67,8 @@ README;
         return $this->getArray('general', 'valid_refs');
     }
 
+	public function getEmergencyNotificationEmail()
+	{
+		return $this->getValue('general', 'emergency_notification_email', null, false);
+	}
 }
