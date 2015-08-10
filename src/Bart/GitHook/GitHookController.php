@@ -3,6 +3,7 @@ namespace Bart\GitHook;
 use Bart\Diesel;
 use Bart\Git\Commit;
 use Bart\Git\GitRoot;
+use Bart\GlobalFunctions;
 use Bart\Log4PHP;
 
 /**
@@ -120,6 +121,7 @@ class GitHookController
 			list($startHash, $endHash, $ref) = explode(" ", $rangeAndRef);
 
 			$endCommit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $endHash);
+			/** @var \Bart\GitHook\GitHookConfig $configs */
 			$configs = Diesel::create('\Bart\GitHook\GitHookConfig', $endCommit);
 			$validRefs = $configs->getValidRefs();
 
@@ -160,6 +162,12 @@ class GitHookController
 	{
 		$message = $commit->message();
 
-		return preg_match('/^EMERGENCY/', $message) === 1;
+		$isEmergency = preg_match('/^EMERGENCY/', $message) === 1;
+
+		if ($isEmergency) {
+			GlobalFunctions::mail('to', 'subject', 'body');
+		}
+
+		return $isEmergency;
 	}
 }
