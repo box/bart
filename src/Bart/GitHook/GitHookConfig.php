@@ -70,16 +70,25 @@ README;
         return $this->getArray('general', 'valid_refs');
     }
 
+    /**
+     * @return string email address to send notifications to
+     */
 	public function getEmergencyNotificationEmail()
 	{
 		return $this->getValue('notifications', 'emergency_notification_email', '', false);
 	}
 
+    /**
+     * @return string subject to send notification email with
+     */
     public function getEmergencyNotificationSubject()
     {
         return $this->getValue('notifications', 'subject', '', false);
     }
 
+    /**
+     * @return string body to send in notification email
+     */
     public function getEmergencyNotificationBody()
     {
         return $this->getValue('notifications', 'body', '', false);
