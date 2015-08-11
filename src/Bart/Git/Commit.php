@@ -57,16 +57,20 @@ class Commit
 		return $result->getOutput(true);
 	}
 
-    public function getFilelist()
-    {
-        $result = $this->gitRoot->getCommandResult('show --name-only --format=full --no-color %s', $this->revision);
+	/** 
+	 * @return string List of modified files
+	 */
 
-        if (!$result->wasOk()) {
-            throw new GitException("Could not get contents of commit {$this}");
-        }
+	public function getFileList()
+	{
+		$result = $this->gitRoot->getCommandResult('show --pretty="format:" --name-only %s', $this->revision);
 
-        return $result->getOutput(true);
-    }
+		if (!$result->wasOk()) {
+			throw new GitException("Could not get contents of commit {$this}");
+		}
+
+		return $result->getOutput(true);
+	}
 
 	/**
 	 * @return string Gerrit Change-Id
