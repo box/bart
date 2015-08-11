@@ -18,9 +18,6 @@ class GitHookConfig extends ProjectConfiguration
 ; Used to determine which refs to run git hooks on. Full ref must be specified.
 valid_refs = 'refs/head/master'
 
-; Optional email address to notify when emergencies are pushed
-emergency_notification_email = emergencies@example.com
-
 [pre_receive]
 hook_actions = '\Bart\GitHook\StopTheLineTravis'
 
@@ -31,6 +28,12 @@ hook_actions = '\Bart\GitHook\JiraComment', '\Bart\GitHook\GerritAbandon'
 ; Used by JiraComment Hook Action
 ; %s will be replaced with commit revision hash
 comment_template = 'Commit %s pushed to JIRA. See online at https://git.example.com/?h=%s'
+
+[notifications]
+; Optional email address to notify when emergencies are pushed
+emergency_notification_email = emergencies@example.com
+subject = 'Emergency push notification'
+body = 'An emergency change has been pushed out.'
 
 README;
 	}
@@ -69,6 +72,18 @@ README;
 
 	public function getEmergencyNotificationEmail()
 	{
-		return $this->getValue('general', 'emergency_notification_email', null, false);
+		return $this->getValue('notifications', 'emergency_notification_email', '', false);
 	}
+
+    public function getEmergencyNotificationSubject()
+    {
+        return $this->getValue('notifications', 'subject', '', false);
+    }
+
+    public function getEmergencyNotificationBody()
+    {
+        return $this->getValue('notifications', 'body', '', false);
+    }
+
+
 }

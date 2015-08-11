@@ -109,6 +109,7 @@ class GitHookController
 	 */
 	private function processRevisions()
 	{
+
 		/** @var \Bart\Git $git */
 		$git = Diesel::create('\Bart\Git', $this->gitDir);
 
@@ -140,7 +141,7 @@ class GitHookController
 				$commit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $revision );
 
 				// Allow a backdoor in case of emergency or broken hook configuration
-				if ($this->shouldSkip($commit)) {
+				if ($this->shouldSkip($commit, $configs)) {
 					continue;
 				}
 
@@ -158,16 +159,20 @@ class GitHookController
 	 * @param Commit $commit
 	 * @return bool If the commit should be skipped by the hook
 	 */
-	private function shouldSkip(Commit $commit)
+	private function shouldSkip(Commit $commit, GitHookConfig $gitHookConfig)
 	{
 		$message = $commit->message();
 
 		$isEmergency = preg_match('/^EMERGENCY/', $message) === 1;
 
 		if ($isEmergency) {
-			GlobalFunctions::mail('to', 'subject', 'body');
+            $to = $gitHookConfig->getEmergencyNotificationEmail();
+            $subject = $gitHookConfig->getEmergencyNotificationSubject();
+            $body = $gitHookConfig->getEmergencyNotificationBody();
+			GlobalFunctions::mail($to, $subject, $body);
 		}
 
 		return $isEmergency;
 	}
+
 }
