@@ -30,6 +30,23 @@ $message";
 		});
 	}
 
+    private function stubGitRootFilelist($getFilelist)
+    {
+        $getFilelist = "commit 31ac1584186257ce6aa14d9cefd78a4b2f89c90e
+Author: Nishad Singh <nsingh@box.com>
+Date:   Mon Aug 10 14:09:36 2015 -0700
+
+conf_override/features.conf
+conf_override/services.conf
+$getFilelist";
+
+        $this->gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root) use ($getFilelist) {
+            $resultStub = new StubbedCommandResult([$getFilelist], 0);
+
+            $root->getCommandResult('show --name-only --format=full --no-color %s', 'HEAD')->once()->return_value($resultStub);
+        });
+    }
+
 	public function testMessage()
 	{
 		$output = 'Create GitCommit class';
@@ -38,6 +55,15 @@ $message";
 
 		$this->assertContains('a57a2664feafb26c61d269babc63b272ed87544d', $commit->message(), 'hash');
 	}
+
+    public function testgetFilelist()
+    {
+        $output = 'Create GitCommit class';
+        $this->stubGitRootFilelist($output);
+        $commit = new Commit($this->gitRoot, 'HEAD');
+
+        $this->assertContains("conf_override/features.conf\nconf_override/services.conf", $commit->getFilelist(), 'hash');
+    }
 
 	public function testJiras()
 	{

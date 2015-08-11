@@ -57,6 +57,17 @@ class Commit
 		return $result->getOutput(true);
 	}
 
+    public function getFilelist()
+    {
+        $result = $this->gitRoot->getCommandResult('show --name-only --format=full --no-color %s', $this->revision);
+
+        if (!$result->wasOk()) {
+            throw new GitException("Could not get contents of commit {$this}");
+        }
+
+        return $result->getOutput(true);
+    }
+
 	/**
 	 * @return string Gerrit Change-Id
 	 * @throws GitException if no Change-Id in message
