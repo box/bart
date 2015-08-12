@@ -58,15 +58,14 @@ class Commit
 	}
 
 	/** 
-	 * @return string List of modified files
+	 * @return string[] The file names changed in commit
 	 */
-
 	public function getFileList()
 	{
 		$result = $this->gitRoot->getCommandResult('show --pretty="format:" --name-only %s', $this->revision);
 
 		if (!$result->wasOk()) {
-			throw new GitException("Could not get contents of commit {$this}");
+			throw new GitException("Could not get file names from commit {$this}");
 		}
 
 		return $result->getOutput(true);
