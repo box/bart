@@ -73,7 +73,7 @@ README;
     /**
      * @return string email address to send notifications to
      */
-	public function getEmergencyNotificationEmail()
+	public function getEmergencyNotificationEmailAddress()
 	{
 		return $this->getValue('notifications', 'emergency_notification_email', '', false);
 	}
