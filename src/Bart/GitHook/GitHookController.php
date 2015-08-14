@@ -166,15 +166,10 @@ class GitHookController
 		$isEmergency = preg_match('/^EMERGENCY/', $message) === 1;
 
 		if ($isEmergency) {
-            $to = $gitHookConfig->getEmergencyNotificationEmail();
-            $subject = $gitHookConfig->getEmergencyNotificationSubject();
-            $body = $gitHookConfig->getEmergencyNotificationBody();
-            if (!empty($to) && !empty($to) && !empty($to)) {
-                GlobalFunctions::mail($to, $subject, $body);
-            }
-            else {
-                $this->logger->error("Invalid email parameters passed. Cannot send mail.");
-            }
+			$to = $gitHookConfig->getEmergencyNotificationEmailAddress();
+			$subject = $gitHookConfig->getEmergencyNotificationSubject();
+			$body = $gitHookConfig->getEmergencyNotificationBody();
+			GlobalFunctions::mail($to, $subject, $body);
 		}
 
 		return $isEmergency;
