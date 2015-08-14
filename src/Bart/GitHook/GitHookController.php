@@ -166,9 +166,9 @@ class GitHookController
 		$isEmergency = preg_match('/^EMERGENCY/', $message) === 1;
 
 		if ($isEmergency) {
-            $to = $gitHookConfig->getEmergencyNotificationEmail();
-            $subject = $gitHookConfig->getEmergencyNotificationSubject();
-            $body = $gitHookConfig->getEmergencyNotificationBody();
+			$to = $gitHookConfig->getEmergencyNotificationEmailAddress();
+			$subject = $gitHookConfig->getEmergencyNotificationSubject();
+			$body = $gitHookConfig->getEmergencyNotificationBody();
 			GlobalFunctions::mail($to, $subject, $body);
 		}
 

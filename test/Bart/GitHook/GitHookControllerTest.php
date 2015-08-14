@@ -116,19 +116,19 @@ class GitHookControllerTest extends BaseTestCase
 		$this->runProcessRevisionTest($stdInArray, $revList, $validRefs, $numValidRefs);
 	}
 
-    public function testProcessRevisionWithEmergencyCommit()
-    {
-        $stdInArray = [
-            self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF,
-        ];
-        $revList = ['hashOne'];
-        $validRefs = [self::MASTER_REF];
+	public function testProcessRevisionWithEmergencyCommit()
+	{
+		$stdInArray = [
+			self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF,
+		];
+		$revList = ['hashOne'];
+		$validRefs = [self::MASTER_REF];
 
-        // Both refs in $stdInArray are also in $validRefs
-        $numValidRefs = 1;
-        $emergency = true;
-        $this->runProcessRevisionTest($stdInArray, $revList, $validRefs, $numValidRefs, $emergency);
-    }
+		// Both refs in $stdInArray are also in $validRefs
+		$numValidRefs = 1;
+		$emergency = true;
+		$this->runProcessRevisionTest($stdInArray, $revList, $validRefs, $numValidRefs, $emergency);
+	}
 
 
 	/**
@@ -142,13 +142,7 @@ class GitHookControllerTest extends BaseTestCase
 
 		$numInputs = count($stdInArray);
 		$numRevs = count($revList);
-
-        if ($emergency) {
-            $message = 'EMERGENCY';
-        }
-        else {
-            $message = 'NOT IMPORTANT';
-        }
+		$message = $emergency ? 'EMERGENCY commit' : "This message will be ignored";
 
 		$this->shmockAndDieselify('\Bart\Shell', function($shell) use($stdInArray) {
 			$shell->realpath(self::POST_RECEIVE_PATH)->once()->return_value(self::POST_RECEIVE_REAL_PATH);
@@ -172,18 +166,22 @@ class GitHookControllerTest extends BaseTestCase
 		// inputs in the standard input array and the number of revisions
 		$stubConfig = $this->shmock('\Bart\GitHook\GitHookConfig', function($gitHookConfig) use($numInputs, $validRefs, $emergency) {
 			$gitHookConfig->getValidRefs()->times($numInputs)->return_value($validRefs);
-            if ($emergency){
-                if (!empty($validRefs)) {
-                    $gitHookConfig->getEmergencyNotificationBody()->return_value('');
-                    $gitHookConfig->getEmergencyNotificationBody()->return_value('');
-                    $gitHookConfig->getEmergencyNotificationEmail()->return_value('');
-                    $gitHookConfig->getEmergencyNotificationSubject()->return_value('');
-                }
-            }
+			if ($emergency){
+				if (!empty($validRefs)) {
+					$gitHookConfig->getEmergencyNotificationBody()->once()->return_value('Notification body');
+					$gitHookConfig->getEmergencyNotificationEmailAddress()->once()->return_value('emergencies@example.com');
+					$gitHookConfig->getEmergencyNotificationSubject()->once()->return_value('Emergency subject');
+				}
+			}
 
 		}, true);
 
-        GlobalFunctions::register('mail', function($to, $subject, $body) {});
+		// Register stub mail() function to validate config is loaded and passed in as expected
+		GlobalFunctions::register('mail', function($to, $subject, $body) {
+			$this->assertEquals('emergencies@example.com', $to, 'Emergency email address');
+			$this->assertEquals('Emergency subject', $subject, 'Emergency subject');
+			$this->assertEquals('Notification body', $body, 'Emergency body');
+		});
 
 		// The number of runs for $gitCommit->message() and $postReceiveRunner->runAllActions depend on $numValidRefs
 		$numValidCommits = $numValidRefs * $numRevs;
@@ -191,10 +189,10 @@ class GitHookControllerTest extends BaseTestCase
 			$gitCommit->message()->times($numValidCommits)->return_value($message);
 		}, true);
 
-        if ($emergency) {
-            $numValidCommits = 0;
-        }
-
+		if ($emergency) {
+			// We'll skip the hooks for any emergency commit
+			$numValidCommits = 0;
+		}
 
 		$stubRunner = $this->shmock('\Bart\GitHook\PostReceiveRunner', function($postReceiveRunner) use($numValidCommits) {
 			$postReceiveRunner->runAllActions()->times($numValidCommits);
