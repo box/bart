@@ -219,9 +219,5 @@ class GitHookControllerTest extends BaseTestCase
 		$controller = GitHookController::createFromScriptName(self::POST_RECEIVE_SCRIPT);
         $controller->run();
 	}
-
-    public function tearDown(){
-        GlobalFunctions::reset();
-    }
 }
 
