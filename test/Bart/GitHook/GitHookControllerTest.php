@@ -142,13 +142,7 @@ class GitHookControllerTest extends BaseTestCase
 
 		$numInputs = count($stdInArray);
 		$numRevs = count($revList);
-
-        if ($emergency) {
-            $message = 'EMERGENCY';
-        }
-        else {
-            $message = 'NOT IMPORTANT';
-        }
+        $message = $emergency ? 'EMEREGENCY commit' : 'Commit message ignored';
 
 		$this->shmockAndDieselify('\Bart\Shell', function($shell) use($stdInArray) {
 			$shell->realpath(self::POST_RECEIVE_PATH)->once()->return_value(self::POST_RECEIVE_REAL_PATH);
@@ -174,7 +168,6 @@ class GitHookControllerTest extends BaseTestCase
 			$gitHookConfig->getValidRefs()->times($numInputs)->return_value($validRefs);
             if ($emergency){
                 if (!empty($validRefs)) {
-                    $gitHookConfig->getEmergencyNotificationBody()->return_value('');
                     $gitHookConfig->getEmergencyNotificationBody()->return_value('');
                     $gitHookConfig->getEmergencyNotificationEmail()->return_value('');
                     $gitHookConfig->getEmergencyNotificationSubject()->return_value('');
@@ -219,9 +212,5 @@ class GitHookControllerTest extends BaseTestCase
 		$controller = GitHookController::createFromScriptName(self::POST_RECEIVE_SCRIPT);
         $controller->run();
 	}
-
-    public function tearDown(){
-        GlobalFunctions::reset();
-    }
 }
 
