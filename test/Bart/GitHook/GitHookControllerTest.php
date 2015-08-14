@@ -4,7 +4,6 @@ namespace Bart\GitHook;
 use Bart\BaseTestCase;
 use Bart\Diesel;
 use Bart\Git\GitRoot;
-use Bart\GlobalFunctions;
 
 class GitHookControllerTest extends BaseTestCase
 {
@@ -116,39 +115,16 @@ class GitHookControllerTest extends BaseTestCase
 		$this->runProcessRevisionTest($stdInArray, $revList, $validRefs, $numValidRefs);
 	}
 
-    public function testProcessRevisionWithEmergencyCommit()
-    {
-        $stdInArray = [
-            self::START_HASH . ' ' . self::END_HASH . ' ' . self::MASTER_REF,
-        ];
-        $revList = ['hashOne'];
-        $validRefs = [self::MASTER_REF];
-
-        // Both refs in $stdInArray are also in $validRefs
-        $numValidRefs = 1;
-        $emergency = true;
-        $this->runProcessRevisionTest($stdInArray, $revList, $validRefs, $numValidRefs, $emergency);
-    }
-
-
 	/**
 	 * @param string[] $stdInArray Array of standard input values
 	 * @param string[] $revList Array of revisions
 	 * @param string[] $validRefs Array of all valid refs
 	 * @param int $numValidRefs Number of valid refs in the standard input array that are actually in $validRefs
 	 */
-	private function runProcessRevisionTest(array $stdInArray, array $revList, array $validRefs, $numValidRefs, $emergency = false)
+	private function runProcessRevisionTest(array $stdInArray, array $revList, array $validRefs, $numValidRefs)
 	{
-
 		$numInputs = count($stdInArray);
 		$numRevs = count($revList);
-
-        if ($emergency) {
-            $message = 'EMERGENCY';
-        }
-        else {
-            $message = 'NOT IMPORTANT';
-        }
 
 		$this->shmockAndDieselify('\Bart\Shell', function($shell) use($stdInArray) {
 			$shell->realpath(self::POST_RECEIVE_PATH)->once()->return_value(self::POST_RECEIVE_REAL_PATH);
@@ -170,36 +146,20 @@ class GitHookControllerTest extends BaseTestCase
 
 		// The number of runs for $gitHookConfig->getValidRefs() depend on the total number of
 		// inputs in the standard input array and the number of revisions
-		$stubConfig = $this->shmock('\Bart\GitHook\GitHookConfig', function($gitHookConfig) use($numInputs, $validRefs, $emergency) {
+		$stubConfig = $this->shmock('\Bart\GitHook\GitHookConfig', function($gitHookConfig) use($numInputs, $validRefs) {
 			$gitHookConfig->getValidRefs()->times($numInputs)->return_value($validRefs);
-            if ($emergency){
-                if (!empty($validRefs)) {
-                    $gitHookConfig->getEmergencyNotificationBody()->return_value('');
-                    $gitHookConfig->getEmergencyNotificationBody()->return_value('');
-                    $gitHookConfig->getEmergencyNotificationEmail()->return_value('');
-                    $gitHookConfig->getEmergencyNotificationSubject()->return_value('');
-                }
-            }
-
 		}, true);
-
-        GlobalFunctions::register('mail', function($to, $subject, $body) {});
 
 		// The number of runs for $gitCommit->message() and $postReceiveRunner->runAllActions depend on $numValidRefs
 		$numValidCommits = $numValidRefs * $numRevs;
-		$stubCommit = $this->shmockAndDieselify('\Bart\Git\Commit', function($gitCommit) use($numValidCommits, $message) {
-			$gitCommit->message()->times($numValidCommits)->return_value($message);
+		$stubCommit = $this->shmockAndDieselify('\Bart\Git\Commit', function($gitCommit) use($numValidCommits) {
+			$gitCommit->message()->times($numValidCommits)->return_value('NOT IMPORTANT');
 		}, true);
-
-        if ($emergency) {
-            $numValidCommits = 0;
-        }
 
 
 		$stubRunner = $this->shmock('\Bart\GitHook\PostReceiveRunner', function($postReceiveRunner) use($numValidCommits) {
 			$postReceiveRunner->runAllActions()->times($numValidCommits);
 		}, true);
-
 
 		// Explicitly register GitHookConfig and PostReceiveRunner stubs so that we can
 		// ...assert the constructor args are what we expect
@@ -217,11 +177,7 @@ class GitHookControllerTest extends BaseTestCase
 
 		// Create the controller and verify the mocks
 		$controller = GitHookController::createFromScriptName(self::POST_RECEIVE_SCRIPT);
-        $controller->run();
+		$controller->run();
 	}
-
-    public function tearDown(){
-        GlobalFunctions::reset();
-    }
 }
 
