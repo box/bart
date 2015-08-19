@@ -169,7 +169,12 @@ class GitHookController
 			$to = $gitHookConfig->getEmergencyNotificationEmailAddress();
 			$subject = $gitHookConfig->getEmergencyNotificationSubject();
 			$body = $gitHookConfig->getEmergencyNotificationBody();
-			GlobalFunctions::mail($to, $subject, $body);
+            if (!empty($to) && !empty($subject) && !empty($body)){
+                GlobalFunctions::mail($to, $subject, $body);
+            }
+			else{
+                $this->logger->error("Invalid mail params. Notification email not sent.");
+            }
 		}
 
 		return $isEmergency;
