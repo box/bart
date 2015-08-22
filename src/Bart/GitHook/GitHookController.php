@@ -3,6 +3,7 @@ namespace Bart\GitHook;
 use Bart\Diesel;
 use Bart\Git\Commit;
 use Bart\Git\GitRoot;
+use Bart\GlobalFunctions;
 use Bart\Log4PHP;
 
 /**
@@ -108,6 +109,7 @@ class GitHookController
 	 */
 	private function processRevisions()
 	{
+
 		/** @var \Bart\Git $git */
 		$git = Diesel::create('\Bart\Git', $this->gitDir);
 
@@ -120,6 +122,7 @@ class GitHookController
 			list($startHash, $endHash, $ref) = explode(" ", $rangeAndRef);
 
 			$endCommit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $endHash);
+			/** @var \Bart\GitHook\GitHookConfig $configs */
 			$configs = Diesel::create('\Bart\GitHook\GitHookConfig', $endCommit);
 			$validRefs = $configs->getValidRefs();
 
@@ -138,7 +141,7 @@ class GitHookController
 				$commit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $revision );
 
 				// Allow a backdoor in case of emergency or broken hook configuration
-				if ($this->shouldSkip($commit)) {
+				if ($this->shouldSkip($commit, $configs)) {
 					continue;
 				}
 
@@ -156,10 +159,25 @@ class GitHookController
 	 * @param Commit $commit
 	 * @return bool If the commit should be skipped by the hook
 	 */
-	private function shouldSkip(Commit $commit)
+	private function shouldSkip(Commit $commit, GitHookConfig $gitHookConfig)
 	{
 		$message = $commit->message();
 
-		return preg_match('/^EMERGENCY/', $message) === 1;
+		$isEmergency = preg_match('/^EMERGENCY/', $message) === 1;
+
+		if ($isEmergency) {
+			$to = $gitHookConfig->getEmergencyNotificationEmailAddress();
+			$subject = $gitHookConfig->getEmergencyNotificationSubject();
+			$body = $gitHookConfig->getEmergencyNotificationBody();
+            if (!empty($to) && !empty($subject) && !empty($body)){
+                GlobalFunctions::mail($to, $subject, $body);
+            }
+			else{
+                $this->logger->error("Invalid mail params. Notification email not sent.");
+            }
+		}
+
+		return $isEmergency;
 	}
+
 }

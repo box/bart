@@ -29,6 +29,12 @@ hook_actions = '\Bart\GitHook\JiraComment', '\Bart\GitHook\GerritAbandon'
 ; %s will be replaced with commit revision hash
 comment_template = 'Commit %s pushed to JIRA. See online at https://git.example.com/?h=%s'
 
+[notifications]
+; Optional email address to notify when emergencies are pushed
+emergency_notification_email = emergencies@example.com
+subject = 'Emergency push notification'
+body = 'An emergency change has been pushed out.'
+
 README;
 	}
 
@@ -63,5 +69,30 @@ README;
     {
         return $this->getArray('general', 'valid_refs');
     }
+
+    /**
+     * @return string email address to send notifications to
+     */
+	public function getEmergencyNotificationEmailAddress()
+	{
+		return $this->getValue('notifications', 'emergency_notification_email', '', false);
+	}
+
+    /**
+     * @return string subject to send notification email with
+     */
+    public function getEmergencyNotificationSubject()
+    {
+        return $this->getValue('notifications', 'subject', '', false);
+    }
+
+    /**
+     * @return string body to send in notification email
+     */
+    public function getEmergencyNotificationBody()
+    {
+        return $this->getValue('notifications', 'body', '', false);
+    }
+
 
 }
