@@ -23,7 +23,7 @@ abstract class GitHookAction
 	}
 
 	/**
-	 * Run the hook
+	 * Run the action
 	 * @param Commit $commit commit to verify
 	 * @throws GitHookException if requirement fails
 	 */
