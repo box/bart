@@ -11,7 +11,7 @@ class ChangeTest extends BaseTestCase
 
 	public function testCurrentPatchSet()
 	{
-		$stubApi = $this->stubApi();
+		$stubApi = $this->getStubApiForDefaultRemoteData();
 		$this->registerDiesel('\Bart\Gerrit\Api', $stubApi);
 
 		$change = new Change($this->fakeChangeId);
@@ -19,9 +19,17 @@ class ChangeTest extends BaseTestCase
 		$this->assertEquals(1, $change->currentPatchSetNumber());
 	}
 
+	public function testIsChangeApprovedAndVerified()
+	{
+		$this->getStubApiForApprovedIsRequired();
+
+		$change = new Change($this->fakeChangeId);
+		$this->assertTrue($change->isReviewedAndVerified(), 'Is reviewed?');
+	}
+
 	public function testMarkMerged()
 	{
-		$stubApi = $this->stubApi();
+		$stubApi = $this->getStubApiForDefaultRemoteData();
 		$stubApi->expects($this->exactly(2))
 			->method('gsql')
 			->will($this->returnCallback(function ($gsql, array $params) {
@@ -54,7 +62,7 @@ class ChangeTest extends BaseTestCase
 
 	public function testNoMatchForChangeId()
 	{
-		$stubApi = $this->stubApi(0);
+		$stubApi = $this->getStubApiForDefaultRemoteData(0);
 		$this->registerDiesel('\Bart\Gerrit\Api', $stubApi);
 
 		$change = new Change($this->fakeChangeId);
@@ -64,7 +72,7 @@ class ChangeTest extends BaseTestCase
 
 	public function testValidChangeExists()
 	{
-		$stubApi = $this->stubApi();
+		$stubApi = $this->getStubApiForDefaultRemoteData();
 		$this->registerDiesel('\Bart\Gerrit\Api', $stubApi);
 
 		$change = new Change($this->fakeChangeId);
@@ -74,7 +82,7 @@ class ChangeTest extends BaseTestCase
 
 	public function testAbandoning()
 	{
-		$stubApi = $this->stubApi();
+		$stubApi = $this->getStubApiForDefaultRemoteData();
 		$stubApi->expects($this->exactly(1))
 			->method('review')
 			->with($this->changeNum . ',1', null, 'See ya later', '--abandon')
@@ -87,7 +95,7 @@ class ChangeTest extends BaseTestCase
 
 	public function testCommenting()
 	{
-		$stubApi = $this->stubApi();
+		$stubApi = $this->getStubApiForDefaultRemoteData();
 		$stubApi->expects($this->exactly(1))
 			->method('review')
 			->with($this->changeNum . ',1', null, 'See ya later')
@@ -102,20 +110,43 @@ class ChangeTest extends BaseTestCase
 	 * @param int $rowCount 0 or 1 number of records to return
 	 * @return \PHPUnit_Framework_MockObject_MockObject stub Gerrit\Api
 	 */
-	private function stubApi($rowCount = 1)
+	private function getStubApiForDefaultRemoteData($rowCount = 1)
 	{
 		$gerritData = $rowCount == 1 ?
-			array(
+			[
 				'number' => $this->changeNum,
-				'currentPatchSet' => array('number' => '1')
-			) : array();
+				'currentPatchSet' => ['number' => '1'],
+			] : [];
 
-		$stubApi = $this->getMock('\Bart\Gerrit\Api', array(), array(), '', false);
+		$stubApi = $this->getMock('\Bart\Gerrit\Api', [], [], '', false);
 		$stubApi->expects($this->once())
 			->method('query')
-			->with('--current-patch-set %s', array($this->fakeChangeId))
-			->will($this->returnValue(new ApiResult(array('rowCount' => $rowCount), array($gerritData))));
+			->with('--current-patch-set %s', [$this->fakeChangeId])
+			->will($this->returnValue(new ApiResult(['rowCount' => $rowCount], [$gerritData])));
+
 		return $stubApi;
+	}
+
+	/**
+	 * Stub out a successful call to Gerrit for an approved and verified change
+	 */
+	private function getStubApiForApprovedIsRequired()
+	{
+		$this->shmockAndDieselify('\Bart\Gerrit\Api', function($stubApi) {
+			$gerritData =  [
+				'number' => $this->changeNum,
+				'currentPatchSet' => ['number' => '1'],
+			];
+
+			$stubApi->query(
+				'--current-patch-set %s %s %s %s %s', [
+					$this->fakeChangeId,
+					'label:Code-Review+2',
+					'label:Verified+1',
+					'NOT label:Code-Review-2',
+					'NOT label:Verified-1',
+				])->once()->return_value(new ApiResult(['rowCount' => 1], [$gerritData]));
+		}, true);
 	}
 }
 

@@ -3,6 +3,7 @@ namespace Bart\GitHook;
 
 use Bart\BaseTestCase;
 use Bart\Git\CommitTest;
+use Bart\Git\GitException;
 
 class GerritApprovedTest extends BaseTestCase
 {
@@ -21,11 +22,10 @@ class GerritApprovedTest extends BaseTestCase
 
 	public function testValidCommit()
 	{
-		$this->shmockAndDieselify('Bart\Gerrit\Api', function($api) {
-			// Any value will do here, just can't be null
-			$api->getApprovedChange($this->changeId, $this->commitHash)
+		$this->shmockAndDieselify('\Bart\Gerrit\Change', function($change) {
+			$change->isReviewedAndVerified()
 				->once()
-				->return_value(['id' => $this->changeId]);
+				->return_true();
 		}, true);
 
 		$hookAction = new GerritApproved();
@@ -34,32 +34,13 @@ class GerritApprovedTest extends BaseTestCase
 
 	public function testApprovedChangeNotFound()
 	{
-		$this->shmockAndDieselify('Bart\Gerrit\Api', function($api) {
-			// Any value will do here, just can't be null
-			$api->getApprovedChange($this->changeId, $this->commitHash)
+		$this->shmockAndDieselify('\Bart\Gerrit\Change', function($change) {
+			$change->isReviewedAndVerified()
 				->once()
-				->return_value(null);
+				->return_false();
 		}, true);
 
-		$msg = "approved review was not found in Gerrit for commit {$this->commitHash} "
-		. "with Change-Id {$this->changeId}";
-		$this->assertThrows('\Exception', $msg, function() {
-			$hookAction = new GerritApproved();
-			$hookAction->run($this->head);
-		});
-	}
-
-	public function testGerritException()
-	{
-		$this->shmockAndDieselify('Bart\Gerrit\Api', function($api) {
-			// Any value will do here, just can't be null
-			$api->getApprovedChange($this->changeId, $this->commitHash)
-				->once()
-				->throw_exception(new \Exception('Invalid credentials'));
-		}, true);
-
-		$msg = 'Error getting Gerrit review info';
-		$this->assertThrows('\Exception', $msg, function() {
+		$this->assertThrows('\Bart\GitHook\GitHookException', $this->changeId, function() {
 			$hookAction = new GerritApproved();
 			$hookAction->run($this->head);
 		});

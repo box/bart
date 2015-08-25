@@ -44,6 +44,15 @@ class Change
 	}
 
 	/**
+	 * @return bool If the change exists in Gerrit and is both approved and verified
+	 */
+	public function isReviewedAndVerified()
+	{
+		// Thanks, PHP loose type checking
+		return $this->remoteData(true) != false;
+	}
+
+	/**
 	 * @return int The current patch set count
 	 */
 	public function currentPatchSetNumber()
@@ -143,16 +152,19 @@ class Change
 	}
 
 	/**
+	 * @param bool $requiredApproved [optional] Require that the change is approved and reviewed
 	 * @return array Details of change from Gerrit
 	 */
-	private function remoteData()
+	private function remoteData($requireApproved = false)
 	{
 		if ($this->_remoteData === null) {
-			$result = $this->api->query('--current-patch-set %s', array($this->changeId));
+			$result = $requireApproved ?
+				$this->tryGetApprovedData() :
+				$this->tryGetChangeData();
 
 			if ($result->rowCount() == 0) {
 				$this->logger->debug("No record exists in Gerrit for {$this->changeId}");
-				$this->_remoteData = array();
+				$this->_remoteData = [];
 			}
 			else {
 				// Use first result (should be the only one)
@@ -161,5 +173,29 @@ class Change
 		}
 
 		return $this->_remoteData;
+	}
+
+	/**
+	 * @return ApiResult
+	 */
+	private function tryGetChangeData()
+	{
+		return $this->api->query('--current-patch-set %s', [$this->changeId]);
+	}
+
+	/**
+	 * @return ApiResult
+	 */
+	private function tryGetApprovedData()
+	{
+		// https://gerrit-review.googlesource.com/Documentation/user-search.html
+		// TODO Make these configurable (i.e. not everyone uses Verified)
+		return $this->api->query('--current-patch-set %s %s %s %s %s', [
+			$this->changeId,
+			'label:Code-Review+2',
+			'label:Verified+1',
+			'NOT label:Code-Review-2',
+			'NOT label:Verified-1',
+		]);
 	}
 }
