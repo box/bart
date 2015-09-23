@@ -161,7 +161,7 @@ class GitHookController
 	 */
 	private function shouldSkip(Commit $commit, GitHookConfig $gitHookConfig)
 	{
-		$message = $commit->message();
+		$message = $commit->messageBody();
 
 		$isEmergency = preg_match('/^EMERGENCY/', $message) === 1;
 

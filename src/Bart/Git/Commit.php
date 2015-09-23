@@ -43,10 +43,21 @@ class Commit
 		return $this->revision;
 	}
 
+	public function messageBody()
+	{
+		$result = $this->gitRoot->getCommandResult('show -s --pretty=%s --no-color %s', 'format:%B', $this->revision);
+
+		if (!$result->wasOk()) {
+			throw new GitException("Could not get contents of commit {$this}");
+		}
+
+		return $result->getOutput(true);
+	}
+
 	/**
-	 * @return string The basic commit log message
+	 * @return string The full commit log message
 	 */
-	public function message()
+	public function messageFull()
 	{
 		$result = $this->gitRoot->getCommandResult('show -s --format=full --no-color %s', $this->revision);
 
@@ -58,12 +69,20 @@ class Commit
 	}
 
 	/**
+	 * @deprecated {@see self::messageFull()}
+	 */
+	public function message()
+	{
+		return $this->messageFull();
+	}
+
+	/**
 	 * @return string Gerrit Change-Id
 	 * @throws GitException if no Change-Id in message
 	 */
 	public function gerritChangeId()
 	{
-		$message = $this->message();
+		$message = $this->messageFull();
 
 		$matches = array();
 		preg_match("/.*Change-Id: ([Ia-z0-9]*)/", $message, $matches);
@@ -99,7 +118,7 @@ class Commit
 		if ($this->_jiras === null) {
 			$this->_jiras = [];
 
-			$message = $this->message();
+			$message = $this->messageFull();
 
 			$matches = [];
 			if (preg_match_all('/([A-Z]{1,8}-[1-9]?[0-9]*)/', $message, $matches) > 0) {
