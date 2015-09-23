@@ -143,7 +143,7 @@ class GitHookControllerTest extends BaseTestCase
 		$numInputs = count($stdInArray);
 		$numRevs = count($revList);
 
-		$message = $emergency ? 'EMERGENCY commit' : "This message will be ignored";
+		$message = $emergency ? "EMERGENCY commit" : "This message will be ignored";
 
 		$this->shmockAndDieselify('\Bart\Shell', function($shell) use($stdInArray) {
 			$shell->realpath(self::POST_RECEIVE_PATH)->once()->return_value(self::POST_RECEIVE_REAL_PATH);
@@ -187,7 +187,7 @@ class GitHookControllerTest extends BaseTestCase
 		// The number of runs for $gitCommit->message() and $postReceiveRunner->runAllActions depend on $numValidRefs
 		$numValidCommits = $numValidRefs * $numRevs;
 		$stubCommit = $this->shmockAndDieselify('\Bart\Git\Commit', function($gitCommit) use($numValidCommits, $message) {
-			$gitCommit->message()->times($numValidCommits)->return_value($message);
+			$gitCommit->messageBody()->times($numValidCommits)->return_value($message);
 		}, true);
 
 		if ($emergency) {
