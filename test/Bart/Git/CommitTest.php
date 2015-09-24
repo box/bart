@@ -6,6 +6,7 @@ use Bart\Diesel;
 use Bart\Log4PHP;
 use Bart\Shell\StubbedCommandResult;
 use Bart\Shell;
+use Bart\Util\Reflection_Helper;
 
 class CommitTest extends BaseTestCase
 {
@@ -30,13 +31,34 @@ $message";
 		});
 	}
 
-	public function testMessage()
+	public function testMessageBody()
+	{
+		$this->gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root) {
+			$output = 'TOP-338 run unit tests when Nate or Zack commit code
+
+Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
+			$resultStub = new StubbedCommandResult([$output], 0);
+
+			$root->getCommandResult('show -s --pretty=%s --no-color %s', 'format:%B', 'HEAD')
+				->once()
+				->return_value($resultStub);
+		});
+		$commit = new Commit($this->gitRoot, 'HEAD');
+
+		// Assert all lines of log message are included
+		$message = $commit->messageBody();
+		$this->assertStringStartsWith('TOP-338', $message, 'No escape args silliness with quotes');
+		$this->assertContains('TOP-338 run unit', $message, 'line one');
+		$this->assertContains('Iecb840ccccf70a79ae622c583761107aa1a1b7b9', $message, 'line two');
+	}
+
+	public function testMessageFull()
 	{
 		$output = 'Create GitCommit class';
 		$this->stubGitRootForMessage($output);
 		$commit = new Commit($this->gitRoot, 'HEAD');
 
-		$this->assertContains('a57a2664feafb26c61d269babc63b272ed87544d', $commit->message(), 'hash');
+		$this->assertContains('a57a2664feafb26c61d269babc63b272ed87544d', $commit->messageFull(), 'hash');
 	}
 
 	public function testJiras()
