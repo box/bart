@@ -43,6 +43,10 @@ class Commit
 		return $this->revision;
 	}
 
+	/**
+	 * @return string The body of the commit message (just the log message, not the author, etc.)
+	 * @throws GitException
+	 */
 	public function messageBody()
 	{
 		$result = $this->gitRoot->getCommandResult('show -s --pretty=%s --no-color %s', 'format:%B', $this->revision);
