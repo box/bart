@@ -31,6 +31,25 @@ $message";
 		});
 	}
 
+	public function testMessageSubject()
+	{
+		// This test is pretty much a "it compiles" test
+		$this->gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root) {
+			$output = 'TOP-338 run unit tests when Nate or Zack commit code';
+			$resultStub = new StubbedCommandResult([$output], 0);
+
+			$root->getCommandResult('show -s --format=%s --no-color %s', '%s', 'HEAD')
+				->once()
+				->return_value($resultStub);
+		});
+		$commit = new Commit($this->gitRoot, 'HEAD');
+
+		// Assert all lines of log message are included
+		$message = $commit->messageSubject();
+		$this->assertStringStartsWith('TOP-338', $message, 'No escape args silliness with quotes');
+		$this->assertEquals('TOP-338 run unit tests when Nate or Zack commit code', $message, 'line one and only line one');
+	}
+
 	public function testMessageRawBody()
 	{
 		$this->gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root) {
