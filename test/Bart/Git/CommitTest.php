@@ -31,7 +31,7 @@ $message";
 		});
 	}
 
-	public function testMessageBody()
+	public function testMessageRawBody()
 	{
 		$this->gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root) {
 			$output = 'TOP-338 run unit tests when Nate or Zack commit code
@@ -39,14 +39,14 @@ $message";
 Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
 			$resultStub = new StubbedCommandResult([$output], 0);
 
-			$root->getCommandResult('show -s --pretty=%s --no-color %s', 'format:%B', 'HEAD')
+			$root->getCommandResult('show -s --format=%s --no-color %s', '%B', 'HEAD')
 				->once()
 				->return_value($resultStub);
 		});
 		$commit = new Commit($this->gitRoot, 'HEAD');
 
 		// Assert all lines of log message are included
-		$message = $commit->messageBody();
+		$message = $commit->messageRawBody();
 		$this->assertStringStartsWith('TOP-338', $message, 'No escape args silliness with quotes');
 		$this->assertContains('TOP-338 run unit', $message, 'line one');
 		$this->assertContains('Iecb840ccccf70a79ae622c583761107aa1a1b7b9', $message, 'line two');
