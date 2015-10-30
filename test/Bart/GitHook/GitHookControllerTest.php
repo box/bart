@@ -187,7 +187,7 @@ class GitHookControllerTest extends BaseTestCase
 		// The number of runs for $gitCommit->message() and $postReceiveRunner->runAllActions depend on $numValidRefs
 		$numValidCommits = $numValidRefs * $numRevs;
 		$stubCommit = $this->shmockAndDieselify('\Bart\Git\Commit', function($gitCommit) use($numValidCommits, $message) {
-			$gitCommit->messageBody()->times($numValidCommits)->return_value($message);
+			$gitCommit->messageSubject()->times($numValidCommits)->return_value($message);
 		}, true);
 
 		if ($emergency) {
