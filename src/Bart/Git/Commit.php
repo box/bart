@@ -44,12 +44,29 @@ class Commit
 	}
 
 	/**
-	 * @return string The body of the commit message (just the log message, not the author, etc.)
+	 * @return string The first non-blank lines of the commit message
 	 * @throws GitException
 	 */
-	public function messageBody()
+	public function messageSubject()
 	{
-		$result = $this->gitRoot->getCommandResult('show -s --pretty=%s --no-color %s', 'format:%B', $this->revision);
+		// Ironic we're replacing %s with %s
+		$result = $this->gitRoot->getCommandResult('show -s --format=%s --no-color %s', '%s', $this->revision);
+
+		if (!$result->wasOk()) {
+			throw new GitException("Could not get contents of commit {$this}");
+		}
+
+		return $result->getOutput(true);
+	}
+
+	/**
+	 * @requires Git 1.7.2
+	 * @return string The unwrapped subject and body of the commit message (just the log message, not the author, etc.)
+	 * @throws GitException
+	 */
+	public function messageRawBody()
+	{
+		$result = $this->gitRoot->getCommandResult('show -s --format=%s --no-color %s', '%B', $this->revision);
 
 		if (!$result->wasOk()) {
 			throw new GitException("Could not get contents of commit {$this}");
