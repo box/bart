@@ -2,7 +2,7 @@
 
 Bart is a PHP project. It originally began its life as a collection of Build and Release Tools used internally at Box. Over time, it's grown into a collection of critical pieces of our PHP frameworks.
 
-We use it at Box as the base of almost all of our open source projects and several of our internal projects.
+We use it at Box as the base of several of our internal projects.
 
 Please read through the [Bart Wiki](https://github.com/box/bart/wiki) for full details of the features and configurations.
 
@@ -14,7 +14,7 @@ Please read through the [Bart Wiki](https://github.com/box/bart/wiki) for full d
 
 ## Copyright and License
 
-Copyright 2014 Box, Inc. All rights reserved.
+Copyright 2015 Box, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
