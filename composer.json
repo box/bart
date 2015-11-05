@@ -1,7 +1,7 @@
 {
   "name": "box/bart",
   "type": "library",
-  "description": "Build and Release Tools for PHP",
+  "description": "A collection of our critical PHP tools",
   "keywords": ["bart","dependency injection","phpunit"],
   "homepage": "http://github.com/box/bart",
   "license": "Apache 2.0",
