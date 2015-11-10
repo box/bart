@@ -1,5 +1,7 @@
 <?php
 namespace Bart;
+use PhpOption\None;
+use PhpOption\Option;
 
 /**
  * Dependency Injection Epic Structured Extreme Language
@@ -35,9 +37,10 @@ class Diesel
 		$arguments = func_get_args();
 		$className = array_shift($arguments);
 
-		$mockObj = self::checkTestScribe($className, $arguments);
-		if ($mockObj !== null) {
-			return $mockObj;
+		/** @var Option $mockObjectOption */
+		$mockObjectOption = self::checkTestScribe($className, $arguments);
+		if ($mockObjectOption->isDefined()) {
+			return $mockObjectOption->get();
 		}
 
 		// If a method has been registered
@@ -58,29 +61,28 @@ class Diesel
 	 */
 	private static function isTestGeneratorRun()
 	{
-		if (self::$isTestGeneratorRun !== null) {
-			// Cache the result of this run time check
-			// to improve performance since resolve is called many times
-			// at run time.
-			return self::$isTestGeneratorRun;
+		if (self::$isTestGeneratorRun === null) {
+            // The test generator should have loaded the class and no autoloader should be needed
+			// when the class exists.
+			self::$isTestGeneratorRun = class_exists('\Box\TestScribe\App', false);
 		}
 
-		// The test generator should have loaded the class and no autoloader should be needed
-		// when the class exists.
-		self::$isTestGeneratorRun = class_exists('\Box\TestScribe\App', false);
-
+		// Cache the result of this run time check
+		// to improve performance since resolve is called many times
+		// at run time.
 		return self::$isTestGeneratorRun;
 	}
 
 	/**
 	 * Replace real instance with the given instance typically a mock object.
-	 *
+	 * NOTE: This is used by the test generator to generate the mock object
+	 * registration/injection statement
 	 * @param string $className
 	 * @param object $instance
 	 *
 	 * @return void
 	 */
-	public static function overwrite($className, $instance)
+	public static function registerInstance($className, $instance)
 	{
 		self::registerInstantiator(
 			$className,
@@ -174,14 +176,18 @@ class Diesel
 	}
 
 
+	/**
+	 * Checks TestScribe (test generator) to determine whether the real or mock class is required.
+	 * If a mock class is needed, it is returned by this method (wrapped in Some), otherwise None is returned.
+	 * @param $className
+	 * @param $arguments
+	 * @return Option
+	 */
 	private static function checkTestScribe($className, $arguments)
 	{
-
 		/** @noinspection PhpUndefinedNamespaceInspection */
 		/** @noinspection PhpUndefinedClassInspection */
-		if (self::isTestGeneratorRun()
-			&& \Box\TestScribe\App::$shouldInjectMockObjects
-		) {
+		if (self::isTestGeneratorRun() && \Box\TestScribe\App::$shouldInjectMockObjects) {
 			// This code block is to support PHPUnit test generator.
 			// @see https://github.com/box/TestScribe
 			// The class 'Box\TestScribe\App' should only be loaded
@@ -191,17 +197,10 @@ class Diesel
 			// generator can monitor the creation and execution of the class
 			// being resolved.
 			/** @noinspection PhpUndefinedNamespaceInspection */
-			$mock = \Box\TestScribe\App::createMockedInstance(
-				$className,
-				$arguments
-			);
-			if ($mock) {
-				return $mock;
-			}
-			// If null is returned by the unit test generator,
-			// it means that the developer has decided not to mock this class.
-			// Proceed with creating the real object.
+
+			return Option::fromValue(\Box\TestScribe\App::createMockedInstance($className, $arguments));
 		}
+		return None::create();
 	}
 }
 
