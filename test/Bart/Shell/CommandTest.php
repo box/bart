@@ -129,23 +129,5 @@ class CommandTest extends BaseTestCase
 
 		$this->assertEquals("echo '\$variable'", $safeStr, 'safe command');
 	}
-
-	public function testShellAliasMethod()
-	{
-		$shell = new Shell();
-		$cActual = $shell->command('echo %s %s %d', 'hello', 'world', 42);
-
-		$safeActual = self::getSafeCommandFrom($cActual);
-		$safeExpected = Command::makeSafeString('echo %s %s %d', array('hello', 'world', 42));
-
-		$this->assertEquals($safeExpected, $safeActual, 'safe commands');
-	}
-
-	private static function getSafeCommandFrom(Command $c)
-	{
-		$field = \Bart\Util\Reflection_Helper::get_property('Bart\Shell\Command', 'safeCommandStr');
-
-		return $field->getValue($c);
-	}
 }
 
