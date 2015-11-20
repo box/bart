@@ -142,7 +142,7 @@ class Commit
 			$message = $this->messageFull();
 
 			$matches = [];
-			if (preg_match_all('/([A-Z]{1,8}-[1-9]?[0-9]*)/', $message, $matches) > 0) {
+			if (preg_match_all('/([A-Z0-9]{1,12}-[1-9]?[0-9]*)/', $message, $matches) > 0) {
 				foreach ($matches[1] as $match) {
 					$this->_jiras[] = new JiraIssue($match);
 				}

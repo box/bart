@@ -82,13 +82,14 @@ Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
 
 	public function testJiras()
 	{
-		$this->stubGitRootForMessage('Fix problems from BUG-42; introduced by changes for PROJECT-336');
+		$this->stubGitRootForMessage("Fix problems from BUG-42; introduced by changes for PROJECT-336\nSee TEAM01-23 for more details");
 		$commit = new Commit($this->gitRoot, 'HEAD');
 
 		$jiras = $commit->jiras();
-		$this->assertCount(2, $jiras, 'Jiras matched');
+		$this->assertCount(3, $jiras, 'Jiras matched');
 		$this->assertEquals('BUG-42', $jiras[0]->id(), '1st Jira ID');
 		$this->assertEquals('PROJECT-336', $jiras[1]->id(), '2nd Jira ID');
+		$this->assertEquals('TEAM01-23', $jiras[2]->id(), 'Jira ID with numbers');
 	}
 
 	public function testRawFileContentsStubbed()
