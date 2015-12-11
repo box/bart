@@ -15,7 +15,7 @@ class Job_Test extends \Bart\BaseTestCase
 	public function configure_for_health_tests($last_success, $last_completed)
 	{
 		$domain = self::$domain;
-		$url = "http://$domain:8080/job/" . rawurlencode(self::$job_name) . '//api/json';
+		$url = "http://$domain:8080/job/" . rawurlencode(self::$job_name) . '/api/json';
 
 		// The essential metadata the Job class needs to instantiate
 		$norris_metadata = array(
@@ -44,7 +44,12 @@ class Job_Test extends \Bart\BaseTestCase
 		$mock_curl->expects($this->once())
 			->method('get')
 			->with($this->equalTo(''), $this->equalTo(array()))
-		    ->will($this->returnValue(array('content' => $json)));
+		    ->will($this->returnValue(
+				[
+					'info' => ['http_code' => 200],
+					'content' => $json
+				]
+			));
 
 		$phpu = $this;
 		Diesel::registerInstantiator('Bart\Curl',
@@ -73,7 +78,7 @@ class Job_Test extends \Bart\BaseTestCase
 	{
 		$domain = self::$domain;
 		$job_name = self::$job_name;
-		$url = "http://$domain:8080/job/" . rawurlencode($job_name) . '//api/json';
+		$url = "http://$domain:8080/job/" . rawurlencode($job_name) . '/api/json';
 		$this->configure_diesel($url, json_encode(array('buildable' => 0), true));
 
 		try
@@ -106,7 +111,7 @@ class Job_Test extends \Bart\BaseTestCase
 		}
 		catch(\Exception $e)
 		{
-			$this->assertEquals('Must provide a job name', $e->getMessage());
+			$this->assertEquals('Must provide a base job name', $e->getMessage());
 		}
 	}
 }

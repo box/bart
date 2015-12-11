@@ -9,52 +9,122 @@ use Bart\Log4PHP;
  */
 class Job
 {
-	private $base_job_url;
-	private $default_params = array();
+	private $baseJobUrl;
+	private $default_params = [];
 	private $my_build_id;
 	private $metadata;
 	/** @var \Logger */
 	private $logger;
 
+	/** @var array $curlOptions */
+	private $curlOptions;
+	/** @var string $port */
+	private $port;
+
+
+
 	/**
-	 * Load metadata about a project
-	 */
-	public function __construct($domain, $job_name)
+	 * Job constructor. Loads metadata about a project.
+	 * @param string $domain The
+	 * @param string $baseProject The top-level name of your Project.
+	 * @param array $subProjects If your Jenkins Job is not defined in the top-level project,
+	 * this parameter must be passed in. For example, if your Job is defined in the following
+	 * third level project: Base->Build->Example, you must pass in 'Base' as the $baseProject
+	 * parameter, and the array ['Build', 'Example'] as the $subProjects parameter. The order
+	 * of the array is maintained when loading the metadata, and hence it's critical.
+	 * @param string $protocol 'http' or 'https'.
+	 * @param string $user User to authenticate against.
+	 * @param string $token API token corresponding to user.
+	 * NOTE: The $user and $token must be passed in if the Jenkins instance doesn't support
+	 * anonymous connections.
+	 * @param int $port The port can be generally be determined by the $protocol. 'http' corresponds
+	 * to port 8080, while 'https' corresponds to 443. If the $port is passed in, it will override
+	 * that determination.
+     */
+	public function __construct(
+		$domain,
+		$baseProject,
+		array $subProjects = [],
+		$protocol = 'http',
+		$user = null,
+		$token = null,
+		$port = 0
+	)
 	{
-		if (!$domain)
-		{
-			throw new \Exception('Must provide a valid domain');
+		if (!$domain) {
+			throw new \InvalidArgumentException('Must provide a valid domain');
 		}
 
-		if (!$job_name)
-		{
-			throw new \Exception('Must provide a job name');
+		if (!$baseProject) {
+			throw new \InvalidArgumentException('Must provide a base job name');
+		}
+
+		$this->curlOptions = [];
+		$baseProjectEncoded = rawurlencode($baseProject);
+		$projectPath = "job/$baseProjectEncoded";
+		if ($subProjects !== []) {
+			for ($i = 0; $i < count ($subProjects); $i++) {
+				$subProjectEncoded = rawurlencode($subProjects[$i]);
+				$projectPath .= "/job/$subProjectEncoded";
+			}
+		}
+
+
+		if ($protocol !== 'http' && $protocol !== 'https') {
+			throw new \InvalidArgumentException("The protocol must only be 'http' or 'https'");
+		}
+
+		if ($user !== null || $token !== null) {
+			if ($token === null || $user === null ) {
+				throw new \InvalidArgumentException("You must specify both a user and a token");
+			}
+			$this->curlOptions[CURLOPT_USERPWD] = "{$user}:{$token}";
+		}
+
+		$this->port = $port;
+		if ($this->port === 0) {
+			if ($protocol === 'http') {
+				$this->port = 8080;
+			} else {
+				$this->port = 443;
+			}
 		}
 
 		$this->logger = Log4PHP::getLogger(__CLASS__);
 
-		$this->base_job_url = "http://$domain:8080/job/" . rawurlencode($job_name) . '/';
-		$this->logger->debug('Base uri: ' . $this->base_job_url);
+		$this->baseJobUrl = "{$protocol}://{$domain}:{$this->port}/{$projectPath}/";
+		$this->logger->debug('Base uri: ' . $this->baseJobUrl);
 
 		$this->metadata = $this->get_json(array());
 
-		if (!$this->metadata['buildable'])
-		{
-			throw new \Exception("Project $job_name is disabled");
+		if (!$this->metadata['buildable']) {
+			throw new \InvalidArgumentException("Project $baseProject is disabled");
 		}
 
-		$this->set_default_params();
+		$this->setDefaultParameters();
 	}
 
 	/**
 	 * Load the default set of parameters defined by project
 	 */
-	private function set_default_params()
+	private function setDefaultParameters()
 	{
 		$properties = $this->metadata['property'];
 		if (count($properties) == 0) return;
 
-		$params = (array) $properties[0]['parameterDefinitions'];
+		// To determine the default parameters, we need to figure out which of sub-arrays
+		// actually contains the 'parameterDefinitions'.
+		$params = null;
+		for ($i = 0; $i < count($properties); $i++) {
+			if (isset($properties[$i]['parameterDefinitions'])) {
+				$params = (array) $properties[$i]['parameterDefinitions'];
+				break;
+			}
+		}
+
+		if ($params === null) {
+			throw new \InvalidArgumentException("The parameterDefinitions are not part of the data.");
+		}
 
 		foreach ($params as $p => $param)
 		{
@@ -73,15 +143,15 @@ class Job
 		$lastCompleted = $this->metadata['lastCompletedBuild']['number'];
 
 		// Another alternative is lastBuild.result == 'SUCCESS'
-		return $lastSuccess == $lastCompleted;
+		return $lastSuccess === $lastCompleted;
 	}
 
 	/**
 	 * Enqueue a build with Jenkins
 	 *
-	 * @param $build_params Any param values to override the project defaults
+	 * @param array $build_params Any param values to override the project defaults
 	 */
-	public function start(array $build_params = array())
+	public function start(array $build_params = [])
 	{
 		$last_completed_build_id = $this->last_build_id(true);
 		$this->logger->debug('Last completed build: ' . $last_completed_build_id);
@@ -130,13 +200,13 @@ class Job
 	{
 		$build_type = $completed ? 'lastCompletedBuild' : 'lastBuild';
 
-		$last_build_data = $this->get_json(array($build_type), true);
+		$last_build_data = $this->get_json(array($build_type));
 
 		return $last_build_data['number'];
 	}
 
 	/**
-	 * @returns Success, Failure, or Incomplete
+	 * @return string Success, Failure, or Incomplete
 	 */
 	public function query_status()
 	{
@@ -147,7 +217,8 @@ class Job
 
 	/**
 	 * Keep polling jenkins every $poll_period seconds until build is complete
-	 * @param $timeout_after Maximum total minutes to poll before giving up
+	 * @param int $poll_period
+	 * @param int $timeout_after Maximum total minutes to poll before giving up
 	 */
 	public function wait_until_complete($poll_period = 1, $timeout_after = 45)
 	{
@@ -194,20 +265,33 @@ class Job
 	 */
 	private function curl(array $resource_items, array $post_data = null)
 	{
-		$resource_path = implode('/', $resource_items);
+		$resource_path = '';
+		if ($resource_items !== []) {
+			$resource_path = implode('/', $resource_items);
+			$resource_path .= '/';
+		}
 
-		$url = $this->base_job_url . $resource_path . '/api/json';
+		$url = $this->baseJobUrl . $resource_path . 'api/json';
 		$is_post = ($post_data != null);
 		$this->logger->debug('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
 
 		/** @var \Bart\Curl $c */
-		$c = Diesel::create('Bart\Curl', $url, 8080);
+		$c = Diesel::create('Bart\Curl', $url, $this->port);
+		if ($this->curlOptions !== []) {
+			$c->setPhpCurlOpts($this->curlOptions);
+		}
 		$response = $is_post ?
 			$c->post('', array(), $post_data) :
 			$c->get('', array());
 
-		$jenkins_json = $response['content'];
-		return json_decode($jenkins_json, true);
+		$httpCode = $response['info']['http_code'];
+		$content = $response['content'];
+		if ($httpCode !== 200 && $httpCode !== 201 && $httpCode !== 202 ) {
+			throw new JenkinsApiException("The Jenkins API call returned a {$httpCode}, " .
+				"with the following content: {$content}");
+		}
+		$content = $response['content'];
+		return json_decode($content, true);
 	}
 
 
