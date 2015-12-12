@@ -6,4 +6,5 @@ namespace Bart\Jenkins;
  */
 class JenkinsApiException extends \Exception
 {
+
 }
