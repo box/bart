@@ -1,7 +1,6 @@
 <?php
 namespace Bart\Jenkins;
 
-use Bart\Diesel;
 use Bart\Log4PHP;
 
 /**
@@ -9,98 +8,43 @@ use Bart\Log4PHP;
  */
 class Job
 {
-	private $baseJobUrl;
-	private $default_params = [];
-	private $my_build_id;
+	private $defaultParams = [];
+	private $myBuildData;
 	private $metadata;
 	/** @var \Logger */
 	private $logger;
 
-	/** @var array $curlOptions */
-	private $curlOptions;
-	/** @var string $port */
-	private $port;
-
-
+	/** @var Connection $connection */
+	private $connection;
+	/** @var string $baseApiPath */
+	private $baseApiPath;
 
 	/**
 	 * Job constructor. Loads metadata about a project.
-	 * @param string $domain The
-	 * @param string $baseProject The top-level name of your Project.
-	 * @param array $subProjects If your Jenkins Job is not defined in the top-level project,
-	 * this parameter must be passed in. For example, if your Job is defined in the following
-	 * third level project: Base->Build->Example, you must pass in 'Base' as the $baseProject
-	 * parameter, and the array ['Build', 'Example'] as the $subProjects parameter. The order
-	 * of the array is maintained when loading the metadata, and hence it's critical.
-	 * @param string $protocol 'http' or 'https'.
-	 * @param string $user User to authenticate against.
-	 * @param string $token API token corresponding to user.
-	 * NOTE: The $user and $token must be passed in if the Jenkins instance doesn't support
-	 * anonymous connections.
-	 * @param int $port The port can be generally be determined by the $protocol. 'http' corresponds
-	 * to port 8080, while 'https' corresponds to 443. If the $port is passed in, it will override
-	 * that determination.
+	 * @param Connection $connection
+	 * @param array $projects This parameter specifies the location of the Jenkins Job.
+	 * For example, if your Job is defined in the following third level project: Base->Build->Example,
+	 * the array you must pass in is ['Base', 'Build', 'Example']. The order of the array is
+	 * maintained when loading the metadata, and hence it's critical.
      */
-	public function __construct(
-		$domain,
-		$baseProject,
-		array $subProjects = [],
-		$protocol = 'http',
-		$user = null,
-		$token = null,
-		$port = 0
-	)
+	public function __construct(Connection $connection, array $projects)
 	{
-		if (!$domain) {
-			throw new \InvalidArgumentException('Must provide a valid domain');
+		$this->connection = $connection;
+		if (count($projects) === 0) {
+			throw new \InvalidArgumentException('You must pass in a non-empty projects array.');
 		}
-
-		if (!$baseProject) {
-			throw new \InvalidArgumentException('Must provide a base job name');
-		}
-
-		$this->curlOptions = [];
-		$baseProjectEncoded = rawurlencode($baseProject);
-		$projectPath = "job/$baseProjectEncoded";
-		if ($subProjects !== []) {
-			for ($i = 0; $i < count ($subProjects); $i++) {
-				$subProjectEncoded = rawurlencode($subProjects[$i]);
-				$projectPath .= "/job/$subProjectEncoded";
-			}
-		}
-
-
-		if ($protocol !== 'http' && $protocol !== 'https') {
-			throw new \InvalidArgumentException("The protocol must only be 'http' or 'https'");
-		}
-
-		if ($user !== null || $token !== null) {
-			if ($token === null || $user === null ) {
-				throw new \InvalidArgumentException("You must specify both a user and a token");
-			}
-			$this->curlOptions[CURLOPT_USERPWD] = "{$user}:{$token}";
-		}
-
-		$this->port = $port;
-		if ($this->port === 0) {
-			if ($protocol === 'http') {
-				$this->port = 8080;
-			} else {
-				$this->port = 443;
-			}
-		}
-
 		$this->logger = Log4PHP::getLogger(__CLASS__);
 
-		$this->baseJobUrl = "{$protocol}://{$domain}:{$this->port}/{$projectPath}/";
-		$this->logger->debug('Base uri: ' . $this->baseJobUrl);
-
-		$this->metadata = $this->get_json(array());
-
-		if (!$this->metadata['buildable']) {
-			throw new \InvalidArgumentException("Project $baseProject is disabled");
+		$this->baseApiPath = '/';
+		for ($i = 0; $i < count($projects); $i++) {
+			$projectEncoded = rawurlencode($projects[$i]);
+			$this->baseApiPath .= "job/{$projectEncoded}/";
 		}
+		$this->metadata = $this->getJson(array());
 
+		if (!isset($this->metadata['buildable'])) {
+			throw new \InvalidArgumentException("The project at path '{$this->baseApiPath}'' is disabled");
+		}
 		$this->setDefaultParameters();
 	}
 
@@ -129,7 +73,7 @@ class Job
 		foreach ($params as $p => $param)
 		{
 			$default = $param['defaultParameterValue'];
-			$this->default_params[$default['name']] = $default['value'];
+			$this->defaultParams[$default['name']] = $default['value'];
 		}
 	}
 
@@ -150,6 +94,7 @@ class Job
 	 * Enqueue a build with Jenkins
 	 *
 	 * @param array $build_params Any param values to override the project defaults
+	 * @throws \Exception
 	 */
 	public function start(array $build_params = [])
 	{
@@ -157,7 +102,7 @@ class Job
 		$this->logger->debug('Last completed build: ' . $last_completed_build_id);
 
 		$params_json = $this->build_params_json($build_params);
-		$this->post_json(
+		$this->postJson(
 			array('build'),
 			array(
 				'json' => $params_json,
@@ -165,13 +110,13 @@ class Job
 			));
 
 		// This gives back the general information about job
-		$metadata = $this->get_json(array());
+		$metadata = $this->getJson(array());
 
 		if ($metadata['inQueue'] > 0)
 		{
 			// Build is queued, but must wait and hasn't been assigned a number
-			$this->my_build_id = $metadata['nextBuildNumber'];
-			$this->logger->debug('Queued build: ' . $this->my_build_id);
+			$this->myBuildData = $metadata['nextBuildNumber'];
+			$this->logger->debug('Queued build: ' . $this->myBuildData);
 
 			// @TODO Sleep until build should be running?
 			// sleep($metadata['queueItem']['buildableStartMilliseconds']);
@@ -180,16 +125,16 @@ class Job
 		{
 			// If no builds blocking (system wide), this build starts right away
 			// ...and has been assigned a build number
-			$this->my_build_id = $this->last_build_id(false);
-			$this->logger->debug('Started build: ' . $this->my_build_id);
+			$this->myBuildData = $this->last_build_id(false);
+			$this->logger->debug('Started build: ' . $this->myBuildData);
 		}
 
-		if ($last_completed_build_id == $this->my_build_id)
+		if ($last_completed_build_id == $this->myBuildData)
 		{
 			throw new \Exception('Could not create new jenkins job. Quitting.');
 		}
 
-		return $this->my_build_id;
+		return $this->myBuildData;
 	}
 
 	/**
@@ -200,7 +145,7 @@ class Job
 	{
 		$build_type = $completed ? 'lastCompletedBuild' : 'lastBuild';
 
-		$last_build_data = $this->get_json(array($build_type));
+		$last_build_data = $this->getJson(array($build_type));
 
 		return $last_build_data['number'];
 	}
@@ -210,7 +155,7 @@ class Job
 	 */
 	public function query_status()
 	{
-		$job_data = $this->get_json(array("{$this->my_build_id}"));
+		$job_data = $this->getJson(array("{$this->myBuildData}"));
 
 		return $job_data['result'];
 	}
@@ -225,7 +170,7 @@ class Job
 		// Poll jenkins until last build number is our build number or greater
 		$last_completed_build_id = $this->last_build_id(true);
 		$started = time();
-		while ($last_completed_build_id < $this->my_build_id
+		while ($last_completed_build_id < $this->myBuildData
 			&& time() < (60 * $timeout_after) + $started)
 		{
 			sleep($poll_period);
@@ -238,62 +183,25 @@ class Job
 
 	/**
 	 * Curl Jenkins API for details about job
-	 * @param $resource_items - List of strings defining path to job resource
+	 * @param $resourceItems - List of strings defining path to job resource
 	 *
-	 * E.g. get details of Acceptance Test job 36 with get_json(array('36'))
+	 * E.g. get details of Acceptance Test job 36 with getJson(array('36'))
 	 *      ==> http://qa-hudson1.dev/job/Acceptance%20Test/36/api/json
 	 */
-	private function get_json(array $resource_items)
+	private function getJson(array $resourceItems)
 	{
-		return $this->curl($resource_items, null);
+		return $this->connection->curlJenkinsApi($this->buildApiPath($resourceItems), null);
 	}
 
 	/**
-	 * @seealso get_json but with POST data
+	 * @see getJson but with POST data
+	 * @param array $resourceItems
+	 * @param array $httpPostArray
 	 */
-	private function post_json(array $resource_items, array $http_post_array)
+	private function postJson(array $resourceItems, array $httpPostArray)
 	{
-		return $this->curl($resource_items, $http_post_array);
+		return $this->connection->curlJenkinsApi($this->buildApiPath($resourceItems), $httpPostArray);
 	}
-
-	/**
-	 * Curl Jenkins JSON API
-	 *
-	 * @param array $resource_items
-	 * @param array $post_data if null, then curl uses GET, otherwise POSTs data
-	 * @returns array JSON data decoded as PHP array
-	 */
-	private function curl(array $resource_items, array $post_data = null)
-	{
-		$resource_path = '';
-		if ($resource_items !== []) {
-			$resource_path = implode('/', $resource_items);
-			$resource_path .= '/';
-		}
-
-		$url = $this->baseJobUrl . $resource_path . 'api/json';
-		$is_post = ($post_data != null);
-		$this->logger->debug('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
-
-		/** @var \Bart\Curl $c */
-		$c = Diesel::create('Bart\Curl', $url, $this->port);
-		if ($this->curlOptions !== []) {
-			$c->setPhpCurlOpts($this->curlOptions);
-		}
-		$response = $is_post ?
-			$c->post('', array(), $post_data) :
-			$c->get('', array());
-
-		$httpCode = $response['info']['http_code'];
-		$content = $response['content'];
-		if ($httpCode !== 200 && $httpCode !== 201 && $httpCode !== 202 ) {
-			throw new JenkinsApiException("The Jenkins API call returned a {$httpCode}, " .
-				"with the following content: {$content}");
-		}
-		$content = $response['content'];
-		return json_decode($content, true);
-	}
-
 
 	/**
 	 * The JSON representation of the build parameters expected by the job
@@ -304,7 +212,7 @@ class Job
 	private function build_params_json(array $override)
 	{
 		$params = array();
-		foreach ($this->default_params as $name => $value)
+		foreach ($this->defaultParams as $name => $value)
 		{
 			$params[] = array(
 				'name' => $name,
@@ -315,6 +223,17 @@ class Job
 		$jenkins_params = array('parameter' => $params);
 
 		return json_encode($jenkins_params);
+	}
+
+	private function buildApiPath(array $resourceItems)
+	{
+		$resourcePath = '';
+        if ($resourceItems !== []) {
+            $resourcePath = implode('/', $resourceItems);
+            $resourcePath .= '/';
+        }
+
+		return "{$this->baseApiPath}{$resourcePath}api/json";
 	}
 }
 
