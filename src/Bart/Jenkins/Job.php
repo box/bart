@@ -9,7 +9,7 @@ use Bart\Log4PHP;
 class Job
 {
 	private $defaultParams = [];
-	private $myBuildData;
+	private $myBuildId;
 	private $metadata;
 	/** @var \Logger */
 	private $logger;
@@ -115,8 +115,8 @@ class Job
 		if ($metadata['inQueue'] > 0)
 		{
 			// Build is queued, but must wait and hasn't been assigned a number
-			$this->myBuildData = $metadata['nextBuildNumber'];
-			$this->logger->debug('Queued build: ' . $this->myBuildData);
+			$this->myBuildId = $metadata['nextBuildNumber'];
+			$this->logger->debug('Queued build: ' . $this->myBuildId);
 
 			// @TODO Sleep until build should be running?
 			// sleep($metadata['queueItem']['buildableStartMilliseconds']);
@@ -125,16 +125,16 @@ class Job
 		{
 			// If no builds blocking (system wide), this build starts right away
 			// ...and has been assigned a build number
-			$this->myBuildData = $this->last_build_id(false);
-			$this->logger->debug('Started build: ' . $this->myBuildData);
+			$this->myBuildId = $this->last_build_id(false);
+			$this->logger->debug('Started build: ' . $this->myBuildId);
 		}
 
-		if ($last_completed_build_id == $this->myBuildData)
+		if ($last_completed_build_id == $this->myBuildId)
 		{
 			throw new \Exception('Could not create new jenkins job. Quitting.');
 		}
 
-		return $this->myBuildData;
+		return $this->myBuildId;
 	}
 
 	/**
@@ -155,7 +155,7 @@ class Job
 	 */
 	public function query_status()
 	{
-		$job_data = $this->getJson(array("{$this->myBuildData}"));
+		$job_data = $this->getJson(array("{$this->myBuildId}"));
 
 		return $job_data['result'];
 	}
@@ -170,7 +170,7 @@ class Job
 		// Poll jenkins until last build number is our build number or greater
 		$last_completed_build_id = $this->last_build_id(true);
 		$started = time();
-		while ($last_completed_build_id < $this->myBuildData
+		while ($last_completed_build_id < $this->myBuildId
 			&& time() < (60 * $timeout_after) + $started)
 		{
 			sleep($poll_period);

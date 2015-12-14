@@ -7,6 +7,7 @@ use Bart\Primitives\Strings;
 
 /**
  * Class Connection
+ * Manages interface between remote Jenkins REST API and client code
  * @package Bart\Jenkins
  */
 class Connection
@@ -72,7 +73,7 @@ class Connection
      * simple GET against the Jenkins Job 'Example', the full path, 'job/Example/api/json'
      * must be passed in.
      * @param array $postData if null, then curl uses GET, otherwise POSTs data
-     * @returns array JSON data decoded as PHP array
+     * @return array JSON data decoded as PHP array
      * @throws JenkinsApiException
      */
     public function curlJenkinsApi($apiPath, array $postData = null)
@@ -86,7 +87,7 @@ class Connection
         $this->logger->debug('Curling ' . ($isPost ? 'POST ' : 'GET ') . $fullUrl);
 
         /** @var \Bart\Curl $curl */
-        $curl = Diesel::create('Bart\Curl', $fullUrl, $this->port);
+        $curl = Diesel::create('\Bart\Curl', $fullUrl, $this->port);
         if ($this->curlOptions !== []) {
             $curl->setPhpCurlOpts($this->curlOptions);
         }
