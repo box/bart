@@ -2,6 +2,7 @@
 namespace Bart\Jenkins;
 
 use Bart\Log4PHP;
+use Bart\Primitives\Strings;
 
 /**
  * Interface to Jenkins jobs
@@ -22,22 +23,32 @@ class Job
 	/**
 	 * Job constructor. Loads metadata about a project.
 	 * @param Connection $connection
-	 * @param array $projects This parameter specifies the location of the Jenkins Job.
+	 * @param string $projectPath This parameter specifies the location of the Jenkins Job.
 	 * For example, if your Job is defined in the following third level project: Base->Build->Example,
-	 * the array you must pass in is ['Base', 'Build', 'Example']. The order of the array is
-	 * maintained when loading the metadata, and hence it's critical.
+	 * you must pass in the full path to the project, 'job/Base/job/Build/job/Example'.
      */
-	public function __construct(Connection $connection, array $projects)
+	public function __construct(Connection $connection, $projectPath)
 	{
-		$this->connection = $connection;
-		if (count($projects) === 0) {
-			throw new \InvalidArgumentException('You must pass in a non-empty projects array.');
+		if (!is_string($projectPath)) {
+			throw new \InvalidArgumentException('The projectPath must be of type string');
 		}
+		$this->connection = $connection;
 		$this->logger = Log4PHP::getLogger(__CLASS__);
 
+		if (!Strings::startsWith($projectPath, '/')) {
+			$projectPath = "/{$projectPath}";
+		}
+
+		if (Strings::endsWith($projectPath, '/')) {
+			$projectPath = substr($projectPath, 0, strlen($projectPath) - 1);
+		}
+
+		$projects = explode('/job/', $projectPath);
+		unset($projects[0]);
+
 		$this->baseApiPath = '/';
-		for ($i = 0; $i < count($projects); $i++) {
-			$projectEncoded = rawurlencode($projects[$i]);
+		foreach($projects as $project) {
+			$projectEncoded = rawurlencode($project);
 			$this->baseApiPath .= "job/{$projectEncoded}/";
 		}
 		$this->metadata = $this->getJson(array());
@@ -93,15 +104,15 @@ class Job
 	/**
 	 * Enqueue a build with Jenkins
 	 *
-	 * @param array $build_params Any param values to override the project defaults
-	 * @throws \Exception
+	 * @param array $buildParams Any param values to override the project defaults
+	 * @throws JenkinsApiException
 	 */
-	public function start(array $build_params = [])
+	public function start(array $buildParams = [])
 	{
 		$last_completed_build_id = $this->last_build_id(true);
 		$this->logger->debug('Last completed build: ' . $last_completed_build_id);
 
-		$params_json = $this->build_params_json($build_params);
+		$params_json = $this->build_params_json($buildParams);
 		$this->postJson(
 			array('build'),
 			array(
@@ -131,7 +142,7 @@ class Job
 
 		if ($last_completed_build_id == $this->myBuildId)
 		{
-			throw new \Exception('Could not create new jenkins job. Quitting.');
+			throw new JenkinsApiException('Could not create new jenkins job. Quitting.');
 		}
 
 		return $this->myBuildId;
