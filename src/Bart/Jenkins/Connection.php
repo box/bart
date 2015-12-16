@@ -1,5 +1,6 @@
 <?php
 namespace Bart\Jenkins;
+
 use Bart\Diesel;
 use Bart\JSON;
 use Bart\Log4PHP;
@@ -16,7 +17,7 @@ class Connection
     /** @var \Logger */
     private $logger;
     /** @var array $curlOptions */
-	private $curlOptions;
+    private $curlOptions;
     /** @var int $port */
     private $port;
     /** @var string $baseUrl */
@@ -97,12 +98,10 @@ class Connection
 
         $httpCode = $response['info']['http_code'];
         $content = $response['content'];
-        if ($httpCode !== 200 && $httpCode !== 201 && $httpCode !== 202 ) {
+        if ($httpCode !== 200 && $httpCode !== 201 && $httpCode !== 202) {
             throw new JenkinsApiException("The Jenkins API call returned a {$httpCode}, " .
                 "with the following content: {$content}");
         }
-
-        $content = $response['content'];
         return JSON::decode($content);
     }
 }

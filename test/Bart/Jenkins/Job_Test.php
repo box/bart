@@ -5,21 +5,18 @@ use Bart\BaseTestCase;
 
 class Job_Test extends BaseTestCase
 {
-	public static $projects = ['chuck norris'];
-
-
-
+	public static $projectPath = 'job/chuck norris';
 	public function testIsHealthy()
 	{
 		$conn = $this->configureForHealthTests(123, 123);
-		$job = new Job($conn, self::$projects);
+		$job = new Job($conn, self::$projectPath);
 		$this->assertTrue($job->is_healthy(), 'Expected that job would be healthy');
 	}
 
 	public function testIsUnhealthy()
 	{
 		$conn = $this->configureForHealthTests(123, 122);
-		$job = new Job($conn, self::$projects);
+		$job = new Job($conn, self::$projectPath);
 		$this->assertFalse($job->is_healthy(), 'Expected that job would be unhealthy');
 	}
 
@@ -27,7 +24,7 @@ class Job_Test extends BaseTestCase
 	{
         $conn = $this->createMockConnection();
         $this->setExpectedException('\InvalidArgumentException');
-        new Job($conn, self::$projects);
+        new Job($conn, self::$projectPath);
 
 	}
 
