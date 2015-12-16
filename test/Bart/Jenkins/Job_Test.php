@@ -5,7 +5,9 @@ use Bart\BaseTestCase;
 
 class Job_Test extends BaseTestCase
 {
-	public static $projectPath = 'job/chuck norris';
+	public static $projectPath = 'job/chuck norris/job/chuck norris two';
+	public static $expectedApiPath = '/job/chuck%20norris/job/chuck%20norris%20two/api/json';
+
 	public function testIsHealthy()
 	{
 		$conn = $this->configureForHealthTests(123, 123);
@@ -38,7 +40,7 @@ class Job_Test extends BaseTestCase
 		/** @var \Bart\Jenkins\Connection $conn */
 		return $this->shmock('\Bart\Jenkins\Connection', function ($stub) use ($returnContent)
 			/** @var \Bart\Jenkins\Connection $stub */ {
-			$stub->curlJenkinsApi()->once()->return_value($returnContent);
+			$stub->curlJenkinsApi(self::$expectedApiPath)->once()->return_value($returnContent);
 		}, true);
 	}
 
