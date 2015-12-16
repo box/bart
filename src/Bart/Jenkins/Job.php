@@ -101,6 +101,7 @@ class Job
 	}
 
 	/**
+	 * @see isHealthy()
 	 * @deprecated
 	 */
 	public function is_healthy()
@@ -175,6 +176,7 @@ class Job
 	}
 
 	/**
+	 * @see queryStatus()
 	 * @deprecated
 	 */
 	public function query_status()
@@ -204,6 +206,7 @@ class Job
 	}
 
 	/**
+	 * @see waitUntilComplete()
 	 * @deprecated
 	 */
 	public function wait_until_complete($pollPeriod = 1, $timeoutAfter = 45)
