@@ -1,113 +1,70 @@
 <?php
 namespace Bart\Jenkins;
 
-use Bart\Diesel;
-use Bart\Curl;
+use Bart\BaseTestCase;
 
-class Job_Test extends \Bart\BaseTestCase
+class Job_Test extends BaseTestCase
 {
-	public static $domain = 'www.norris.com';
-	public static $job_name = 'chuck norris';
+	public static $projectPath = 'job/chuck norris/job/chuck norris two';
+	public static $expectedApiPath = '/job/chuck%20norris/job/chuck%20norris%20two/api/json';
+
+	public function testIsHealthy()
+	{
+		$conn = $this->configureForHealthTests(123, 123);
+		$job = new Job($conn, self::$projectPath);
+		$this->assertTrue($job->is_healthy(), 'Expected that job would be healthy');
+	}
+
+	public function testIsUnhealthy()
+	{
+		$conn = $this->configureForHealthTests(123, 122);
+		$job = new Job($conn, self::$projectPath);
+		$this->assertFalse($job->is_healthy(), 'Expected that job would be unhealthy');
+	}
+
+	public function testBuildIsDisabled()
+	{
+        $conn = $this->createMockConnection();
+        $this->setExpectedException('\InvalidArgumentException');
+        new Job($conn, self::$projectPath);
+
+	}
+
+	/**
+	 * Create a mock Jenkins connection
+	 * @param array $returnContent The data that Jenkins should return (as an array)
+	 * @return Connection A mock Jenkins Connection
+	 */
+	private function createMockConnection(array $returnContent = [])
+	{
+		/** @var \Bart\Jenkins\Connection $conn */
+		return $this->shmock('\Bart\Jenkins\Connection', function ($stub) use ($returnContent)
+			/** @var \Bart\Jenkins\Connection $stub */ {
+			$stub->curlJenkinsApi(self::$expectedApiPath)->once()->return_value($returnContent);
+		}, true);
+	}
 
 	/**
 	 * Mock the metadata returned by curl
+	 * @param $lastSuccess
+	 * @param $lastCompleted
+	 * @return Connection A mock Jenkins Connection
 	 */
-	public function configure_for_health_tests($last_success, $last_completed)
+	private function configureForHealthTests($lastSuccess, $lastCompleted)
 	{
-		$domain = self::$domain;
-		$url = "http://$domain:8080/job/" . rawurlencode(self::$job_name) . '//api/json';
-
 		// The essential metadata the Job class needs to instantiate
-		$norris_metadata = array(
+		$norrisMetadata = array(
 			'buildable' => 1,
 			'property' => array(
 				'0' => array(
 					'parameterDefinitions' => array(),
 				),
 			),
-			'lastSuccessfulBuild' => array('number' => $last_success),
-			'lastCompletedBuild' => array('number' => $last_completed),
+			'lastSuccessfulBuild' => array('number' => $lastSuccess),
+			'lastCompletedBuild' => array('number' => $lastCompleted),
 		);
 
-		$json = json_encode($norris_metadata, true);
-		$this->configure_diesel($url, $json);
-	}
-
-	/**
-	 * Configure Job for injection of stub Curl with $json
-	 * @param string $url Expected Jenkins URL
-	 * @param JSON $json
-	 */
-	private function configure_diesel($url, $json)
-	{
-		$mock_curl = $this->getMock('\\Bart\\Curl', array(), array(), '', false);
-		$mock_curl->expects($this->once())
-			->method('get')
-			->with($this->equalTo(''), $this->equalTo(array()))
-		    ->will($this->returnValue(array('content' => $json)));
-
-		$phpu = $this;
-		Diesel::registerInstantiator('Bart\Curl',
-			function($urlParam, $portParam) use($phpu, $url, $mock_curl) {
-				$phpu->assertEquals($url, $urlParam, 'url');
-				$phpu->assertEquals(8080, $portParam, 'port');
-				return $mock_curl;
-			});
-	}
-
-	public function test_is_healthy()
-	{
-		$this->configure_for_health_tests(123, 123);
-		$job = new Job(self::$domain, self::$job_name);
-		$this->assertTrue($job->is_healthy(), 'Expected that job would be healthy');
-	}
-
-	public function test_is_unhealthy()
-	{
-		$this->configure_for_health_tests(123, 122);
-		$job = new Job(self::$domain, self::$job_name);
-		$this->assertFalse($job->is_healthy(), 'Expected that job would be unhealthy');
-	}
-
-	public function test_build_is_disabled()
-	{
-		$domain = self::$domain;
-		$job_name = self::$job_name;
-		$url = "http://$domain:8080/job/" . rawurlencode($job_name) . '//api/json';
-		$this->configure_diesel($url, json_encode(array('buildable' => 0), true));
-
-		try
-		{
-			new Job($domain, $job_name);
-			$this->fail('Expected exception on disabled job');
-		}
-		catch (\Exception $e)
-		{
-			$this->assertEquals($e->getMessage(), "Project $job_name is disabled");
-		}
-	}
-
-	public function test_fails_on_missing_param()
-	{
-		try
-		{
-			new Job('', '');
-			$this->fail('Should fail when missing a daomin');
-		}
-		catch(\Exception $e)
-		{
-			$this->assertEquals('Must provide a valid domain', $e->getMessage());
-		}
-
-		try
-		{
-			new Job('domain', '');
-			$this->fail('Should fail when missing a job name');
-		}
-		catch(\Exception $e)
-		{
-			$this->assertEquals('Must provide a job name', $e->getMessage());
-		}
+		return $this->createMockConnection($norrisMetadata);
 	}
 }
 

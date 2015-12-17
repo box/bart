@@ -1,236 +1,268 @@
 <?php
 namespace Bart\Jenkins;
 
-use Bart\Diesel;
 use Bart\Log4PHP;
+use Bart\Primitives\Strings;
 
 /**
  * Interface to Jenkins jobs
  */
 class Job
 {
-	private $base_job_url;
-	private $default_params = array();
-	private $my_build_id;
-	private $metadata;
-	/** @var \Logger */
-	private $logger;
+    private $defaultParams = [];
+    private $myBuildId;
+    private $metadata;
+    /** @var \Logger */
+    private $logger;
 
-	/**
-	 * Load metadata about a project
-	 */
-	public function __construct($domain, $job_name)
-	{
-		if (!$domain)
-		{
-			throw new \Exception('Must provide a valid domain');
-		}
+    /** @var Connection $connection */
+    private $connection;
+    /** @var string $baseApiPath */
+    private $baseApiPath;
 
-		if (!$job_name)
-		{
-			throw new \Exception('Must provide a job name');
-		}
+    /**
+     * Job constructor. Loads metadata about a project.
+     * @param Connection $connection
+     * @param string $projectPath This parameter specifies the location of the Jenkins Job.
+     * For example, if your Job is defined in the following third level project: Base->Build->Example,
+     * you must pass in the full path to the project, 'job/Base/job/Build/job/Example'.
+     */
+    public function __construct(Connection $connection, $projectPath)
+    {
+        if (!is_string($projectPath)) {
+            throw new \InvalidArgumentException('The projectPath must be of type string');
+        }
+        $this->connection = $connection;
+        $this->logger = Log4PHP::getLogger(__CLASS__);
 
-		$this->logger = Log4PHP::getLogger(__CLASS__);
+        if (!Strings::startsWith($projectPath, '/')) {
+            $projectPath = "/{$projectPath}";
+        }
 
-		$this->base_job_url = "http://$domain:8080/job/" . rawurlencode($job_name) . '/';
-		$this->logger->debug('Base uri: ' . $this->base_job_url);
+        if (Strings::endsWith($projectPath, '/')) {
+            $projectPath = substr($projectPath, 0, strlen($projectPath) - 1);
+        }
 
-		$this->metadata = $this->get_json(array());
+        $projects = explode('/job/', $projectPath);
+        unset($projects[0]);
 
-		if (!$this->metadata['buildable'])
-		{
-			throw new \Exception("Project $job_name is disabled");
-		}
+        $this->baseApiPath = '/';
+        foreach ($projects as $project) {
+            $projectEncoded = rawurlencode($project);
+            $this->baseApiPath .= "job/{$projectEncoded}/";
+        }
+        $this->metadata = $this->getJson(array());
 
-		$this->set_default_params();
-	}
+        if (!isset($this->metadata['buildable'])) {
+            throw new \InvalidArgumentException("The project at path '{$this->baseApiPath}'' is disabled");
+        }
+        $this->setDefaultParameters();
+    }
 
-	/**
-	 * Load the default set of parameters defined by project
-	 */
-	private function set_default_params()
-	{
-		$properties = $this->metadata['property'];
-		if (count($properties) == 0) return;
+    /**
+     * Load the default set of parameters defined by project
+     */
+    private function setDefaultParameters()
+    {
+        $properties = $this->metadata['property'];
+        if (count($properties) == 0) return;
 
-		$params = (array) $properties[0]['parameterDefinitions'];
+        // To determine the default parameters, we need to figure out which of sub-arrays
+        // actually contains the 'parameterDefinitions'.
+        $params = null;
+        for ($i = 0; $i < count($properties); $i++) {
+            if (isset($properties[$i]['parameterDefinitions'])) {
+                $params = (array)$properties[$i]['parameterDefinitions'];
+                break;
+            }
+        }
 
-		foreach ($params as $p => $param)
-		{
-			$default = $param['defaultParameterValue'];
-			$this->default_params[$default['name']] = $default['value'];
-		}
-	}
+        if ($params === null) {
+            throw new \InvalidArgumentException("The parameterDefinitions are not part of the data.");
+        }
 
-	/**
-	 * @returns true if the last build was successful
-	 */
-	public function is_healthy()
-	{
-		// TODO default if property is not defined?
-		$lastSuccess = $this->metadata['lastSuccessfulBuild']['number'];
-		$lastCompleted = $this->metadata['lastCompletedBuild']['number'];
+        foreach ($params as $p => $param) {
+            $default = $param['defaultParameterValue'];
+            $this->defaultParams[$default['name']] = $default['value'];
+        }
+    }
 
-		// Another alternative is lastBuild.result == 'SUCCESS'
-		return $lastSuccess == $lastCompleted;
-	}
+    /**
+     * @return true if the last build was successful
+     */
+    public function isHealthy()
+    {
+        // TODO default if property is not defined?
+        $lastSuccess = $this->metadata['lastSuccessfulBuild']['number'];
+        $lastCompleted = $this->metadata['lastCompletedBuild']['number'];
 
-	/**
-	 * Enqueue a build with Jenkins
-	 *
-	 * @param $build_params Any param values to override the project defaults
-	 */
-	public function start(array $build_params = array())
-	{
-		$last_completed_build_id = $this->last_build_id(true);
-		$this->logger->debug('Last completed build: ' . $last_completed_build_id);
+        // Another alternative is lastBuild.result == 'SUCCESS'
+        return $lastSuccess === $lastCompleted;
+    }
 
-		$params_json = $this->build_params_json($build_params);
-		$this->post_json(
-			array('build'),
-			array(
-				'json' => $params_json,
-				'delay' => '0sec',
-			));
+    /**
+     * @see isHealthy()
+     * @deprecated
+     */
+    public function is_healthy()
+    {
+        return $this->isHealthy();
+    }
 
-		// This gives back the general information about job
-		$metadata = $this->get_json(array());
+    /**
+     * Enqueue a build with Jenkins
+     *
+     * @param array $buildParams Any param values to override the project defaults
+     * @throws JenkinsApiException
+     */
+    public function start(array $buildParams = [])
+    {
+        $lastCompletedBuildId = $this->lastBuildId(true);
+        $this->logger->debug('Last completed build: ' . $lastCompletedBuildId);
 
-		if ($metadata['inQueue'] > 0)
-		{
-			// Build is queued, but must wait and hasn't been assigned a number
-			$this->my_build_id = $metadata['nextBuildNumber'];
-			$this->logger->debug('Queued build: ' . $this->my_build_id);
+        $params_json = $this->buildParamsJson($buildParams);
+        $this->postJson(
+            ['build'],
+            [
+                'json' => $params_json,
+                'delay' => '0sec',
+            ]);
 
-			// @TODO Sleep until build should be running?
-			// sleep($metadata['queueItem']['buildableStartMilliseconds']);
-		}
-		else
-		{
-			// If no builds blocking (system wide), this build starts right away
-			// ...and has been assigned a build number
-			$this->my_build_id = $this->last_build_id(false);
-			$this->logger->debug('Started build: ' . $this->my_build_id);
-		}
+        // This gives back the general information about job
+        $metadata = $this->getJson([]);
 
-		if ($last_completed_build_id == $this->my_build_id)
-		{
-			throw new \Exception('Could not create new jenkins job. Quitting.');
-		}
+        if ($metadata['inQueue'] > 0) {
+            // Build is queued, but must wait and hasn't been assigned a number
+            $this->myBuildId = $metadata['nextBuildNumber'];
+            $this->logger->debug('Queued build: ' . $this->myBuildId);
 
-		return $this->my_build_id;
-	}
+            // @TODO Sleep until build should be running?
+            // sleep($metadata['queueItem']['buildableStartMilliseconds']);
+        } else {
+            // If no builds blocking (system wide), this build starts right away
+            // ...and has been assigned a build number
+            $this->myBuildId = $this->lastBuildId(false);
+            $this->logger->debug('Started build: ' . $this->myBuildId);
+        }
 
-	/**
-	 * Build number of the last build
-	 * @param $completed - If true, get last *completed* build, otherwise last build
-	 */
-	private function last_build_id($completed = false)
-	{
-		$build_type = $completed ? 'lastCompletedBuild' : 'lastBuild';
+        if ($lastCompletedBuildId == $this->myBuildId) {
+            throw new JenkinsApiException('Could not create new jenkins job. Quitting.');
+        }
 
-		$last_build_data = $this->get_json(array($build_type), true);
+        return $this->myBuildId;
+    }
 
-		return $last_build_data['number'];
-	}
+    /**
+     * Build number of the last build
+     * @param $completed - If true, get last *completed* build, otherwise last build
+     */
+    private function lastBuildId($completed = false)
+    {
+        $buildType = $completed ? 'lastCompletedBuild' : 'lastBuild';
 
-	/**
-	 * @returns Success, Failure, or Incomplete
-	 */
-	public function query_status()
-	{
-		$job_data = $this->get_json(array("{$this->my_build_id}"));
+        $lastBuildData = $this->getJson([$buildType]);
 
-		return $job_data['result'];
-	}
+        return $lastBuildData['number'];
+    }
 
-	/**
-	 * Keep polling jenkins every $poll_period seconds until build is complete
-	 * @param $timeout_after Maximum total minutes to poll before giving up
-	 */
-	public function wait_until_complete($poll_period = 1, $timeout_after = 45)
-	{
-		// Poll jenkins until last build number is our build number or greater
-		$last_completed_build_id = $this->last_build_id(true);
-		$started = time();
-		while ($last_completed_build_id < $this->my_build_id
-			&& time() < (60 * $timeout_after) + $started)
-		{
-			sleep($poll_period);
+    /**
+     * @return string Success, Failure, or Incomplete
+     */
+    public function queryStatus()
+    {
+        $jobData = $this->getJson(array("{$this->myBuildId}"));
 
-			// Consider persisting curl handle between these requests
-			// ...if we see perf. degredation
-			$last_completed_build_id = $this->last_build_id(true);
-		}
-	}
+        return $jobData['result'];
+    }
 
-	/**
-	 * Curl Jenkins API for details about job
-	 * @param $resource_items - List of strings defining path to job resource
-	 *
-	 * E.g. get details of Acceptance Test job 36 with get_json(array('36'))
-	 *      ==> http://qa-hudson1.dev/job/Acceptance%20Test/36/api/json
-	 */
-	private function get_json(array $resource_items)
-	{
-		return $this->curl($resource_items, null);
-	}
+    /**
+     * @see queryStatus()
+     * @deprecated
+     */
+    public function query_status()
+    {
+        return $this->queryStatus();
+    }
 
-	/**
-	 * @seealso get_json but with POST data
-	 */
-	private function post_json(array $resource_items, array $http_post_array)
-	{
-		return $this->curl($resource_items, $http_post_array);
-	}
+    /**
+     * Keep polling jenkins every $pollPeriod seconds until build is complete
+     * @param int $pollPeriod
+     * @param int $timeoutAfter Maximum total minutes to poll before giving up
+     */
+    public function waitUntilComplete($pollPeriod = 1, $timeoutAfter = 45)
+    {
+        // Poll jenkins until last build number is our build number or greater
+        $lastCompletedBuild = $this->lastBuildId(true);
+        $started = time();
+        while ($lastCompletedBuild < $this->myBuildId
+            && time() < (60 * $timeoutAfter) + $started) {
+            sleep($pollPeriod);
 
-	/**
-	 * Curl Jenkins JSON API
-	 *
-	 * @param array $resource_items
-	 * @param array $post_data if null, then curl uses GET, otherwise POSTs data
-	 * @returns array JSON data decoded as PHP array
-	 */
-	private function curl(array $resource_items, array $post_data = null)
-	{
-		$resource_path = implode('/', $resource_items);
+            // Consider persisting curl handle between these requests
+            // ...if we see perf. degredation
+            $lastCompletedBuild = $this->lastBuildId(true);
+        }
+    }
 
-		$url = $this->base_job_url . $resource_path . '/api/json';
-		$is_post = ($post_data != null);
-		$this->logger->debug('Curling ' . ($is_post ? 'POST ' : 'GET ') . $url);
+    /**
+     * @see waitUntilComplete()
+     * @deprecated
+     */
+    public function wait_until_complete($pollPeriod = 1, $timeoutAfter = 45)
+    {
+        $this->waitUntilComplete($pollPeriod, $timeoutAfter);
+    }
 
-		/** @var \Bart\Curl $c */
-		$c = Diesel::create('Bart\Curl', $url, 8080);
-		$response = $is_post ?
-			$c->post('', array(), $post_data) :
-			$c->get('', array());
+    /**
+     * Curl Jenkins API for details about job
+     * @param $resourceItems - List of strings defining path to job resource
+     * @return array JSON data decoded as PHP array
+     */
+    private function getJson(array $resourceItems)
+    {
+        return $this->connection->curlJenkinsApi($this->buildApiPath($resourceItems), null);
+    }
 
-		$jenkins_json = $response['content'];
-		return json_decode($jenkins_json, true);
-	}
+    /**
+     * @see getJson but with POST data
+     * @param array $resourceItems
+     * @param array $httpPostArray
+     * @return array JSON data decoded as PHP array
+     */
+    private function postJson(array $resourceItems, array $httpPostArray)
+    {
+        return $this->connection->curlJenkinsApi($this->buildApiPath($resourceItems), $httpPostArray);
+    }
 
+    /**
+     * The JSON representation of the build parameters expected by the job
+     * coalescing defaults and $override values
+     * @param array $override Override the default values defined by project
+     * @return string JSON representation of build parameters
+     */
+    private function buildParamsJson(array $override)
+    {
+        $params = [];
+        foreach ($this->defaultParams as $name => $value) {
+            $params[] = [
+                'name' => $name,
+                'value' => isset($override[$name]) ? $override[$name] : $value,
+            ];
+        }
 
-	/**
-	 * The JSON representation of the build parameters expected by the job
-	 * coalescing defaults and @param $override values
-	 *
-	 * @param array $override Override the default values defined by project
-	 */
-	private function build_params_json(array $override)
-	{
-		$params = array();
-		foreach ($this->default_params as $name => $value)
-		{
-			$params[] = array(
-				'name' => $name,
-				'value' => isset($override[$name]) ?  $override[$name] : $value,
-			);
-		}
+        $jenkinsParams = ['parameter' => $params];
+        return json_encode($jenkinsParams);
+    }
 
-		$jenkins_params = array('parameter' => $params);
+    private function buildApiPath(array $resourceItems)
+    {
+        $resourcePath = '';
+        if ($resourceItems !== []) {
+            $resourcePath = implode('/', $resourceItems);
+            $resourcePath .= '/';
+        }
 
-		return json_encode($jenkins_params);
-	}
+        return "{$this->baseApiPath}{$resourcePath}api/json";
+    }
 }
 
