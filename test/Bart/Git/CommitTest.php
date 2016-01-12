@@ -27,7 +27,7 @@ $message";
 		$this->gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root) use ($message) {
 			$resultStub = new StubbedCommandResult([$message], 0);
 
-			$root->getCommandResult('show -s --format=full --no-color %s', 'HEAD')->once()->return_value($resultStub);
+			$root->getCommandResult("show -s --format='full' --no-color HEAD")->once()->return_value($resultStub);
 		});
 	}
 
@@ -38,7 +38,7 @@ $message";
 			$output = 'TOP-338 run unit tests when Nate or Zack commit code';
 			$resultStub = new StubbedCommandResult([$output], 0);
 
-			$root->getCommandResult('show -s --format=%s --no-color %s', '%s', 'HEAD')
+			$root->getCommandResult("show -s --format='%s' --no-color HEAD")
 				->once()
 				->return_value($resultStub);
 		});
@@ -58,7 +58,7 @@ $message";
 Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
 			$resultStub = new StubbedCommandResult([$output], 0);
 
-			$root->getCommandResult('show -s --format=%s --no-color %s', '%B', 'HEAD')
+			$root->getCommandResult("show -s --format='%B' --no-color HEAD")
 				->once()
 				->return_value($resultStub);
 		});
@@ -78,6 +78,56 @@ Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
 		$commit = new Commit($this->gitRoot, 'HEAD');
 
 		$this->assertContains('a57a2664feafb26c61d269babc63b272ed87544d', $commit->messageFull(), 'hash');
+	}
+
+	public function testCommitter()
+	{
+		$expectedName = 'Committer Name';
+		$expectedEmail = 'committer@example.com';
+		$gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root)
+		use ($expectedName, $expectedEmail) {
+			$nameResultStub = new StubbedCommandResult([$expectedName], 0);
+			$emailResultStub = new StubbedCommandResult([$expectedEmail], 0);
+			$root->order_matters();
+			$root->getCommandResult("show -s --format='%cN' --no-color HEAD")
+				->once()
+				->return_value($nameResultStub);
+			$root->getCommandResult("show -s --format='%cE' --no-color HEAD")
+				->once()
+				->return_value($emailResultStub);
+		});
+
+		$commit = new Commit($gitRoot, 'HEAD');
+		$person = $commit->committer();
+		$actualName = $person->getName();
+		$actualEmail = $person->getEmail();
+		$this->assertSame($expectedName, $actualName);
+		$this->assertSame($expectedEmail, $actualEmail);
+	}
+
+	public function testAuthor()
+	{
+		$expectedName = 'Author Name';
+		$expectedEmail = 'author@example.com';
+		$gitRoot = $this->shmock('\Bart\Git\GitRoot', function($root)
+		use ($expectedName, $expectedEmail) {
+			$nameResultStub = new StubbedCommandResult([$expectedName], 0);
+			$emailResultStub = new StubbedCommandResult([$expectedEmail], 0);
+			$root->order_matters();
+			$root->getCommandResult("show -s --format='%aN' --no-color HEAD")
+				->once()
+				->return_value($nameResultStub);
+			$root->getCommandResult("show -s --format='%aE' --no-color HEAD")
+				->once()
+				->return_value($emailResultStub);
+		});
+
+		$commit = new Commit($gitRoot, 'HEAD');
+		$person = $commit->author();
+		$actualName = $person->getName();
+		$actualEmail = $person->getEmail();
+		$this->assertSame($expectedName, $actualName);
+		$this->assertSame($expectedEmail, $actualEmail);
 	}
 
 	public function testJiras()

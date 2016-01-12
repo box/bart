@@ -49,14 +49,7 @@ class Commit
 	 */
 	public function messageSubject()
 	{
-		// Ironic we're replacing %s with %s
-		$result = $this->gitRoot->getCommandResult('show -s --format=%s --no-color %s', '%s', $this->revision);
-
-		if (!$result->wasOk()) {
-			throw new GitException("Could not get contents of commit {$this}");
-		}
-
-		return $result->getOutput(true);
+		return $this->gitShowFormatOutput('%s', 'Could not get contents of commit');
 	}
 
 	/**
@@ -66,13 +59,7 @@ class Commit
 	 */
 	public function messageRawBody()
 	{
-		$result = $this->gitRoot->getCommandResult('show -s --format=%s --no-color %s', '%B', $this->revision);
-
-		if (!$result->wasOk()) {
-			throw new GitException("Could not get contents of commit {$this}");
-		}
-
-		return $result->getOutput(true);
+		return $this->gitShowFormatOutput('%B', 'Could not get contents of commit' );
 	}
 
 	/**
@@ -80,13 +67,7 @@ class Commit
 	 */
 	public function messageFull()
 	{
-		$result = $this->gitRoot->getCommandResult('show -s --format=full --no-color %s', $this->revision);
-
-		if (!$result->wasOk()) {
-			throw new GitException("Could not get contents of commit {$this}");
-		}
-
-		return $result->getOutput(true);
+		return $this->gitShowFormatOutput('full', 'Could not get contents of commit' );
 	}
 
 	/**
@@ -150,5 +131,46 @@ class Commit
 		}
 
 		return $this->_jiras;
+	}
+
+	/**
+	 * The author of the commit (person who originally wrote the work)
+	 * @return Person
+	 * @throws GitException
+	 */
+	public function author()
+	{
+		$name = $this->gitShowFormatOutput('%aN', 'Could not get name of author');
+		$email = $this->gitShowFormatOutput('%aE', 'Could not get email of author');
+		return new Person($name, $email);
+	}
+	/**
+	 * The committer of the commit (person who last applied the work)
+	 * @return Person
+	 * @throws GitException
+	 */
+	public function committer()
+	{
+		$name = $this->gitShowFormatOutput('%cN', 'Could not get name of committer');
+		$email = $this->gitShowFormatOutput('%cE', 'Could not get email of committer');
+		return new Person($name, $email);
+	}
+
+	/**
+	 * The output from `git show` with a specific format (--format={$format} flag)
+	 * and suppressed diff output (-s flag)
+	 * @param string $format One of the formats specified in the "PRETTY FORMAT" section in the
+	 * `git-show` man page (https://git-scm.com/docs/git-show)
+	 * @param string $exceptionMsg The exception message to output in case the command fails
+	 * @return string The output (as a string) of the `git show` command
+	 * @throws GitException
+	 */
+	private function gitShowFormatOutput($format, $exceptionMsg)
+	{
+		$result = $this->gitRoot->getCommandResult("show -s --format='{$format}' --no-color {$this->revision}");
+		if (!$result->wasOk()) {
+			throw new GitException("{$exceptionMsg} at revision {$this}");
+		}
+		return $result->getOutput(true);
 	}
 }
