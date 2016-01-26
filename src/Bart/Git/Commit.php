@@ -49,7 +49,7 @@ class Commit
      */
     public function messageSubject()
     {
-        return $this->gitShowFormatOutput('%s', 'Could not get contents of commit');
+        return $this->gitShowFormatOutput('%%s', 'Could not get contents of commit');
     }
 
     /**
@@ -59,7 +59,7 @@ class Commit
      */
     public function messageRawBody()
     {
-        return $this->gitShowFormatOutput('%B', 'Could not get contents of commit');
+        return $this->gitShowFormatOutput('%%B', 'Could not get contents of commit');
     }
 
     /**
@@ -139,8 +139,8 @@ class Commit
      */
     public function author()
     {
-        $name = $this->gitShowFormatOutput('%aN', 'Could not get name of author');
-        $email = $this->gitShowFormatOutput('%aE', 'Could not get email of author');
+        $name = $this->gitShowFormatOutput('%%aN', 'Could not get name of author');
+        $email = $this->gitShowFormatOutput('%%aE', 'Could not get email of author');
         return new Person($name, $email);
     }
 
@@ -151,8 +151,8 @@ class Commit
      */
     public function committer()
     {
-        $name = $this->gitShowFormatOutput('%cN', 'Could not get name of committer');
-        $email = $this->gitShowFormatOutput('%cE', 'Could not get email of committer');
+        $name = $this->gitShowFormatOutput('%%cN', 'Could not get name of committer');
+        $email = $this->gitShowFormatOutput('%%cE', 'Could not get email of committer');
         return new Person($name, $email);
     }
 
