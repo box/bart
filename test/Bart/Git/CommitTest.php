@@ -38,7 +38,7 @@ $message";
 			$output = 'TOP-338 run unit tests when Nate or Zack commit code';
 			$resultStub = new StubbedCommandResult([$output], 0);
 
-			$root->getCommandResult("show -s --no-color --format='%s' HEAD")
+			$root->getCommandResult("show -s --no-color --format='%%s' HEAD")
 				->once()
 				->return_value($resultStub);
 		});
@@ -58,7 +58,7 @@ $message";
 Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
 			$resultStub = new StubbedCommandResult([$output], 0);
 
-			$root->getCommandResult("show -s --no-color --format='%B' HEAD")
+			$root->getCommandResult("show -s --no-color --format='%%B' HEAD")
 				->once()
 				->return_value($resultStub);
 		});
@@ -89,10 +89,10 @@ Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
 			$nameResultStub = new StubbedCommandResult([$expectedName], 0);
 			$emailResultStub = new StubbedCommandResult([$expectedEmail], 0);
 			$root->order_matters();
-			$root->getCommandResult("show -s --no-color --format='%cN' HEAD")
+			$root->getCommandResult("show -s --no-color --format='%%cN' HEAD")
 				->once()
 				->return_value($nameResultStub);
-			$root->getCommandResult("show -s --no-color --format='%cE' HEAD")
+			$root->getCommandResult("show -s --no-color --format='%%cE' HEAD")
 				->once()
 				->return_value($emailResultStub);
 		});
@@ -114,10 +114,10 @@ Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
 			$nameResultStub = new StubbedCommandResult([$expectedName], 0);
 			$emailResultStub = new StubbedCommandResult([$expectedEmail], 0);
 			$root->order_matters();
-			$root->getCommandResult("show -s --no-color --format='%aN' HEAD")
+			$root->getCommandResult("show -s --no-color --format='%%aN' HEAD")
 				->once()
 				->return_value($nameResultStub);
-			$root->getCommandResult("show -s --no-color --format='%aE' HEAD")
+			$root->getCommandResult("show -s --no-color --format='%%aE' HEAD")
 				->once()
 				->return_value($emailResultStub);
 		});
