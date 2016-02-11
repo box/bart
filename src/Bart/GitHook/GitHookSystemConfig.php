@@ -24,13 +24,14 @@ class GitHookSystemConfig extends Configuration
 push_user_name = GITOSIS_USER
 
 
+;; This section holds configurations for freezing code
 [frozen]
-; Do not all merges to the following repos
-; valid options are '', 'all' for everything, or a CSV of repo names
-repo_names = bart.git, example.git, my-organization/repo.git
+; Do not allow merges to the following repos
+; Use 'all' to block everything; otherwise a CSV of repo names
+repo_names = bart, example, my-organization/repo
 
-; These users are granted access in spite of frozen status
-super_users = gitosis_admin, linus
+; A CSV of users exempt from any code freeze
+super_users = gitosis-admin, linus
 README;
     }
 

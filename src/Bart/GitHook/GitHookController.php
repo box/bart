@@ -128,7 +128,7 @@ class GitHookController
 
 			// Check whether current ref should have git hooks run or not
 			if(!in_array($ref, $validRefs)) {
-				$this->logger->info('Skipping hooks on ref ' . $ref);
+				$this->logger->info("Skipping hooks for $ref; valid refs are " . implode(', ', $validRefs));
 				continue;
 			}
 
