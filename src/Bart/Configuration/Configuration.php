@@ -100,9 +100,14 @@ abstract class Configuration
 	 * @return string[] String list of value split by comma
 	 * @throws ConfigurationTypeConversionException
 	 */
-	protected function getArray($section, $key, array $default = null, $required = true)
+	protected function getArray($section, $key, array $default = [], $required = true)
 	{
 		$rawVal = $this->getValue($section, $key, $default, $required);
+
+		// If there is no configured value, return the default which is already an array
+		if ($rawVal === $default) {
+			return $default;
+		}
 
 		// I considered accepting a "split" parameter, but decided that for now
 		// ...enforcing a convention of at most one space after the comma will
@@ -118,7 +123,7 @@ abstract class Configuration
 		$value = $this->getValue($section, $key, $default, $required);
 		// will equal 'true' when conf is quoted, will equal '1' when literal boolean used!
 		// See the unit tests for more fun realities of parse_ini_*()
-		return ($value === 'true' || $value === '1');
+		return ($value === 'true' || $value === '1' || $value === true);
 	}
 
 	/**
