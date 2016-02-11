@@ -8,6 +8,7 @@
 
 namespace Bart\GitHook;
 
+use Bart\Diesel;
 use Bart\Git\Commit;
 
 /**
@@ -20,7 +21,7 @@ class CodeFreeze extends GitHookAction
 
     public function  __construct()
     {
-        $this->config = new GitHookSystemConfig();
+        $this->config = Diesel::create('\Bart\GitHook\GitHookSystemConfig');
         parent::__construct();
     }
 
@@ -31,19 +32,18 @@ class CodeFreeze extends GitHookAction
      */
     public function run(Commit $commit)
     {
-        $project = $commit->getProjectName();
-        $frozenRepos = $this->config->frozenRepoNames();
-
         // Super users are exempt from frozen checks
         // So hope they don't do anything bad by mistake!
         if ($this->isSuperUser()) {
             return;
         }
 
-        if ($frozenRepos === 'all') {
+        $frozenRepos = $this->config->frozenRepoNames();
+        if ($frozenRepos === ['all']) {
             throw new GitHookException('All repositories are frozen.');
         }
 
+        $project = $commit->getProjectName();
         if (in_array($project, $frozenRepos)) {
             throw new GitHookException("$project repository is frozen.");
         }
