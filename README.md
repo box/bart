@@ -4,7 +4,7 @@ Bart is a PHP project. It originally began its life as a collection of Build and
 
 We use it at Box as the base of several of our internal projects.
 
-Please read through the [Bart Wiki](https://github.com/box/bart/wiki) for full details of the features and configurations.
+Please read through the [Bart Wiki](https://github.com/box/bart/wiki) for full details of the features, configurations, and installation instructions.
 
 
 [![Build Status](https://secure.travis-ci.org/box/bart.png?branch=master)](http://travis-ci.org/box/bart)
