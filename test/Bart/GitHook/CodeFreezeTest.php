@@ -14,21 +14,40 @@ class CodeFreezeTest extends BaseTestCase
     {
         parent::setUp();
 
+        putenv('GITOSIS_USER=');
         $this->head = new Commit(new GitRoot(), 'abcde123', 'bart.git');
     }
 
     public function testWhenSuperUser()
     {
         $this->shmockAndDieselify('\Bart\GitHook\GitHookSystemConfig', function($config) {
+            $config->frozenRepoNames()->once()->return_value(['all']);
             $config->envVarNameForPushUser()->once()->return_value(
                 Option::fromValue('GITOSIS_USER'));
             $config->superUserNames()->once()->return_value(['braynard']);
-            $config->frozenRepoNames()->never();
         }, true);
 
         // simulate push from John
-        $_ENV['GITOSIS_USER'] = 'braynard';
+        putenv('GITOSIS_USER=braynard');
 
+        $freeze = new CodeFreeze();
+        $freeze->run($this->head);
+    }
+
+    /**
+     * @expectedException \Bart\GitHook\GitHookException
+     * @expectedExceptionMessage All repositories are frozen
+     */
+    public function testWhenAllFrozenAndEnvNotSet()
+    {
+        $this->shmockAndDieselify('\Bart\GitHook\GitHookSystemConfig', function($config) {
+            $config->frozenRepoNames()->once()->return_value(['all']);
+            $config->envVarNameForPushUser()->once()->return_value(
+                Option::fromValue('GITOSIS_USER'));
+            $config->superUserNames()->once()->return_value(['braynard']);
+        }, true);
+
+        // Note there is no variable set for ENV
         $freeze = new CodeFreeze();
         $freeze->run($this->head);
     }
@@ -36,11 +55,11 @@ class CodeFreezeTest extends BaseTestCase
     public function testWhenNotFrozenRepoAndNoEnvVarEither()
     {
         $this->shmockAndDieselify('\Bart\GitHook\GitHookSystemConfig', function($config) {
+            $config->frozenRepoNames()->once()->return_value(['example.git']);
             $config->envVarNameForPushUser()->once()->return_value(
                 Option::fromValue(null));
             // This should not be called because env var name is None
             $config->superUserNames()->never();
-            $config->frozenRepoNames()->once()->return_value(['example.git']);
         }, true);
 
         $freeze = new CodeFreeze();
@@ -69,7 +88,7 @@ class CodeFreezeTest extends BaseTestCase
      * @expectedException \Bart\GitHook\GitHookException
      * @expectedExceptionMessage All repositories are frozen
      */
-    public function testWhenAllFrozenRepoAndNoEnvVar()
+    public function testWhenAllFrozenRepoAndNoEnvVarConfigured()
     {
         $this->shmockAndDieselify('\Bart\GitHook\GitHookSystemConfig', function($config) {
             $config->envVarNameForPushUser()->once()->return_value(
