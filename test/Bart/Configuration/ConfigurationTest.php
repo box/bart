@@ -179,6 +179,19 @@ class ConfigurationTest extends BaseTestCase
 		$this->assertFalse($configs->hasFavorites(), 'hasFavorites');
 	}
 
+	public function testGetBoolDefaultTrue()
+	{
+		$configs = new TestConfig();
+		$configs->configureForTesting([]);
+		$this->assertTrue($configs->isUnconfigured(), 'isUnconfigured default value');
+	}
+
+	public function testGetArrayDefaults()
+	{
+		$configs = new TestConfig();
+		$configs->configureForTesting([]);
+		$this->assertEquals([1, 2, 3], $configs->oneTwoThree());
+	}
 	public function testGetArrayHandlesSingleElement()
 	{
 		$configs = new TestConfig();
@@ -380,12 +393,26 @@ class TestConfig extends Configuration
 
 	public function nicknames()
 	{
-		return $this->getArray('favorites', 'nicknames');
+		// Throw in a default here to confirm that it is ignored when a value is configured
+		return $this->getArray('favorites', 'nicknames', ['ignored']);
+	}
+
+	public function oneTwoThree()
+	{
+		// This value won't exist, so it should default
+		return $this->getArray('missing', 'missing', [1, 2, 3]);
+	}
+
+	public function isUnconfigured()
+	{
+		// This value won't exist, so it should default
+		return $this->getBool('missing', 'missing', true);
 	}
 
 	public function hasFavorites()
 	{
-		return $this->getBool('favorites', 'has_favorites');
+		// Throw in a default here to confirm that it is ignored when a value is configured
+		return $this->getBool('favorites', 'has_favorites', true);
 	}
 
 	public function username()

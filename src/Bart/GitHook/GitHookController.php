@@ -128,7 +128,7 @@ class GitHookController
 
 			// Check whether current ref should have git hooks run or not
 			if(!in_array($ref, $validRefs)) {
-				$this->logger->info('Skipping hooks on ref ' . $ref);
+				$this->logger->info("Skipping hooks for $ref; valid refs are " . implode(', ', $validRefs));
 				continue;
 			}
 
@@ -138,7 +138,7 @@ class GitHookController
 			$this->logger->debug('Found ' . count($revisions) . ' revision(s)');
 
 			foreach ($revisions as $revision) {
-				$commit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $revision );
+				$commit = Diesel::create('\Bart\Git\Commit', $this->gitRoot, $revision, $this->projectName);
 
 				// Allow a backdoor in case of emergency or broken hook configuration
 				if ($this->shouldSkip($commit, $configs)) {
