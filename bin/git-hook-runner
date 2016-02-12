@@ -33,7 +33,7 @@ $logger = \Logger::getLogger(__CLASS__);
 // Your system configuration or deployment tools should be responsible for
 // ...defining the content of the files in this directory
 // NOTE *project* configuration files belong checked into repo in the 'etc' dir
-\Bart\Configuration\Configuration::configure('/etc/box/');
+\Bart\Configuration\Configuration::configure('/box/etc');
 
 $controller = GitHookController::createFromScriptName($_SERVER['SCRIPT_NAME']);
 $logger->debug("Created git hook controller $controller");

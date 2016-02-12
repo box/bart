@@ -13,18 +13,25 @@ class Commit
     private $gitRoot;
     /** @var string The revision name of this commit */
     private $revision;
+    /** @var string Name of the project repository in which commit was made, this may
+     * or may not contain the ".git" suffix */
+    private $projectName;
     /** @var JiraIssue[] Any Jira Issues mentioned in commit message */
     private $_jiras;
 
     /**
+     * @param GitRoot $root Root of repo on disk
      * @param string $revision The revision label of commit, typically the hash.
+     * @param string $projectName Project in which commit was made. This defaults
+     * to `null` for backwards compatibility
      * See `man git-rev-parse` "SPECIFYING REVISIONS" for valid names
      */
-    public function __construct(GitRoot $root, $revision)
+    public function __construct(GitRoot $root, $revision, $projectName = null)
     {
         // Consider switching from composition of gitRoot to inheritance
         $this->gitRoot = $root;
         $this->revision = $revision;
+        $this->projectName = $projectName;
     }
 
     /**
@@ -41,6 +48,15 @@ class Commit
     public function revision()
     {
         return $this->revision;
+    }
+
+    /**
+     * @return string Name of the repository in which commit was made. This may
+     * or may not include the ".git" suffix
+     */
+    public function getProjectName()
+    {
+        return $this->projectName;
     }
 
     /**

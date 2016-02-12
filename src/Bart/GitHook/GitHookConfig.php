@@ -16,7 +16,7 @@ class GitHookConfig extends ProjectConfiguration
 		return <<<README
 [general]
 ; Used to determine which refs to run git hooks on. Full ref must be specified.
-valid_refs = 'refs/head/master'
+valid_refs = 'refs/heads/master'
 
 [pre_receive]
 hook_actions = '\Bart\GitHook\StopTheLineTravis'
@@ -43,7 +43,7 @@ README;
 	 */
 	public function getPreReceiveHookActions()
 	{
-		return $this->getArray('pre_receive', 'hook_actions');
+		return $this->getArray('pre_receive', 'hook_actions', [], false);
 	}
 
 	/**
@@ -51,7 +51,7 @@ README;
 	 */
 	public function getPostReceiveHookActions()
 	{
-		return $this->getArray('post_receive', 'hook_actions');
+		return $this->getArray('post_receive', 'hook_actions', [], false);
 	}
 
 	/**
