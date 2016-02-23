@@ -188,7 +188,7 @@ Change-Id: Iecb840ccccf70a79ae622c583761107aa1a1b7b9';
      * @param BaseTestCase $phpu
      * @param string $revision
      * @param callable $configure Shmock configuration function
-     * @return mixed
+     * @return Commit
      */
     public static function getStubCommit(BaseTestCase $phpu, $revision = 'HEAD', callable $configure = null)
     {
