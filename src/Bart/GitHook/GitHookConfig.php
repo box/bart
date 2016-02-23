@@ -29,6 +29,12 @@ hook_actions = '\Bart\GitHook\JiraComment', '\Bart\GitHook\GerritAbandon'
 ; %s will be replaced with commit revision hash
 comment_template = 'Commit %s pushed to JIRA. See online at https://git.example.com/?h=%s'
 
+[jenkins]
+; Used by StopTheLineJenkins Hook Action to allow
+; commits that have this directive to go through,
+; when the build is broken. Defaults to {buildfix}.
+build_fix_directive = '{buildfix}'
+
 [notifications]
 ; Optional email address to notify when emergencies are pushed
 emergency_notification_email = emergencies@example.com
@@ -60,6 +66,14 @@ README;
 	public function jiraCommentTemplate()
 	{
 		return $this->getValue('jira', 'comment_template');
+	}
+
+	/**
+	 * @return string Build fix directive used to allow commits that fix builds to go through
+	 */
+	public function jenkinsBuildFixDirective()
+	{
+		return $this->getValue('jenkins', 'build_fix_directive', '{buildFix}', false);
 	}
 
     /**

@@ -2,46 +2,67 @@
 namespace Bart\GitHook;
 
 use Bart\Diesel;
-use Bart\Jenkins;
+use Bart\Git\Commit;
+use Bart\Git\GitException;
+use Bart\Jenkins\Connection;
+use Bart\Jenkins\JenkinsConfig;
+use Bart\Jenkins\Job;
 
 /**
- * @deprecated as of 2.0.0 Using Travis now
  * Reject commits against broken line unless the commit is fixing the build
  */
-class StopTheLineJenkins extends DeprecatedHookAction
+class StopTheLineJenkins extends GitHookAction
 {
+	/** @var Job $job **/
 	private $job;
 
-	public function __construct(array $conf, $gitDir, $repo)
+	public function __construct()
 	{
-		$stl_conf = $conf['jenkins'];
-		if (!array_key_exists('job_name', $stl_conf))
-		{
-			// Default to the repo for convenience
-			$stl_conf['job_name'] = $repo;
+		parent::__construct();
+
+		/** @var JenkinsConfig $jenkinsConfig */
+		$jenkinsConfig = Diesel::create('\Bart\Jenkins\JenkinsConfig');
+
+		/** @var Connection $connection */
+		$connection = Diesel::create(
+			'\Bart\Jenkins\Connection',
+			$jenkinsConfig->domain(),
+			$jenkinsConfig->protocol(),
+			$jenkinsConfig->port()
+		);
+
+		$user = $jenkinsConfig->user();
+		$token = $jenkinsConfig->token();
+		if ($user !== null && $token !== null) {
+			$connection->setAuth($user, $token);
 		}
 
-		parent::__construct($stl_conf, $gitDir, $repo);
-
-		$this->job = Diesel::create('Bart\Jenkins\Job',
-				$stl_conf['host'], $stl_conf['job_name']);
+		/** @var Job job */
+		$this->job = Diesel::create('\Bart\Jenkins\Job', $connection, $jenkinsConfig->jobLocation());
 	}
 
-	public function run($commitHash)
+	/**
+	 * @param Commit $commit
+	 * @throws GitHookException
+	 * @throws GitException
+     */
+	public function run(Commit $commit)
 	{
-		if ($this->job->is_healthy())
-		{
+		if ($this->job->isHealthy()) {
 			$this->logger->debug('Jenkins job is healthy.');
 			return;
 		}
 
 		$this->logger->info('Jenkins job is not healthy...asserting that commit message contains {buildfix} hash');
+		$messageSubject = $commit->messageSubject();
+
+		/** @var GitHookConfig $gitHookConfig */
+		$gitHookConfig = Diesel::create('\Bart\GitHook\GitHookConfig');
+		$buildFixDirective = $gitHookConfig->jenkinsBuildFixDirective();
 
 		// Check if commit has buildfix directive
-		$msg = $this->git->get_commit_msg($commitHash);
-		if (preg_match('/\{buildfix\}/', $msg) > 0)
-		{
-			// Commit attempts to fix the build
+		if (preg_match("/{$buildFixDirective}/", $messageSubject) > 0) {
+			$this->logger->info("Commit has {$buildFixDirective} directive. It attempts to fix build");
 			return;
 		}
 
