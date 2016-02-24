@@ -37,9 +37,28 @@ class GitHookController
 		$this->logger = Log4PHP::getLogger(__CLASS__);
 	}
 
+	/**
+	 * @return string A human readable respresentation of this instance
+	 */
 	public function __toString()
 	{
 		return "{$this->projectName}.{$this->hookName}";
+	}
+
+	/**
+	 * @return string The parsed name of the current project
+	 */
+	public function projectName()
+	{
+		return $this->projectName;
+	}
+
+	/**
+	 * @return string The parsed name of the running hook context
+	 */
+	public function hookName()
+	{
+		return $this->hookName;
 	}
 
 	/**
