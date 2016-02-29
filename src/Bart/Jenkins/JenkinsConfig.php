@@ -51,7 +51,7 @@ README;
     }
 
     /**
-     * @return string The port that the Jenkins instance is running on
+     * @return int The port that the Jenkins instance is running on
      * @throws ConfigurationException
      */
     public function port()

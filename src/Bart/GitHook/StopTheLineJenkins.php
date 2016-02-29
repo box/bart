@@ -56,9 +56,7 @@ class StopTheLineJenkins extends GitHookAction
 		$this->logger->info('Jenkins job is not healthy...asserting that commit message contains {buildfix} hash');
 		$messageSubject = $commit->messageSubject();
 
-		/** @var GitHookConfig $gitHookConfig */
-		$gitHookConfig = Diesel::create('\Bart\GitHook\GitHookConfig');
-		$buildFixDirective = $gitHookConfig->jenkinsBuildFixDirective();
+		$buildFixDirective = Directives::buildFix();
 
 		// Check if commit has buildfix directive
 		if (preg_match("/{$buildFixDirective}/", $messageSubject) > 0) {
