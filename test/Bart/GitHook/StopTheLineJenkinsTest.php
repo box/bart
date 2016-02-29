@@ -6,8 +6,6 @@ use Bart\Git\CommitTest;
 
 class StopTheLineJenkinsTest extends TestBase
 {
-    private static $buildFixDirective = '{buildFix}';
-
     public function testHealthyBuild()
     {
         $this->mockJenkinsJobWithDependencies();
@@ -35,10 +33,6 @@ class StopTheLineJenkinsTest extends TestBase
     public function testUnhealthyBuildAndValidBuildFixDirectives($message)
     {
         $this->mockJenkinsJobWithDependencies(false);
-        $this->shmockAndDieselify('\Bart\GitHook\GitHookConfig', function ($hConfigs) {
-            $hConfigs->jenkinsBuildFixDirective()->once()->return_value(self::$buildFixDirective);
-        }, true);
-
         $mockCommit = CommitTest::getStubCommit($this, 'HEAD', function ($head) use ($message) {
             $head->messageSubject()->once()->return_value($message);
         });
@@ -64,10 +58,6 @@ class StopTheLineJenkinsTest extends TestBase
     public function testUnhealthyBuildAndInvalidBuildFixDirectives($message)
     {
         $this->mockJenkinsJobWithDependencies(false);
-        $this->shmockAndDieselify('\Bart\GitHook\GitHookConfig', function ($hConfigs) {
-            $hConfigs->jenkinsBuildFixDirective()->once()->return_value(self::$buildFixDirective);
-        }, true);
-
         $mockCommit = CommitTest::getStubCommit($this, 'HEAD', function ($head) use ($message) {
             $head->messageSubject()->once()->return_value($message);
         });
