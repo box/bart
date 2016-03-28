@@ -14,6 +14,6 @@ class Directives extends AbstractEnumeration
      * Used by StopTheLineJenkins Hook Action to allow commits that have this
      * directive to go through, when the build is broken.
      */
-    const buildFix = '{buildFix}';
-    
+    const BUILD_FIX = '{buildFix}';
+
 }

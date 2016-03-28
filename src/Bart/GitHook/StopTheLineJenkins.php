@@ -56,10 +56,10 @@ class StopTheLineJenkins extends GitHookAction
 		$this->logger->info('Jenkins job is not healthy...asserting that commit message contains {buildfix} hash');
 		$messageSubject = $commit->messageSubject();
 
-		$buildFixDirective = Directives::buildFix();
+		$buildFixDirective = Directives::BUILD_FIX();
 
 		// Check if commit has buildfix directive
-		if (preg_match("/{$buildFixDirective}/", $messageSubject) > 0) {
+		if (preg_match("/{$buildFixDirective->value()}/", $messageSubject) > 0) {
 			$this->logger->info("Commit has {$buildFixDirective} directive. It attempts to fix build");
 			return;
 		}
