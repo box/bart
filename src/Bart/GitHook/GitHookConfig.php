@@ -94,5 +94,4 @@ README;
         return $this->getValue('notifications', 'body', '', false);
     }
 
-
 }
