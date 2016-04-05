@@ -31,3 +31,7 @@ limitations under the License.
 ## Contributing
 
 Please see `CONTRIBUTING.md`. All contributions are expected to meet PHP FIG standards, http://www.php-fig.org/psr/
+
+## Reporting bugs or feature requests
+
+We welcome bug reports and feature requests! Please get in touch with us using GitHub Issues or suggest changes with a Pull Request. Thanks!
