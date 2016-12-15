@@ -2,7 +2,7 @@
   "name": "box/bart",
   "type": "library",
   "description": "A collection of our critical PHP tools",
-  "keywords": ["bart","dependency injection","phpunit"],
+  "keywords": ["bart","dependency injection","phpunit","jenkins"],
   "homepage": "http://github.com/box/bart",
   "license": "Apache 2.0",
   "authors": [
