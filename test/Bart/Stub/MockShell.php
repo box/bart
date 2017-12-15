@@ -1,6 +1,8 @@
 <?php
 namespace Bart\Stub;
 
+use PHPUnit\Framework\TestCase;
+
 /**
  * MockShell provides the ability to assert the behavior of calls to both {@see Shell::exec()} and
  * {@see Shell::passthru()}.
@@ -23,10 +25,10 @@ class MockShell
 	 * Creates a MockShell capable of mocking multiple calls to both {@see Shell::exec()} and
 	 * {@see Shell::passthru()}
 	 *
-	 * @param \PHPUnit_Framework_TestCase $phpunit
+	 * @param \PHPUnit\Framework\TestCase $phpunit
 	 * @param \Bart\Shell $shell Decorates a mock Shell instance if desired for missing methods
 	 */
-	public function __construct(\PHPUnit_Framework_TestCase $phpunit, \Bart\Shell $shell = null)
+	public function __construct(TestCase $phpunit, \Bart\Shell $shell = null)
 	{
 		$this->phpunit = $phpunit;
 		$this->shell = $shell;
@@ -177,4 +179,3 @@ final class MockShellCommand
 		return new self($cmdStr, null, $exitStatus);
 	}
 }
-
