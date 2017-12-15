@@ -1,7 +1,9 @@
 <?php
 namespace Bart;
 
-abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+abstract class BaseTestCase extends TestCase
 {
 	public static function setUpBeforeClass()
 	{
@@ -150,28 +152,28 @@ abstract class BaseTestCase extends \PHPUnit_Framework_TestCase
 		}
 	}
 
-	/**  
+	/**
 	 * Capture the output from the output buffer
 	 *
 	 * @note Use intelligently
-	 * @param callable $func [(PHPUnit_Framework_TestCase) => string] Anonymous function that presumably produces output
+	 * @param callable $func [(PHPUnit\Framework\TestCase) => string] Anonymous function that presumably produces output
 	 * @return string The output of the closure
 	 */
 	protected function captureOutputBuffer($func)
-	{    
+	{
 		ob_start();
-		try  
-		{    
+		try
+		{
 			$func($this);
 			$output = ob_get_contents();
 			ob_end_clean();
-		}    
+		}
 		catch (\Exception $e)
-		{    
+		{
 			ob_end_clean();
 			throw $e;
-		}    
+		}
 
 		return $output;
-	}  
+	}
 }
